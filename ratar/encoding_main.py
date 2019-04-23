@@ -17,9 +17,10 @@ import argparse
 import sys
 import glob
 
+# Print absolute path of the executable binary for the Python interpreter
 print(sys.executable)
 
-# Start time of script
+# Get start time of script
 script_start = datetime.datetime.now()
 
 
@@ -38,12 +39,6 @@ parser.add_argument("-o", "--output_dir", help="Path to output directory.",
 args = parser.parse_args()
 input_mol2_path = args.input_mol2_path
 output_dir = args.output_dir
-
-"""
-# In case of running this script without parsing
-input_mol2_path = "/home/dominique/Documents/data/test_20180807/*/site.mol2"
-output_dir = "/home/dominique/Documents/projects/ratar-data"
-"""
 
 print("Input: %s" % input_mol2_path)
 print("Output: %s" % output_dir)
