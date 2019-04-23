@@ -52,9 +52,6 @@ print("Output: %s" % output_dir)
 input_split = input_mol2_path.split(sep="/")
 
 # Set output files
-output_dir = output_dir + "/results/encoding/" + \
-             "/".join(input_split[input_split.index("data")+1:input_split.index("data")+2+1])
-print(output_dir)
 output_log_path = output_dir + "/binding_sites.log"
 
 # Create output folder
@@ -132,6 +129,8 @@ for mol2 in input_mol2_path_list:
         # Save binding site reference points as cgo file
         save_cgo_file(binding_site, output_dir)
 
+
+# To Do: add similarity comparison!
 
 # Add run time to log file
 script_end = datetime.datetime.now()
