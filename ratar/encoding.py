@@ -9,32 +9,36 @@
 # Import modules
 ########################################################################################
 
-from encoding_aux import *
+from auxiliary import *
 
 import _pickle as pickle
 from typing import List
+
+import re
+import sys
+import glob
 
 import numpy as np
 import pandas as pd
 from scipy.special import cbrt
 from scipy.stats.stats import skew
 
-import re
-from sys import exit
+import seaborn as sns
+
 
 ########################################################################################
 # Global variables
 ########################################################################################
 
 # Project location
-project_path: str = "/home/dominique/Documents/projects/readacross_targetome"
+package_path: str = sys.path[0]
 
 # Representative and physicochemical property keys
 repres_keys: List[str] = ["ca", "pca", "pc"]
 pcprop_keys: List[str] = ["z1", "z12", "z123"]
 
 # Pseudocenters definition
-pc_atoms: pd.DataFrame = pickle.load(open(project_path+"/data/pseudocenter_atoms.p", "rb"))
+pc_atoms: pd.DataFrame = pickle.load(open(package_path+"/data/pseudocenter_atoms.p", "rb"))
 pc_atoms = pc_atoms[pc_atoms["type"] != "HBDA"]  # remove HBDA features information (too few data points)
 pc_atoms.reset_index(drop=True, inplace=True)
 
@@ -45,7 +49,6 @@ aa = AminoAcidDescriptors()
 ########################################################################################
 # Process binding sites
 ########################################################################################
-
 
 def encode_binding_site(pmol, output_log_path=None):
     """
@@ -71,6 +74,168 @@ def encode_binding_site(pmol, output_log_path=None):
     binding_site = BindingSite(pmol, output_log_path)
 
     return binding_site
+
+
+########################################################################################
+# Save and load binding site
+########################################################################################
+
+def save_binding_site(binding_site, output_path):
+    """
+    This function saves an encoded binding site to a pickle file in an output directory.
+
+    :param binding_site: Encoded binding site.
+    :type binding_site: encoding.BindingSite
+
+    :param output_path: Path to output directory (without / at the end).
+    :type output_path: String
+
+    :return: Pickle file is saved; no return value.
+    :rtype: None
+    """
+
+    output_bs_path = output_path + "/binding_sites/" + binding_site.pdb_id + ".p"
+    pickle.dump(binding_site, open(output_bs_path, "wb"))
+
+
+def get_binding_site_path(pdb, output_path):
+    """
+    This functions returns a binding site pickle path based on a path wildcard constructed from
+    - a four-letter PDB ID and
+    - an output directory that contains binding site pickle file(s) in a "binding_sites" directory:
+
+    Wildcard: output_path + "/binding_sites/" + pdb + "*.p"
+
+    :param pdb: Four-letter PDB ID.
+    :type: String
+
+    :param output_path: Path to output directory containing binding site pickle file(s) in a "binding_sites" directory.
+    :type: String
+
+    :return: Path to binding site pickle file.
+    :rtype: String
+    """
+    # Define wildcard for path to pickle file
+    bs_wildcard = output_path + "/binding_sites/" + pdb + "*.p"
+
+    # Retrieve all paths that match the wildcard
+    bs_path = glob.glob(bs_wildcard)
+
+    # If wildcard matches no file, retry.
+    if len(bs_path) == 0:
+        print("Error: Your input path matches no file. Please retry.")
+        print("\nYour input wildcard was the following: ")
+        print(bs_wildcard)
+        return None
+
+    # If wildcard matches multiple files, retry.
+    elif len(bs_path) > 1:
+        print("Error: Your input path matches multiple files. Please select one of the following as input string: ")
+        for i in bs_path:
+            print(i)
+        print("\nYour input wildcard was the following: ")
+        print(bs_wildcard)
+        return None
+
+    # If wildcard matches one file, load file.
+    else:
+        bs_path = bs_path[0]
+        return bs_path
+
+
+def load_binding_site(binding_site_path):
+    """
+    This function loads an encoded binding site from a pickle file.
+
+    :param binding_site_path: Path to binding site pickle file.
+    :type: String
+
+    :return: Encoded binding site.
+    :rtype: encoding.BindingSite
+    """
+
+    # Retrieve all paths that match the input path
+    bs_path = glob.glob(binding_site_path)
+
+    # If input path matches no file, retry.
+    if len(bs_path) == 0:
+        print("Error: Your input path matches no file. Please retry.")
+        print("\nYour input path was the following: ")
+        print(bs_path)
+        return None
+
+    # If input path matches multiple files, retry.
+    elif len(bs_path) > 1:
+        print("Error: Your input path matches multiple files. Please select one of the following as input string: ")
+        for i in bs_path:
+            print(i)
+        print("\nYour input path was the following: ")
+        print(bs_path)
+        return None
+
+    # If input path matches one file, load file.
+    else:
+        bs_path = bs_path[0]
+        binding_site = pickle.load(open(bs_path, "rb"))
+        print("The following file was loaded: ")
+        print(bs_path)
+        return binding_site
+
+
+def save_cgo_file(binding_site, output_path):
+    """
+    Generate CGO files containing reference points.
+    """
+
+    output_cgo_path = output_path + "/cgo_files"
+    pdb_id = binding_site.pdb_id
+
+    ref_points_colors = sns.color_palette("hls", 7)
+
+    for repres in binding_site.shapes.shapes_dict.keys():
+        for method in binding_site.shapes.shapes_dict[repres].keys():
+            if method != "na":
+
+                ref_points = binding_site.shapes.shapes_dict[repres][method]["ref_points"]
+
+                filename = output_cgo_path + "/" + pdb_id[:4] + "_" + repres.replace("_coord", "") + "_" + method + \
+                                             ".py"
+                cgo_file = open(filename, 'w')
+
+                cgo_file.write("from pymol import *\n")
+                cgo_file.write("import os\n")
+                cgo_file.write("from pymol.cgo import *\n")
+
+                size = str(1)
+
+                cgo_file.write("obj = [\n")
+
+                counter_colors = 0
+
+                for index, row in ref_points.iterrows():
+
+                    # Set sphere color
+
+                    ref_points_color = list(ref_points_colors[counter_colors])
+                    counter_colors = counter_colors + 1
+
+                    cgo_file.write("\tCOLOR, "
+                                   + str(ref_points_color[0]) + ", "
+                                   + str(ref_points_color[1]) + ", "
+                                   + str(ref_points_color[2]) + ", \n")
+
+                    # Set sphere coordinates
+                    cgo_file.write("\tSPHERE, "
+                                   + str(row["x"]) + ", "
+                                   + str(row["y"]) + ", "
+                                   + str(row["z"]) + ", "
+                                   + size + ",")
+
+                    cgo_file.write("\n")
+
+                cgo_file.write("]\ncmd.load_cgo(obj, '" + filename.split(".")[0].split("/")[-1] + "')")
+
+                cgo_file.close()
 
 
 ########################################################################################
@@ -342,8 +507,8 @@ def get_pcproperties(repres_dict, repres_key, pcprop_key):
     if pcprop_key == pcprop_keys[2]:
         return get_zscales(repres_dict, repres_key, 3)
     else:
-        raise SystemExit("Unknown representative key."
-                         "Select: ", ", ".join(pcprop_keys))
+        raise SystemExit('Unknown representative key.'
+                         'Select: ', ", ".join(pcprop_keys))
 
 
 def get_zscales(repres_dict, repres_key, z_number):
@@ -365,7 +530,8 @@ def get_zscales(repres_dict, repres_key, z_number):
             repres_zs.append(zs.loc[i])
         # If not, terminate script and print out error message
         else:
-            exit("Error: Identifier " + i + " not in pre-defined Z-scales. Please contact dominique.sydow@charite.de")
+            sys.exit("Error: Identifier " + i + " not in pre-defined Z-scales. " +
+                     "Please contact dominique.sydow@charite.de")
     # Cast into DataFrame
     bs_repres_zs = pd.DataFrame(repres_zs, index=repres_dict[repres_key].index, columns=zs.columns)
 
@@ -704,7 +870,7 @@ def get_shape_6dim(points, scaling_factor=1):
     """
 
     if points.shape[1] != 6:
-        exit("Error: Dimension of input (points) is not 6 as requested for get_shape_6dim.")
+        sys.exit("Error: Dimension of input (points) is not 6 as requested for get_shape_6dim.")
 
     # Get centroid of input coordinates (in 7 dimensions), and distances from c1 to all other points
     c1 = points.mean(axis=0)

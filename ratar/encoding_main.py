@@ -9,23 +9,18 @@
 # Import modules
 ########################################################################################
 
+from auxiliary import *
+from encoding import encode_binding_site, save_binding_site, save_cgo_file
+
 import datetime
 import argparse
 import sys
-print(sys.executable)
+import glob
 
-from encoding import *
-from encoding_aux import *
+print(sys.executable)
 
 # Start time of script
 script_start = datetime.datetime.now()
-
-
-########################################################################################
-# Project location
-########################################################################################
-
-project_path = "/home/dominique/Documents/projects/readacross_targetome"
 
 
 ########################################################################################
@@ -36,15 +31,22 @@ project_path = "/home/dominique/Documents/projects/readacross_targetome"
 parser = argparse.ArgumentParser()
 parser.add_argument("-i", "--input_mol2_path", help="Path to mol2 file(s).",
                     required=True)
+parser.add_argument("-o", "--output_dir", help="Path to output directory.",
+                    required=True)
 
 # Set as variables
 args = parser.parse_args()
 input_mol2_path = args.input_mol2_path
+output_dir = args.output_dir
 
+"""
 # In case of running this script without parsing
-#input_mol2_path = "/home/dominique/Documents/projects/readacross_targetome/data/scPDB_20180807_test/*/site.mol2"
+input_mol2_path = "/home/dominique/Documents/data/test_20180807/*/site.mol2"
+output_dir = "/home/dominique/Documents/projects/ratar-data"
+"""
 
-print(input_mol2_path)
+print("Input: %s" % input_mol2_path)
+print("Output: %s" % output_dir)
 
 
 ########################################################################################
@@ -52,16 +54,18 @@ print(input_mol2_path)
 ########################################################################################
 
 # Get input name (data name); fetches the subfolder name in data folder
-input_name = input_mol2_path.split(sep="/")[input_mol2_path.split(sep="/").index("data")+1]
+input_split = input_mol2_path.split(sep="/")
 
 # Set output files
-output_path = project_path + "/results/encoding/" + input_name
-output_log_path = output_path + "/binding_sites.log"
+output_dir = output_dir + "/results/encoding/" + \
+             "/".join(input_split[input_split.index("data")+1:input_split.index("data")+2+1])
+print(output_dir)
+output_log_path = output_dir + "/binding_sites.log"
 
 # Create output folder
-create_folder(output_path)
-create_folder(output_path + "/binding_sites")
-create_folder(output_path + "/cgo_files")
+create_folder(output_dir)
+create_folder(output_dir + "/binding_sites")
+create_folder(output_dir + "/cgo_files")
 
 
 ########################################################################################
@@ -69,12 +73,12 @@ create_folder(output_path + "/cgo_files")
 ########################################################################################
 
 # Log IO files
-log_file = open(output_path + "/binding_sites.log", "w")
+log_file = open(output_dir + "/binding_sites.log", "w")
 log_file.write("------------------------------------------------------------\n")
 log_file.write("IO\n")
 log_file.write("------------------------------------------------------------\n\n")
 log_file.write("Input: " + input_mol2_path + "\n")
-log_file.write("Output: " + output_path + "\n\n")
+log_file.write("Output: " + output_dir + "\n\n")
 log_file.close()
 
 # Get all mol2 files
@@ -114,8 +118,7 @@ for mol2 in input_mol2_path_list:
 
         # Print out iteration progress
         progress_string = str(mol2_counter) + "/" + str(mol2_sum) + " mol2 files - " + \
-                          str(pmol_counter) + "/" + str(pmol_sum) + " pmol objects: " + \
-                          pmol.code
+                          str(pmol_counter) + "/" + str(pmol_sum) + " pmol objects: " + pmol.code
         print(progress_string)
 
         # Add binding site information to log file
@@ -129,10 +132,10 @@ for mol2 in input_mol2_path_list:
         binding_site = encode_binding_site(pmol, output_log_path)
 
         # Save binding site
-        save_binding_site(binding_site, output_path)
+        save_binding_site(binding_site, output_dir)
 
         # Save binding site reference points as cgo file
-        save_cgo_files(binding_site, output_path)
+        save_cgo_file(binding_site, output_dir)
 
 
 # Add run time to log file
