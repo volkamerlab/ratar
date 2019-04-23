@@ -1,3 +1,7 @@
+# Package Data
+
+This directory contains data used to encode binding sites.
+
 # Sample Package Data
 
 This directory contains sample additional data you may want to include with your package.
