@@ -594,9 +594,9 @@ def get_points(coord_dict, pcprop_dict):
     points_dict = {}
 
     for i in repres_keys:
-        points_dict[i + "_coord"] = coord_dict[i]
+        points_dict[i] = coord_dict[i]
         for j in pcprop_keys:
-            points_dict[i + "_coord_" + j] = pd.concat([coord_dict[i], pcprop_dict[i][j]], axis=1)
+            points_dict[i + "_" + j] = pd.concat([coord_dict[i], pcprop_dict[i][j]], axis=1)
 
     return points_dict
 

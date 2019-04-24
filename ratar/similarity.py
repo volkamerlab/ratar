@@ -12,6 +12,8 @@ Handles the primary functions for comparing binding sites.
 # Import modules
 ########################################################################################
 
+from encoding import *
+
 import sys
 import pandas as pd
 
