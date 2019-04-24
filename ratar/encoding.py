@@ -33,8 +33,8 @@ import seaborn as sns
 # Global variables
 ########################################################################################
 
-# Project location
-#package_path: str = sys.path[0]
+# Package location
+# package_path: str = sys.path[0]
 package_path: str = "/home/dominique/Documents/projects/ratar/ratar"
 print(package_path)
 
