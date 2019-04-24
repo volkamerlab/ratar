@@ -168,8 +168,6 @@ def process_binding_sites(input_mol2_path, output_dir):
 ########################################################################################
 
 if __name__ == "__main__":
-    """
-    """
 
     # Get start time of script
     script_start = datetime.datetime.now()
