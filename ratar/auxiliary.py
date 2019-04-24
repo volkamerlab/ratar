@@ -1,8 +1,11 @@
-########################################################################################
-# Helper functions
-########################################################################################
+"""
+auxiliary.py
 
-# This script contains helper functions and classes.
+Read-across the targetome -
+An integrated structure- and ligand-based workbench for computational target prediction and novel tool compound design
+
+Handles the helper functions.
+"""
 
 
 ########################################################################################
@@ -12,7 +15,6 @@
 from biopandas.mol2 import PandasMol2, split_multimol2
 import pandas as pd
 import os
-import sys
 
 
 ########################################################################################
@@ -20,7 +22,8 @@ import sys
 ########################################################################################
 
 # Project location
-package_path: str = sys.path[0]
+# package_path: str = sys.path[0]
+package_path: str = "/home/dominique/Documents/projects/ratar/ratar"
 
 
 ########################################################################################
@@ -46,9 +49,8 @@ class Mol2Loader:
     Load binding sites from file(s).
     """
 
-    def __init__(self, input_mol2_path, output_log_path=None):
+    def __init__(self, input_mol2_path):
         self.input_mol2_path = input_mol2_path
-        self.output_log_path = output_log_path
         self.pmols = self.read_from_mol2()
 
     def read_from_mol2(self):

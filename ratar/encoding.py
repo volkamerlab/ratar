@@ -1,8 +1,11 @@
-########################################################################################
-# Binding site encoding
-########################################################################################
+"""
+encoding.py
 
-# This script contains classes and functions used during the binding site encoding step.
+Read-across the targetome -
+An integrated structure- and ligand-based workbench for computational target prediction and novel tool compound design
+
+Handles the primary functions for encoding a single binding site.
+"""
 
 
 ########################################################################################
@@ -31,7 +34,9 @@ import seaborn as sns
 ########################################################################################
 
 # Project location
-package_path: str = sys.path[0]
+#package_path: str = sys.path[0]
+package_path: str = "/home/dominique/Documents/projects/ratar/ratar"
+print(package_path)
 
 # Representative and physicochemical property keys
 repres_keys: List[str] = ["ca", "pca", "pc"]
@@ -66,7 +71,8 @@ def encode_binding_site(pmol, output_log_path=None):
     """
 
     if output_log_path is not None:
-        log_file = open(output_log_path, "a+")
+        log_file = open(output_log_path, "w")
+        log_file.write("%s\n\n" % pmol.code)
         log_file.write("Encode binding site.\n\n")
         log_file.close()
 
@@ -87,15 +93,80 @@ def save_binding_site(binding_site, output_path):
     :param binding_site: Encoded binding site.
     :type binding_site: encoding.BindingSite
 
-    :param output_path: Path to output directory (without / at the end).
+    :param output_path: Path to output file.
     :type output_path: String
 
     :return: Pickle file is saved; no return value.
     :rtype: None
     """
 
-    output_bs_path = output_path + "/binding_sites/" + binding_site.pdb_id + ".p"
-    pickle.dump(binding_site, open(output_bs_path, "wb"))
+    pickle.dump(binding_site, open(output_path, "wb"))
+
+
+def save_cgo_file(binding_site, output_path):
+    """
+    Generate CGO file containing reference points for different encoding methods.
+    """
+
+    # Set PyMol sphere colors (for reference points)
+    sphere_colors = sns.color_palette("hls", 7)
+
+    # Open cgo file
+    cgo_file = open(output_path, 'w')
+    cgo_file.write("from pymol import *\n")
+    cgo_file.write("import os\n")
+    cgo_file.write("from pymol.cgo import *\n\n")
+
+    # Collect all PyMol objects here (in order to group them after loading them to PyMol)
+    obj_names = []
+
+    for repres in binding_site.shapes.shapes_dict.keys():
+        for method in binding_site.shapes.shapes_dict[repres].keys():
+            if method != "na":
+
+                # Get reference points (coordinates)
+                ref_points = binding_site.shapes.shapes_dict[repres][method]["ref_points"]
+
+                # Set descriptive name for reference points (PDB ID, representatives, dimensions, encoding method)
+                obj_name = "%s_%s_%s" % (binding_site.pdb_id[:4], repres.replace("_coord", ""), method)
+                obj_names.append(obj_name)
+
+                # Set size for PyMol spheres
+                size = str(1)
+
+                cgo_file.write("obj_%s = [\n" % obj_name)  # Variable cannot start with digit, thus add prefix "obj_"
+
+                # Set color counter (since we iterate over colors for each reference point)
+                counter_colors = 0
+
+                # For each reference point, write sphere color, coordinates and size to file
+                for index, row in ref_points.iterrows():
+
+                    # Set sphere color
+                    sphere_color = list(sphere_colors[counter_colors])
+                    counter_colors = counter_colors + 1
+
+                    # Write sphere color to file
+                    cgo_file.write("\tCOLOR, "
+                                   + str(sphere_color[0]) + ", "
+                                   + str(sphere_color[1]) + ", "
+                                   + str(sphere_color[2]) + ", \n")
+
+                    # Write sphere coordinates and size to file
+                    cgo_file.write("\tSPHERE, "
+                                   + str(row["x"]) + ", "
+                                   + str(row["y"]) + ", "
+                                   + str(row["z"]) + ", "
+                                   + size + ", \n")
+
+                # Write command to file that will load the reference points as PyMol object
+                cgo_file.write("]\ncmd.load_cgo(obj_%s, '%s')\n\n" % (obj_name, obj_name))
+
+    # Group all objects to one group
+    cgo_file.write("cmd.group('%s_ref_points', '%s')" % (binding_site.pdb_id[:4], " ".join(obj_names)))
+
+    # Close cgo file
+    cgo_file.close()
 
 
 def get_binding_site_path(pdb, output_path):
@@ -180,62 +251,6 @@ def load_binding_site(binding_site_path):
         print("The following file was loaded: ")
         print(bs_path)
         return binding_site
-
-
-def save_cgo_file(binding_site, output_path):
-    """
-    Generate CGO files containing reference points.
-    """
-
-    output_cgo_path = output_path + "/cgo_files"
-    pdb_id = binding_site.pdb_id
-
-    ref_points_colors = sns.color_palette("hls", 7)
-
-    for repres in binding_site.shapes.shapes_dict.keys():
-        for method in binding_site.shapes.shapes_dict[repres].keys():
-            if method != "na":
-
-                ref_points = binding_site.shapes.shapes_dict[repres][method]["ref_points"]
-
-                filename = output_cgo_path + "/" + pdb_id[:4] + "_" + repres.replace("_coord", "") + "_" + method + \
-                                             ".py"
-                cgo_file = open(filename, 'w')
-
-                cgo_file.write("from pymol import *\n")
-                cgo_file.write("import os\n")
-                cgo_file.write("from pymol.cgo import *\n")
-
-                size = str(1)
-
-                cgo_file.write("obj = [\n")
-
-                counter_colors = 0
-
-                for index, row in ref_points.iterrows():
-
-                    # Set sphere color
-
-                    ref_points_color = list(ref_points_colors[counter_colors])
-                    counter_colors = counter_colors + 1
-
-                    cgo_file.write("\tCOLOR, "
-                                   + str(ref_points_color[0]) + ", "
-                                   + str(ref_points_color[1]) + ", "
-                                   + str(ref_points_color[2]) + ", \n")
-
-                    # Set sphere coordinates
-                    cgo_file.write("\tSPHERE, "
-                                   + str(row["x"]) + ", "
-                                   + str(row["y"]) + ", "
-                                   + str(row["z"]) + ", "
-                                   + size + ",")
-
-                    cgo_file.write("\n")
-
-                cgo_file.write("]\ncmd.load_cgo(obj, '" + filename.split(".")[0].split("/")[-1] + "')")
-
-                cgo_file.close()
 
 
 ########################################################################################

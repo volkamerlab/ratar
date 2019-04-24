@@ -13,7 +13,7 @@ output_dir="/home/dominique/Documents/projects/ratar-data/results/encoding"
 ########################################################################################
 
 # Data set scPDB-EFGR
-#python encoding_main.py -i ${data_dir}"/scpdb/egfr_20180807/scPDB_20190128_egfr.mol2" -o ${output_dir}
+#python ratar_encoding.py -i ${data_dir}"/scpdb/egfr_20180807/scPDB_20190128_egfr.mol2" -o ${output_dir}
 
 
 ########################################################################################
@@ -21,11 +21,10 @@ output_dir="/home/dominique/Documents/projects/ratar-data/results/encoding"
 ########################################################################################
 
 # Full scPDB
-#python encoding_main.py -i ${data_dir}"/scpdb/full_20180807/*/site.mol2" -o ${output_dir}
+#python ratar_encoding.py -i ${data_dir}"/scpdb/full_20180807/*/site.mol2" -o ${output_dir}
 
 # Subset of scPDB
-#python encoding_main.py -i ${data_dir}"/scpdb/test_20180807/*/site.mol2" -o ${output_dir}"/scpdb/test_20180807/"
-
+python ratar_encoding.py -i ${data_dir}"/scpdb/test_20180807/*/site.mol2" -o ${output_dir}"/scpdb/test_20180807/"
 
 # Data set scPDB sent by Didier Rognan
-python encoding_main.py -i ${data_dir}"/benchmarking/fuzcav/sim_dis_pairs/structures/*/site_CA_Met_pp.mol2" -o ${output_dir}"/benchmarking/fuzcav/sim_dis_pairs/"
+#python ratar_encoding.py -i ${data_dir}"/benchmarking/fuzcav/sim_dis_pairs/structures/*/site_CA_Met_pp.mol2" -o ${output_dir}"/benchmarking/fuzcav/sim_dis_pairs/"
