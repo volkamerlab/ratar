@@ -64,7 +64,7 @@ def encode_binding_site(pmol, output_log_path=None):
     :type pmol: biopandas.mol2.pandas_mol2.PandasMol2
 
     :param output_log_path: Path to log file.
-    :type pmol: String
+    :type output_log_path: String
 
     :return: Encoded binding site.
     :rtype: encoding.BindingSite
@@ -83,7 +83,7 @@ def encode_binding_site(pmol, output_log_path=None):
 
 
 ########################################################################################
-# Save and load binding site
+# Save encoding related files
 ########################################################################################
 
 def save_binding_site(binding_site, output_path):
@@ -169,25 +169,29 @@ def save_cgo_file(binding_site, output_path):
     cgo_file.close()
 
 
-def get_binding_site_path(pdb, output_path):
+########################################################################################
+# Load encoding related files
+########################################################################################
+
+def get_encoded_binding_site_path(pdb, output_path):
     """
     This functions returns a binding site pickle path based on a path wildcard constructed from
     - a four-letter PDB ID and
-    - an output directory that contains binding site pickle file(s) in a "binding_sites" directory:
+    - an output directory that contains ratar related files:
 
-    Wildcard: output_path + "/binding_sites/" + pdb + "*.p"
+    Wildcard: output_path + "/encoding/" + pdb + "*.p"
 
     :param pdb: Four-letter PDB ID.
     :type: String
 
-    :param output_path: Path to output directory containing binding site pickle file(s) in a "binding_sites" directory.
+    :param output_path: Path to output directory containing ratar related files.
     :type: String
 
     :return: Path to binding site pickle file.
     :rtype: String
     """
     # Define wildcard for path to pickle file
-    bs_wildcard = output_path + "/binding_sites/" + pdb + "*.p"
+    bs_wildcard = "%s/encoding/%s/ratar_encoding.p" % (output_path, pdb)
 
     # Retrieve all paths that match the wildcard
     bs_path = glob.glob(bs_wildcard)
@@ -208,7 +212,7 @@ def get_binding_site_path(pdb, output_path):
         print(bs_wildcard)
         return None
 
-    # If wildcard matches one file, load file.
+    # If wildcard matches one file, return file path.
     else:
         bs_path = bs_path[0]
         return bs_path

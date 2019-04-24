@@ -28,7 +28,8 @@ def parse_arguments():
     """
     This function parses the arguments given when calling this script.
 
-    :return:
+    :return: Input mol2 file path and output directory.
+    :rtype: Strings
     """
 
     # Parse arguments
@@ -50,6 +51,35 @@ def parse_arguments():
 
 
 def process_binding_site(pmol, output_dir):
+    """
+    This functions processes a single binding site:
+      * Creates all necessary output directories and sets all necessary file paths.
+      * Encodes the binding site.
+      * Saves the encoded binding sites as pickle file (alongside a log file).
+      * Saves the reference points as PyMol cgo file.
+
+    The output file systems is constructed as follows:
+
+    output_dir/
+      encoding/
+        pdb_id_1/
+          ratar_encoding.p
+          ratar_encoding.log
+          ref_points_cgo.py
+        pdb_id_2/
+          ...
+      ratar.log
+
+
+    :param pmol: Coordinates and PDB ID for one binding site.
+    :type pmol: biopandas.mol2.pandas_mol2.PandasMol2
+
+    :param output_dir: Output directory.
+    :type output_dir: String
+
+    :return: No return value.
+    :rtype: None
+    """
 
     # Create output folder
     pdb_id_encoding = output_dir + "/encoding/" + pmol.code
@@ -71,6 +101,21 @@ def process_binding_site(pmol, output_dir):
 
 
 def process_binding_sites(input_mol2_path, output_dir):
+    """
+    This script processes a list of mol2 files (retrieved by an input path to one or multiple files) and
+    saves multiple output files to output directory.
+
+    See more detailed information on the output file system in description of process_binding_site function.
+
+    :param input_mol2_path: Path to mol2 file(s), can include a wildcard to match multiple files.
+    :type input_mol2_path: String
+
+    :param output_dir: Output directory.
+    :type output_dir: String
+
+    :return: No return value.
+    :rtype: None
+    """
 
     # Get all mol2 files
     input_mol2_path_list = glob.glob(input_mol2_path)
@@ -151,6 +196,9 @@ if __name__ == "__main__":
 
     # Process binding sites
     process_binding_sites(input_mol2_path, output_dir)
+
+    # Compare binding sites
+    pass
 
     # Get end time of script
     script_end = datetime.datetime.now()

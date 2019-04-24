@@ -5,7 +5,7 @@
 ########################################################################################
 
 data_dir="/home/dominique/Documents/data"
-output_dir="/home/dominique/Documents/projects/ratar-data/results/encoding"
+output_dir="/home/dominique/Documents/projects/ratar-data/results"
 
 
 ########################################################################################
