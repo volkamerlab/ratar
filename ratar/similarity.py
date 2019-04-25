@@ -14,7 +14,8 @@ Handles the primary functions for comparing binding sites.
 
 from encoding import *
 
-import sys
+import glob
+import pickle
 import pandas as pd
 
 ########################################################################################
@@ -24,7 +25,6 @@ import pandas as pd
 # Package location
 # package_path: str = sys.path[0]
 package_path: str = "/home/dominique/Documents/projects/ratar/ratar"
-print(package_path)
 
 
 ########################################################################################
@@ -51,27 +51,76 @@ def get_similarity(moments_p1, moments_p2, measure):
         print("Please choose a similarity measure.")
 
 
-def get_similarity_matrix(moments, pdb_ids):
+def get_similarity_all_against_all(output_dir):
     """
-    Calculate the similarity matrix (all pairwise comparisons between moments).
-    Return as Pandas DataFrame.
+    This function retrieves all encoded binding sites from a given output directory and
+    calculates all-against-all matrices for each ratar encoding method.
 
-    :param moments:
-    :param pdb_ids:
-    :return:
+    :param output_dir: Absolute path to directory containing the ratar encoding output.
+    :type output_dir: String
+
+    :return: All-against-all similarity matrix (DataFrame) for each encoding method (dictionary).
+    :rtype: Dict of DataFrames
     """
 
-    # Initialize the similarity matrix
-    sim_matrix = []
+    # Get list of all encoded binding site files
+    file_list = glob.glob("%s/encoding/*/ratar_encoding.p" % output_dir)
 
-    # Treat each target as query (for loop)
-    for query in moments:
-        # Calculate the similarity to each of the other targets (list comprehension)
-        sim = [get_similarity(query, i, 1) for i in moments]
-        # Concatenate all query comparisons
-        sim_matrix.append(sim)
+    # Initialise dictionary of matrices (to be returned from function)
+    sim_matrices = {}
 
-    return pd.DataFrame(sim_matrix, columns=pdb_ids, index=pdb_ids)
+    # Get binding site ids and initialise all-against-all DataFrame with similarities of one (identical binding site)
+    pdb_ids = []
+    for f in file_list:
+        bs = pickle.load(open(f, "rb"))
+        pdb_ids.append(bs.pdb_id)
+    sim_df = pd.DataFrame(float(1), index=pdb_ids, columns=pdb_ids)
+
+    # Get example encoded binding site to retrieve binding site data architecture
+    bs = pickle.load(open(file_list[0], "rb"))
+
+    # Initialise each encoding method with all-against-all DataFrame with similarities of one
+    for repres in bs.shapes.shapes_dict.keys():
+        for method in bs.shapes.shapes_dict[repres].keys():
+            if method != "na":
+
+                # Set name for encoding method (representatives and method) and
+                # use as key for dictionary of all-against-all matrices
+                desc = "%s_%s" % (repres, method)
+
+                # Add initial all-against-all matrices in dictionary
+                sim_matrices[desc] = sim_df
+
+    # Load all possible binding site pairs (to construct an upper triangular matrix)
+    for i in range(0, len(file_list) - 1):
+        for j in range(i + 1, len(file_list)):
+
+            # Load binding site pair
+            bs1 = pickle.load(open(file_list[i], "rb"))
+            bs2 = pickle.load(open(file_list[j], "rb"))
+
+            for repres in bs1.shapes.shapes_dict.keys():
+                for method in bs1.shapes.shapes_dict[repres].keys():
+                    if method != "na":
+
+                        # Set name for encoding method (representatives and method) and
+                        # use as key for dictionary of all-against-all matrices
+                        desc = "%s_%s" % (repres, method)
+
+                        # Get binding site ids
+                        id1 = bs1.pdb_id
+                        id2 = bs2.pdb_id
+
+                        # Get similarity value
+                        sim = get_similarity(bs1.shapes.shapes_dict[repres][method]["moments"],
+                                             bs2.shapes.shapes_dict[repres][method]["moments"],
+                                             1)
+
+                        # Save similarity similarity to matrix
+                        sim_matrices[desc].at[id1, id2] = round(sim, 5)  # upper matrix triangle
+                        sim_matrices[desc].at[id2, id1] = round(sim, 5)  # lower matrix triangle
+
+    return sim_matrices
 
 
 def rank_targets_by_similarity(similarity_matrix, query_id):
