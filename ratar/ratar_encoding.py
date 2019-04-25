@@ -14,6 +14,7 @@ Handles the primary functions for processing the encoding of multiple binding si
 
 from auxiliary import *
 from encoding import encode_binding_site, save_binding_site, save_cgo_file
+from similarity import get_similarity_all_against_all
 
 import datetime
 import argparse
@@ -195,19 +196,30 @@ if __name__ == "__main__":
     # Process binding sites
     process_binding_sites(input_mol2_path, output_dir)
 
+    # Log binding site comparison
+    log_file = open(output_dir + "/ratar.log", "a+")
+    log_file.write("Output: " + output_dir + "\n\n")
+    log_file.write("------------------------------------------------------------\n")
+    log_file.write("COMPARE BINDING SITE SIMILARITY\n")
+    log_file.write("------------------------------------------------------------\n\n")
+    log_file.close()
+
+    # Get end time of encoding step and runtime
+    encoding_end = datetime.datetime.now()
+    encoding_runtime = encoding_end - script_start
+
     # Compare binding sites
-    pass
+    sim_matrix_all_against_all = get_similarity_all_against_all(output_dir)
 
-    # Get end time of script
-    script_end = datetime.datetime.now()
-
-    # Get script run time
-    runtime = script_end - script_start
+    # Get end time of comparison step and runtime
+    similarity_end = datetime.datetime.now()
+    similarity_runtime = similarity_end - encoding_end
 
     # Log runtime
     log_file = open(output_dir + "/ratar.log", "a+")
     log_file.write("\n------------------------------------------------------------\n")
     log_file.write("RUNTIME\n")
     log_file.write("------------------------------------------------------------\n\n")
-    log_file.write("Run time: " + str(runtime))
+    log_file.write("Encoding step: %s\n" % str(encoding_runtime))
+    log_file.write("Similarity step: %s\n" % str(similarity_runtime))
     log_file.close()
