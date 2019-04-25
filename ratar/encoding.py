@@ -36,7 +36,6 @@ import seaborn as sns
 # Package location
 # package_path: str = sys.path[0]
 package_path: str = "/home/dominique/Documents/projects/ratar/ratar"
-print(package_path)
 
 # Representative and physicochemical property keys
 repres_keys: List[str] = ["ca", "pca", "pc"]
@@ -128,7 +127,7 @@ def save_cgo_file(binding_site, output_path):
                 ref_points = binding_site.shapes.shapes_dict[repres][method]["ref_points"]
 
                 # Set descriptive name for reference points (PDB ID, representatives, dimensions, encoding method)
-                obj_name = "%s_%s_%s" % (binding_site.pdb_id[:4], repres.replace("_coord", ""), method)
+                obj_name = "%s_%s_%s" % (binding_site.pdb_id[:4], repres, method)
                 obj_names.append(obj_name)
 
                 # Set size for PyMol spheres
