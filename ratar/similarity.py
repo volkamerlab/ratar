@@ -123,13 +123,42 @@ def get_similarity_all_against_all(output_dir):
     return sim_matrices
 
 
-def rank_targets_by_similarity(similarity_matrix, query_id):
-    """
+def get_similarty_pairs(benchmarkset):
+    """"""
 
-    :param similarity_matrix:
-    :param query_id:
-    :return:
-    """
-    query = pd.DataFrame(similarity_matrix[query_id])
-    targets_ranked = query.sort_values(by=query.columns[0], axis=0, ascending=False)
-    return targets_ranked
+    benchmarksets = ["fuzcav", "tough-m1"]
+
+    sim_pairs = None  # List of similar pairs
+    dis_pairs = None  # List of dissimilar pairs
+
+    if benchmarkset == benchmarksets[0]:
+
+        # Set path to pairs list
+        sim_pairs_path = "/home/dominique/Documents/data/benchmarking/fuzcav/sim_dis_pairs/similar_pairs.txt"
+        dis_pairs_path = "/home/dominique/Documents/data/benchmarking/fuzcav/sim_dis_pairs/dissimilar_pairs.txt"
+
+        # Get pairs list
+        sim_pairs = pd.read_csv(sim_pairs_path, delimiter="  ")
+        dis_pairs = pd.read_csv(dis_pairs_path, delimiter="  ")
+
+        # Set path to structures directory
+        output_dir = "/home/dominique/Documents/projects/ratar-data/results/benchmarking/fuzcav/sim_dis_pairs/"
+
+    elif benchmarkset == benchmarksets[1]:
+
+        # Set path to dataset
+        sim_pairs_path = "/home/dominique/Documents/data/benchmarking/TOUGH-M1/TOUGH-M1_positive.list"
+        dis_pairs_path = "/home/dominique/Documents/data/benchmarking/TOUGH-M1/TOUGH-M1_negative.list"
+
+        # Get pairs
+        sim_pairs = pd.read_csv(sim_pairs_path, delimiter=" ")
+        dis_pairs = pd.read_csv(dis_pairs_path, delimiter=" ")
+
+    else:
+        return "Selected benchmarking dataset unknown. Please choose from: %s" % ', '.join(benchmarksets)
+
+    sim_sim_pairs = None  # Similarity values for similar pairs
+    sim_dis_pairs = None  # Similarity values for dissimilar pairs
+
+    return sim_sim_pairs, sim_dis_pairs
+
