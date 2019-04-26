@@ -24,7 +24,10 @@ output_dir="/home/dominique/Documents/projects/ratar-data/results"
 #python ratar_encoding.py -i ${data_dir}"/scpdb/full_20180807/*/site.mol2" -o ${output_dir}
 
 # Subset of scPDB
-python ratar_encoding.py -i ${data_dir}"/scpdb/test_20180807/*/site.mol2" -o ${output_dir}"/scpdb/test_20180807/"
+#python ratar_encoding.py -i ${data_dir}"/scpdb/test_20180807/*/site.mol2" -o ${output_dir}"/scpdb/test_20180807/"
 
-# Data set scPDB sent by Didier Rognan
+# Benchmarking dataset - FuzCav
 #python ratar_encoding.py -i ${data_dir}"/benchmarking/fuzcav/sim_dis_pairs/structures/*/site_CA_Met_pp.mol2" -o ${output_dir}"/benchmarking/fuzcav/sim_dis_pairs/"
+
+# Benchmarking dataset - TOUGH-M1
+#python ratar_encoding.py -i ${data_dir}"/benchmarking/TOUGH-M1/structures/*/site_CA_Met_pp.mol2" -o ${output_dir}"/benchmarking/fuzcav/sim_dis_pairs/"
