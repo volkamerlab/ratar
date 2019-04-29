@@ -1,5 +1,5 @@
 """
-ratar_encoding.py
+ratar.py
 
 Read-across the targetome -
 An integrated structure- and ligand-based workbench for computational target prediction and novel tool compound design
@@ -50,13 +50,16 @@ def parse_arguments():
     return input_mol2_path, output_dir
 
 
-def process_binding_site(pmol, output_dir):
+def process_encoding(input_mol2_path, output_dir):
     """
-    This functions processes a single binding site:
-      * Creates all necessary output directories and sets all necessary file paths.
-      * Encodes the binding site.
-      * Saves the encoded binding sites as pickle file (alongside a log file).
-      * Saves the reference points as PyMol cgo file.
+    This function processes a list of mol2 files (retrieved by an input path to one or multiple files) and
+    saves per binding site multiple output files to an output directory.
+
+    Each binding site is processed as follows:
+      * Create all necessary output directories and sets all necessary file paths.
+      * Encode the binding site.
+      * Save the encoded binding sites as pickle file (alongside a log file).
+      * Save the reference points as PyMol cgo file.
 
     The output file systems is constructed as follows:
 
@@ -70,42 +73,6 @@ def process_binding_site(pmol, output_dir):
           ...
       ratar.log
 
-
-    :param pmol: Coordinates and PDB ID for one binding site.
-    :type pmol: biopandas.mol2.pandas_mol2.PandasMol2
-
-    :param output_dir: Output directory.
-    :type output_dir: String
-
-    :return: No return value.
-    :rtype: None
-    """
-
-    # Create output folder
-    pdb_id_encoding = output_dir + "/encoding/" + pmol.code
-    create_folder(pdb_id_encoding)
-
-    # Get output file paths
-    output_log_path = pdb_id_encoding + "/ratar_encoding.log"
-    output_enc_path = pdb_id_encoding + "/ratar_encoding.p"
-    output_cgo_path = pdb_id_encoding + "/ref_points_cgo.py"
-
-    # Encode binding site
-    binding_site = encode_binding_site(pmol, output_log_path)
-
-    # Save binding site
-    save_binding_site(binding_site, output_enc_path)
-
-    # Save binding site reference points as cgo file
-    save_cgo_file(binding_site, output_cgo_path)
-
-
-def process_binding_sites(input_mol2_path, output_dir):
-    """
-    This script processes a list of mol2 files (retrieved by an input path to one or multiple files) and
-    saves multiple output files to output directory.
-
-    See more detailed information on the output file system in description of process_binding_site function.
 
     :param input_mol2_path: Path to mol2 file(s), can include a wildcard to match multiple files.
     :type input_mol2_path: String
@@ -159,8 +126,25 @@ def process_binding_sites(input_mol2_path, output_dir):
             log_file.write("%s\n" % progress_string)
             log_file.close()
 
-            # Process binding site
-            process_binding_site(pmol, output_dir)
+            # Process single binding site:
+
+            # Create output folder
+            pdb_id_encoding = output_dir + "/encoding/" + pmol.code
+            create_folder(pdb_id_encoding)
+
+            # Get output file paths
+            output_log_path = pdb_id_encoding + "/ratar_encoding.log"
+            output_enc_path = pdb_id_encoding + "/ratar_encoding.p"
+            output_cgo_path = pdb_id_encoding + "/ref_points_cgo.py"
+
+            # Encode binding site
+            binding_site = encode_binding_site(pmol, output_log_path)
+
+            # Save binding site
+            save_binding_site(binding_site, output_enc_path)
+
+            # Save binding site reference points as cgo file
+            save_cgo_file(binding_site, output_cgo_path)
 
 
 ########################################################################################
@@ -193,7 +177,7 @@ if __name__ == "__main__":
     log_file.close()
 
     # Process binding sites
-    process_binding_sites(input_mol2_path, output_dir)
+    process_encoding(input_mol2_path, output_dir)
 
     # Get end time of encoding step and runtime
     encoding_end = datetime.datetime.now()
