@@ -169,14 +169,14 @@ if __name__ == "__main__":
     log_file.write("------------------------------------------------------------\n\n")
     log_file.write("Input: " + input_mol2_path + "\n")
 
-    # Log binding site processing
+    # Log encoding step processing
     log_file.write("Output: " + output_dir + "\n\n")
     log_file.write("------------------------------------------------------------\n")
-    log_file.write("PROCESS BINDING SITES\n")
+    log_file.write("PROCESS ENCODING\n")
     log_file.write("------------------------------------------------------------\n\n")
     log_file.close()
 
-    # Process binding sites
+    # Process encoding
     process_encoding(input_mol2_path, output_dir)
 
     # Get end time of encoding step and runtime
