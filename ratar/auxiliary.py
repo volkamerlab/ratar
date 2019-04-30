@@ -121,7 +121,7 @@ class MolFileLoader:
         pmol = PandasPdb().read_pdb(self.input_path)
 
         if pmol.code == "":
-            pmol.code = os.path.basename(pdb_path).split(".")[0]
+            pmol.code = os.path.basename(self.input_path).split(".")[0]
 
         # Get both ATOM and HETATM lines of PDB file
         pmol._df = pd.concat([pmol.df["ATOM"], pmol.df["HETATM"]])
