@@ -104,7 +104,17 @@ def save_binding_site(binding_site, output_path):
 
 def save_cgo_file(binding_site, output_path):
     """
-    Generate CGO file containing reference points for different encoding methods.
+    This function generates a CGO file containing reference points for different encoding methods.
+
+    :param binding_site: Encoded binding site.
+    :type binding_site: encoding.BindingSite
+
+    :param output_path: Path to output file.
+    :type output_path: String
+
+    :return: Python script (cgo file) for PyMol.
+    :rtype: None
+
     """
 
     # Set PyMol sphere colors (for reference points)
@@ -263,13 +273,33 @@ def load_binding_site(binding_site_path):
 
 class BindingSite:
     """
-    Extract binding site representatives.
+    A class used to represent a binding site, containing:
+
+    - pdb_id: the PDB ID (or structure ID)
+    - mol: DataFrame containing atom lines from input file
+    - repres: Representatives instance
+    - subset: Subsetter instance
+    - coord: Coordinates instance
+    - pcprop: PCProperties instance
+    - points: Points instance
+    - shapes: Shapes instance
+
+    Attributes
+    ----------
+    pmol : biopandas.mol2.pandas_mol2.PandasMol2 or biopandas.pdb.pandas_pdb.PandasPdb
+        Content of mol2 or pdb file as BioPandas object.
+    output_log_path : str
+        Path to output log file.
+
+    Methods
+    -------
+    None
     """
 
     def __init__(self, pmol, output_log_path=None):
 
         self.pdb_id = pmol.code
-        self.mol = get_natural_amino_acids(pmol.df, output_log_path)
+        self.mol = get_zscales_amino_acids(pmol.df, output_log_path)
         self.repres = Representatives(self.mol)
         self.subset = Subsetter(self.repres.repres_dict)
         self.coord = Coordinates(self.repres.repres_dict)
@@ -280,7 +310,22 @@ class BindingSite:
 
 class Representatives:
     """
+    A class used to store binding site representatives.
+    Representatives are selected atoms in a binding site,
+    for instances all Calpha atoms of a binding site could serve as its representatives.
 
+    This class contains:
+    - repres_dict: Representatives stored as dictionary with several representation methods serving as key.
+      Example: {'ca': ..., 'pca': ..., 'pc': ...}
+
+    Attributes
+    ----------
+    mol : pandas DataFrame
+        DataFrame containing atom lines of mol2 or pdb file.
+
+    Methods
+    -------
+    None
     """
 
     def __init__(self, mol):
@@ -292,7 +337,21 @@ class Representatives:
 
 class Coordinates:
     """
-    Extract coordinates from binding site representatives.
+    A class used to store the coordinates of the binding site representatives,
+    which were defined by the Representatives class (in its repres_dict variable).
+
+    This class contains:
+    - coord_dict: Coordinates stored as dictionary with the same keys as in Representatives.repres_dict.
+      Example: {'ca': ..., 'pca': ..., 'pc': ...}
+
+    Attributes
+    ----------
+    repres_dict : Representatives.repres_dict (dictionary)
+        Dictionary with several representation methods serving as key.
+
+    Methods
+    -------
+    None
     """
 
     def __init__(self, repres_dict):
@@ -307,7 +366,26 @@ class Coordinates:
 
 class PCProperties:
     """
-    Extract physicochemical properties from binding site representatives.
+    A class used to store the physicochemical properties of binding site representatives,
+    which were defined by the Representatives class (in its repres_dict variable).
+
+    This class contains:
+    - pcprop_dict: Physicochemical properties stored as dictionary with the same keys as in Representatives.repres_dict.
+      Example: {'ca': ..., 'pca': ..., 'pc': ...}
+    - output_log_path: Path to output log file.
+
+    Coordinates are stored as dictionary (coord_dict), with the same keys as in Representatives.repres_dict.
+
+    Attributes
+    ----------
+    repres_dict : Representatives.repres_dict (dictionary)
+        Dictionary with several representation methods serving as key.
+    output_log_path : str
+        Path to output log file.
+
+    Methods
+    -------
+    None
     """
 
     def __init__(self, repres_dict, output_log_path=None):
@@ -327,7 +405,23 @@ class PCProperties:
 
 class Subsetter:
     """
+    A class used to store subsets of binding site representatives,
+    which were defined by the Representatives class (in its repres_dict variable).
 
+    This class contains:
+    - subsets_indices_dict: Subsets stored as dictionary with the same keys as in Representatives.repres_dict.
+      Example: {'ca': {'H': ..., 'HBD': ..., ...},
+                'pca': {'H': ..., 'HBD': ..., ...},
+                'pc': {'H': ..., 'HBD': ..., ...}}
+
+    Attributes
+    ----------
+    repres_dict : Representatives.repres_dict (dictionary)
+        Dictionary with several representation methods serving as key.
+
+    Methods
+    -------
+    None
     """
 
     def __init__(self, repres_dict):
@@ -338,7 +432,41 @@ class Subsetter:
 
 class Points:
     """
+    A class used to store the vectors for the binding site representatives,
+    which were defined by the Representatives class (in its repres_dict variable).
 
+    Binding site representatives (i.e. atoms) can have different dimensionalities, for instance
+    an atom can have
+    - 3 dimensions (spatial properties x, y, z) or
+    - more dimensions (spatial and some additional properties).
+
+    This class contains:
+    - points_dict: 3- to n-dimensional vectors for binding site representatives
+      Example: {'ca': ..., 'ca_z1': ..., 'ca_z123': ..., ..., 'pca': ..., ...}
+    - points_subsets_dict: 3- to n-dimensional vectors for binding site representatives, grouped by subsets.
+      Example: {'pc_z1': {'H': ..., 'HBD': ..., ...},
+                'pc_z12': {'H': ..., 'HBD': ..., ...},
+                ...,
+                'pca_z12': {'H': ..., 'HBD': ..., ...},
+                ...}
+
+    Attributes
+    ----------
+    coord_dict: Coordinates.coord_dict (dictionary)
+        Dictionary with spatial properties (=coordinates) for each representative.
+        Has the same keys as Representatives.repres_dict.
+    pcprop_dict: PCProperties.pcprop_dict (dictionary)
+        Dictionary with physicochemical properties for each representative.
+        Has the same top level keys as Representatives.repres_dict,
+        with nested keys describing different physicochemical properties per representative type.
+    subsets_indices_dict: Subsetter.subsets_indices_dict (dictionary)
+        Dictionary with subsets of representatives.
+        Has the same top level keys as Representatives.repres_dict,
+        with nested keys describing different subsetting types.
+
+    Methods
+    -------
+    None
     """
 
     def __init__(self, coord_dict, pcprop_dict, subsets_indices_dict):
@@ -349,7 +477,29 @@ class Points:
 
 class Shapes:
     """
+    A class used to store the encoded binding site representatives,
+    which were defined by the Representatives class (in its repres_dict variable).
 
+    This class contains:
+    - shapes_dict: Encoding stored as dictionary with
+        - level 1 keys for representatives, e.g. 'ca',
+        - level 2 keys for encoding method, e.g. '3dim_usr',
+        - level 3 keys for reference point coordinates 'ref_points', distances 'dist', and moments 'moments'.
+    - shapes_subsets_dict: Encoding stored as dictionary
+        - level 1 keys for representatives, e.g. 'ca',
+        - level 2 keys for subsets, e.g. 'H',
+        - level 3 keys for encoding method, e.g. '3dim_usr',
+        - level 4 keys for reference point coordinates 'ref_points', distances 'dist', and moments 'moments'.
+
+    Attributes
+    ----------
+    points: Points.points (dictionary)
+        Dictionary with spatial properties (=coordinates) for each representative.
+        Has the same keys as Representatives.repres_dict.
+
+    Methods
+    -------
+    None
     """
 
     def __init__(self, points):
@@ -371,28 +521,40 @@ class Shapes:
 # Functions mainly for BindingSites class
 ########################################################################################
 
-def get_natural_amino_acids(mol, output_log_path=None):
+def get_zscales_amino_acids(mol, output_log_path=None):
+    """
+    This function retrieves all amino acids atoms that are described by Z-scales.
+    
+    :param mol: DataFrame containing atom lines from input file.
+    :type mol: pandas DataFrame
+
+    :param output_log_path: Path to log file.
+    :type output_log_path: String
+
+    :return: DataFrame containing atom lines from input file described by Z-scales.
+    :rtype: pandas DataFrame
+    """
 
     # Get amino acid name per row (atom)
     mol_aa = mol["subst_name"].apply(lambda x: x[0:3])
 
-    # Get only rows (atoms) that belong to natural amino acids (described in Z-scales)
-    mol_natural_aa = mol[mol_aa.apply(lambda y: y in aa.zscales.index)].copy()
+    # Get only rows (atoms) that belong to Z-scales amino acids
+    mol_zscales_aa = mol[mol_aa.apply(lambda y: y in aa.zscales.index)].copy()
 
-    # Get only rows (atoms) that DO NOT belong to natural amino acids (described in Z-scales)
-    mol_non_natural_aa = mol[mol_aa.apply(lambda y: y not in aa.zscales.index)].copy()
+    # Get only rows (atoms) that DO NOT belong to Z-scales amino acids
+    mol_non_zscales_aa = mol[mol_aa.apply(lambda y: y not in aa.zscales.index)].copy()
 
-    if not mol_non_natural_aa.empty:
+    if not mol_non_zscales_aa.empty:
         if output_log_path is not None:
             log_file = open(output_log_path, "a+")
             log_file.write("Atoms removed for binding site encoding:\n\n")
-            log_file.write(mol_non_natural_aa.to_string() + "\n\n")
+            log_file.write(mol_non_zscales_aa.to_string() + "\n\n")
             log_file.close()
         else:
             print("Atoms removed for binding site encoding:")
-            print(mol_non_natural_aa)
+            print(mol_non_zscales_aa)
 
-    return mol_natural_aa
+    return mol_zscales_aa
 
 
 ########################################################################################
@@ -401,7 +563,16 @@ def get_natural_amino_acids(mol, output_log_path=None):
 
 def get_representatives(mol, repres_key):
     """
-    Extract representatives from binding site.
+    This function extracts binding site representatives.
+
+    :param mol: DataFrame containing atom lines from input file.
+    :type mol: pandas DataFrame
+
+    :param repres_key: Representatives name; key in repres_dict.
+    :type repres_key: String
+
+    :return: DataFrame containing atom lines from input file described by Z-scales.
+    :rtype: pandas DataFrame
     """
 
     if repres_key == repres_keys[0]:
@@ -417,7 +588,13 @@ def get_representatives(mol, repres_key):
 
 def get_ca(mol):
     """
-    Extract Ca atoms from binding site.
+    This function extracts Calpha atoms from binding site.
+
+    :param mol: DataFrame containing atom lines from input file.
+    :type mol: pandas DataFrame
+
+    :return: DataFrame containing atom lines from input file described by Z-scales.
+    :rtype: pandas DataFrame
     """
 
     bs_ca = mol[mol['atom_name'] == "CA"]
@@ -427,7 +604,13 @@ def get_ca(mol):
 
 def get_pca(mol):
     """
-    Extract pseudocenter atoms and pseudocenters from binding site.
+    This function extracts pseudocenter atoms from binding site.
+
+    :param mol: DataFrame containing atom lines from input file.
+    :type mol: pandas DataFrame
+
+    :return: DataFrame containing atom lines from input file described by Z-scales.
+    :rtype: pandas DataFrame
     """
 
     # Add column containing amino acid names
@@ -479,7 +662,13 @@ def get_pca(mol):
 
 def get_pc(mol):
     """
+    This function extracts pseudocenters from binding site.
 
+    :param mol: DataFrame containing atom lines from input file.
+    :type mol: pandas DataFrame
+
+    :return: DataFrame containing atom lines from input file described by Z-scales.
+    :rtype: pandas DataFrame
     """
 
     # Get pseudocenter atoms
@@ -515,7 +704,19 @@ def get_pc(mol):
 
 def get_pcproperties(repres_dict, repres_key, pcprop_key):
     """
-    Main function to extract physicochemical properties.
+    This function is the main function to extract physicochemical properties.
+
+    :param repres_dict: Representatives stored as dictionary with several representation methods serving as key.
+    :type repres_dict: Representatives.repres_dict
+
+    :param repres_key: Representatives name; key in repres_dict.
+    :type repres_key: String
+
+    :param pcprop_key: Physicochemical property name; key in pcprop_key
+    :type pcprop_key: String
+
+    :return: DataFrame containing BLA
+    :rtype: pandas DataFrame
     """
 
     if pcprop_key == pcprop_keys[0]:
@@ -532,6 +733,8 @@ def get_pcproperties(repres_dict, repres_key, pcprop_key):
 def get_zscales(repres_dict, repres_key, z_number):
     """
     Extract Z-scales from binding site representatives.
+
+    BLA
     """
 
     # Get amino acid to Z-scales transformation matrix
@@ -564,6 +767,8 @@ def get_zscales(repres_dict, repres_key, z_number):
 def get_subset_indices(repres_dict, repres_key):
     """
     Extract feature subsets from pseudocenters (pseudocenter atoms).
+
+    BLA
     """
 
     repres = repres_dict[repres_key]
@@ -587,7 +792,7 @@ def get_subset_indices(repres_dict, repres_key):
 
 def get_points(coord_dict, pcprop_dict):
     """
-
+    BLA
     """
 
     points_dict = {}
@@ -602,7 +807,7 @@ def get_points(coord_dict, pcprop_dict):
 
 def get_points_subsetted(points_dict, subsets_indices_dict):
     """
-
+    BLA
     """
 
     points_subsets_dict = {}
@@ -623,6 +828,8 @@ def get_points_subsetted(points_dict, subsets_indices_dict):
 def get_shape(points):
     """
     Get shape data depending on number of dimensions and points of input data.
+
+    BLA
     """
 
     n_points = points.shape[0]
