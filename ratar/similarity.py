@@ -37,10 +37,18 @@ def get_similarity(moments_p1, moments_p2, measure):
     - 1: inverse of the translated and scaled Manhattan distance
     - 2: tba
 
-    :param moments_p1:
-    :param moments_p2:
-    :param measure:
-    :return:
+    :param moments_p1: Fingerprint for protein (binding site) b1
+    :type moments_p1: DataFrame
+
+    :param moments_p2: Fingerprint for protein (binding site) p2
+    :type moments_p2: DataFrame
+
+    :param measure: Integer referring to a specific similarity measurement:
+    1 (inverse of the translated and scaled Manhattan distance)
+    :type measure: Integer
+
+    :return: Similarity value
+    :rtype: float
     """
 
     # Calculate inverse of the translated and scaled Manhattan distance
@@ -48,7 +56,7 @@ def get_similarity(moments_p1, moments_p2, measure):
         return 1 / (1 + 1 / moments_p1.size * abs(moments_p1 - moments_p2).values.sum())
     # Print message if measure unknown
     else:
-        print("Please choose a similarity measure.")
+        print("Please choose a similarity measure: 1 (inverse of the translated and scaled Manhattan distance).")
 
 
 def get_similarity_all_against_all(output_dir):
@@ -123,13 +131,21 @@ def get_similarity_all_against_all(output_dir):
     return sim_matrices
 
 
-def get_similarty_pairs(benchmarkset):
-    """"""
+def get_similarity_pairs(benchmarkset):
+    """
+    This function calculates the similarity values for binding site pairs described in different benchmarking datasets.
+
+    For a given benchmark dataset, this function returns a dictionary of DataFrames that contain each
+    different similarity measures for pairs of binding sites.
+
+    :param benchmarkset: Benchmarking dataset type.
+    :type benchmarkset: String
+
+    :return: Dictionary of DataFrames containing a matrix of similarity values (pair ID x similarity measurement)
+    :type: Dictionary of DataFrames
+    """
 
     benchmarksets = ["fuzcav", "tough-m1"]
-
-    sim_pairs = None  # List of similar pairs
-    dis_pairs = None  # List of dissimilar pairs
 
     if benchmarkset == benchmarksets[0]:
 
@@ -138,11 +154,28 @@ def get_similarty_pairs(benchmarkset):
         dis_pairs_path = "/home/dominique/Documents/data/benchmarking/fuzcav/sim_dis_pairs/dissimilar_pairs.txt"
 
         # Get pairs list
-        sim_pairs = pd.read_csv(sim_pairs_path, delimiter="  ")
-        dis_pairs = pd.read_csv(dis_pairs_path, delimiter="  ")
+        sim_pairs = pd.read_csv(sim_pairs_path,
+                                delimiter="  ",
+                                names=["struc1", "struc2"],
+                                engine="python")
+        dis_pairs = pd.read_csv(dis_pairs_path,
+                                delimiter="  ",
+                                names=["struc1", "struc2"],
+                                engine="python")
 
         # Set path to structures directory
-        output_dir = "/home/dominique/Documents/projects/ratar-data/results/benchmarking/fuzcav/sim_dis_pairs/"
+        struc_path_template = "/home/dominique/Documents/projects/ratar-data/results/benchmarking/" \
+                              "fuzcav/sim_dis_pairs/encoding/%s_site/ratar_encoding.p"
+
+        similarity = {"sim_pairs": calculate_similarity_pairs(sim_pairs, struc_path_template),
+                      "dis_pairs": calculate_similarity_pairs(dis_pairs, struc_path_template)}
+
+        # Save to file
+        output_path = "/home/dominique/Documents/projects/ratar-data/results/benchmarking/" \
+                      "fuzcav/sim_dis_pairs/similarity/pairs_similarity.p"
+        pickle.dump(similarity, open(output_path, "wb"))
+
+        return similarity
 
     elif benchmarkset == benchmarksets[1]:
 
@@ -151,14 +184,105 @@ def get_similarty_pairs(benchmarkset):
         dis_pairs_path = "/home/dominique/Documents/data/benchmarking/TOUGH-M1/TOUGH-M1_negative.list"
 
         # Get pairs
-        sim_pairs = pd.read_csv(sim_pairs_path, delimiter=" ")
-        dis_pairs = pd.read_csv(dis_pairs_path, delimiter=" ")
+        sim_pairs = pd.read_csv(sim_pairs_path,
+                                delimiter=" ",
+                                names=["struc1", "struc2", "seq_sim", "struc_sim", "lig_sim"])
+        dis_pairs = pd.read_csv(dis_pairs_path,
+                                delimiter=" ",
+                                names=["struc1", "struc2", "seq_sim", "struc_sim", "lig_sim"])
+
+        # Set path to structures directory
+        struc_path_template = "/home/dominique/Documents/projects/ratar-data/results/benchmarking/" \
+                              "TOUGH-M1/encoding/%s/ratar_encoding.p"
+
+        similarity = {"sim_pairs": calculate_similarity_pairs(sim_pairs, struc_path_template),
+                      "dis_pairs": calculate_similarity_pairs(dis_pairs, struc_path_template)}
+
+        # Save to file
+        output_path = "/home/dominique/Documents/projects/ratar-data/results/benchmarking/" \
+                      "TOUGH-M1/similarity/pairs_similarity.p"
+        pickle.dump(similarity, open(output_path, "wb"))
+
+        return similarity
 
     else:
         return "Selected benchmarking dataset unknown. Please choose from: %s" % ', '.join(benchmarksets)
 
-    sim_sim_pairs = None  # Similarity values for similar pairs
-    sim_dis_pairs = None  # Similarity values for dissimilar pairs
 
-    return sim_sim_pairs, sim_dis_pairs
+def calculate_similarity_pairs(pairs, struc_path_template):
+    """
+    This method calculates the similarity between pairs of binding sites for different encoding methods and
+    returns a pairs ID x encoding method DataFrame containing the similarity values.
 
+    Example for :
+    Two pairs of binding sites: (p11, p12), (p21, p22)
+
+    sim_dict = {"encoding_method1": [0.5, 0.9], "encoding_method2": [0.55, 0.94]}
+    pair_list = ["p11_p12", "p21_p22"]
+
+    sim_df =
+                    encoding_method1    encoding_method2
+        p11_p12     0.5                 0.55
+        p21_p22     0.9                 0.94
+
+
+    :param pairs: DataFrame with structure ID for pairs of binding sites (given in columns "struc1" and "struc2")
+    :type pairs: DataFrame
+
+    :param struc_path_template: Full path to file with encoded binding sites with %s (placeholder) for structure ID.
+    :type struc_path_template: String
+
+    :return: DataFrame containing a matrix of similarity values (pair ID x similarity measurement)
+    :type: DataFrame
+    """
+
+    # Initialise objects to be filled while iterating over pairs
+    sim_dict = {}  # This dictionary will be transformed to a DataFrame in the end
+    pair_list = []  # This list will serve as index for that DataFrame
+
+    # Initialise sim_dict with encoding method type (as keys) and empty lists (as values)
+    bs = pickle.load(open(struc_path_template % pairs.loc[0, "struc1"], "rb"))  # Load example binding site
+    for repres in bs.shapes.shapes_dict.keys():
+        for method in bs.shapes.shapes_dict[repres].keys():
+            if method != "na":
+
+                # Set name for encoding method (representatives and method) and
+                # use as key for dictionary
+                desc = "%s_%s" % (repres, method)
+                sim_dict[desc] = []
+
+    for i in pairs.index:
+
+        p1 = pairs.loc[i, "struc1"]  # Get one partner of pair
+        p2 = pairs.loc[i, "struc2"]  # Get other partner of pair
+
+        pair_list.append("%s_%s" % (p1, p2))  # Save pair as string
+
+        # Get path to structure files
+        struc_path1 = struc_path_template % p1
+        struc_path2 = struc_path_template % p2
+
+        # Load binding sites
+        bs1 = pickle.load(open(struc_path1, "rb"))
+        bs2 = pickle.load(open(struc_path2, "rb"))
+
+        for repres in bs1.shapes.shapes_dict.keys():
+            for method in bs1.shapes.shapes_dict[repres].keys():
+                if method != "na":
+
+                    # Set name for encoding method (representatives and method) and
+                    # use as key for dictionary
+                    desc = "%s_%s" % (repres, method)
+
+                    # Get similarity value
+                    sim = get_similarity(bs1.shapes.shapes_dict[repres][method]["moments"],
+                                         bs2.shapes.shapes_dict[repres][method]["moments"],
+                                         1)
+
+                    # Add similarity value to similarity dictionary
+                    sim_dict[desc].append(sim)
+
+    # Transform dictionary of lists to DataFrame
+    sim_df = pd.DataFrame(sim_dict, index=pair_list)
+
+    return sim_df
