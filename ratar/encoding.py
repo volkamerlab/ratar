@@ -31,15 +31,15 @@ import seaborn as sns
 
 # Package location
 # package_path: str = sys.path[0]
-package_path: str = "/home/dominique/Documents/projects/ratar/ratar"
+package_path = "/home/dominique/Documents/projects/ratar/ratar"
 
 # Representative and physicochemical property keys
-repres_keys: List[str] = ["ca", "pca", "pc"]
-pcprop_keys: List[str] = ["z1", "z12", "z123"]
+repres_keys = ["ca", "pca", "pc"]
+pcprop_keys = ["z1", "z12", "z123"]
 
 # Pseudocenters definition
-pc_atoms: pd.DataFrame = pickle.load(open(package_path+"/data/pseudocenter_atoms.p", "rb"))
-pc_atoms = pc_atoms[pc_atoms["type"] != "HBDA"]  # remove HBDA features information (too few data points)
+pc_atoms = pickle.load(open(package_path+"/data/pseudocenter_atoms.p", "rb"))
+pc_atoms = pc_atoms[pc_atoms["type"] != "HBDA"]  # Remove HBDA features information (too few data points)
 pc_atoms.reset_index(drop=True, inplace=True)
 
 # Amino acid descriptors definition, e.g. Z-scales
@@ -59,7 +59,7 @@ def encode_binding_site(pmol, output_log_path=None):
     ----------
     pmol : biopandas.mol2.pandas_mol2.PandasMol2
         Coordinates and PDB ID for one binding site.
-    output_log_path: string
+    output_log_path : string
         Path to log file.
 
     Returns
@@ -1465,7 +1465,7 @@ def get_nearest_atom(point, points, scaling_factor):
     dist_c_3d = get_distances_to_point(points.iloc[:, 0:3], point)
 
     # Get nearest atom (in space, i.e. 3D) and save its 6D vector
-    c_6d = points.loc[dist_c_3d.idxmin()]  # FIXME loc or iloc
+    c_6d = points.loc[dist_c_3d.idxmin()]  # Note: idxmin() returns DataFrame index label (.loc) not position (.iloc)
 
     # Apply scaling factor on non-spatial dimensions
     scaling_vector = pd.Series([1] * 3 + [scaling_factor] * (points.shape[1]-3), index=c_6d.index)
