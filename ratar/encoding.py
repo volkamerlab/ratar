@@ -1398,9 +1398,9 @@ def get_adjusted_3d_cross_product(coord_origin, coord_point_a, coord_point_b):
 
     """
 
-    if coord_origin.size == coord_point_a.size == coord_point_b.size:
+    if not coord_origin.size == coord_point_a.size == coord_point_b.size:
         sys.exit('Error: The three input Series are not of same length.')
-    if coord_origin.size > 2:
+    if not coord_origin.size > 2:
         sys.exit('Error: The three input Series are not at least of length 3.')
 
     # Span vectors to point a and b from origin point
@@ -1456,9 +1456,9 @@ def get_nearest_atom(point, points, scaling_factor):
 
     """
 
-    if point.size == 3:
+    if not point.size == 3:
         sys.exit('Error: Input point is not of length 3.')
-    if points.shape[1] > 2:
+    if not points.shape[1] > 2:
         sys.exit('Error: Input points are not of at least length 3.')
 
     # Get distances (in space, i.e. 3D) to all points
@@ -1468,7 +1468,7 @@ def get_nearest_atom(point, points, scaling_factor):
     c_6d = points.loc[dist_c_3d.idxmin()]  # FIXME loc or iloc
 
     # Apply scaling factor on non-spatial dimensions
-    scaling_vector = pd.Series([1] * 3 + [scaling_factor] * points.shape[1]-3, index=c_6d.index)
+    scaling_vector = pd.Series([1] * 3 + [scaling_factor] * (points.shape[1]-3), index=c_6d.index)
     c_6d = c_6d * scaling_vector
 
     return c_6d
