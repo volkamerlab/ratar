@@ -8,10 +8,6 @@ Handles the primary functions for processing the encoding of multiple binding si
 """
 
 
-########################################################################################
-# Import modules
-########################################################################################
-
 from auxiliary import *
 from encoding import encode_binding_site, save_binding_site, save_cgo_file
 
@@ -20,13 +16,9 @@ import argparse
 import glob
 
 
-########################################################################################
-# Functions
-########################################################################################
-
 def parse_arguments():
     """
-    This function parses the arguments given when calling this script.
+    Parse the arguments given when calling this script.
 
     :return: Input mol2 file path and output directory.
     :rtype: Strings
@@ -34,26 +26,24 @@ def parse_arguments():
 
     # Parse arguments
     parser = argparse.ArgumentParser()
-    parser.add_argument("-i", "--input_mol2_path", help="Path to mol2 file(s).",
-                        required=True)
-    parser.add_argument("-o", "--output_dir", help="Path to output directory.",
-                        required=True)
+    parser.add_argument("-i", "--input_mol2_path", help="Path to mol2 file(s).", required=True)
+    parser.add_argument("-o", "--output_dir", help="Path to output directory.", required=True)
 
     # Set as variables
     args = parser.parse_args()
     input_mol2_path = args.input_mol2_path
     output_dir = args.output_dir
 
-    print("Input: %s" % input_mol2_path)
-    print("Output: %s" % output_dir)
+    print(f'Input: {input_mol2_path}')
+    print(f'Output: {output_dir}')
 
     return input_mol2_path, output_dir
 
 
 def process_encoding(input_mol2_path, output_dir):
     """
-    This function processes a list of mol2 files (retrieved by an input path to one or multiple files) and
-    saves per binding site multiple output files to an output directory.
+    Process a list of mol2 files (retrieved by an input path to one or multiple files) and
+    save per binding site multiple output files to an output directory.
 
     Each binding site is processed as follows:
       * Create all necessary output directories and sets all necessary file paths.
@@ -113,17 +103,14 @@ def process_encoding(input_mol2_path, output_dir):
             pmol_counter = pmol_counter + 1
 
             # Get iteration progress
-            progress_string = "%s/%s mol2 files - %s/%s pmol objects: %s" % (mol2_counter,
-                                                                             mol2_sum,
-                                                                             pmol_counter,
-                                                                             pmol_sum,
-                                                                             pmol.code)
+            progress_string = f'{mol2_counter}/{mol2_sum} mol2 files - {pmol_counter}/{pmol_sum} pmol objects: {pmol.code}'
+
             # Print iteration process
             print(progress_string)
 
             # Log iteration process
             log_file = open(output_dir + "/ratar.log", "a+")
-            log_file.write("%s\n" % progress_string)
+            log_file.write(f'{progress_string}\n')
             log_file.close()
 
             # Process single binding site:
@@ -147,10 +134,6 @@ def process_encoding(input_mol2_path, output_dir):
             save_cgo_file(binding_site, output_cgo_path)
 
 
-########################################################################################
-# Main
-########################################################################################
-
 if __name__ == "__main__":
 
     # Get start time of script
@@ -164,16 +147,16 @@ if __name__ == "__main__":
 
     # Log IO files
     log_file = open(output_dir + "/ratar.log", "w")
-    log_file.write("------------------------------------------------------------\n")
-    log_file.write("IO\n")
-    log_file.write("------------------------------------------------------------\n\n")
-    log_file.write("Input: " + input_mol2_path + "\n")
+    log_file.write(f'------------------------------------------------------------\n')
+    log_file.write(f'IO\n')
+    log_file.write(f'------------------------------------------------------------\n\n')
+    log_file.write(f'Input: {input_mol2_path}\n')
 
     # Log encoding step processing
-    log_file.write("Output: " + output_dir + "\n\n")
-    log_file.write("------------------------------------------------------------\n")
-    log_file.write("PROCESS ENCODING\n")
-    log_file.write("------------------------------------------------------------\n\n")
+    log_file.write(f'Output: {output_dir}\n\n')
+    log_file.write(f'------------------------------------------------------------\n')
+    log_file.write(f'PROCESS ENCODING\n')
+    log_file.write(f'------------------------------------------------------------\n\n')
     log_file.close()
 
     # Process encoding
@@ -185,8 +168,8 @@ if __name__ == "__main__":
 
     # Log runtime
     log_file = open(output_dir + "/ratar.log", "a+")
-    log_file.write("\n------------------------------------------------------------\n")
-    log_file.write("RUNTIME\n")
-    log_file.write("------------------------------------------------------------\n\n")
-    log_file.write("Encoding step: %s\n" % str(encoding_runtime))
+    log_file.write(f'\n------------------------------------------------------------\n')
+    log_file.write(f'RUNTIME\n')
+    log_file.write(f'------------------------------------------------------------\n\n')
+    log_file.write(f'Encoding step: {encoding_runtime}\n"')
     log_file.close()
