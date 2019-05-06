@@ -391,7 +391,7 @@ class Coordinates:
 
     Attributes
     ----------
-    coord_dict :
+    coord_dict : Coordinates.coord_dict
         Coordinates stored as dictionary with the same keys as in Representatives.repres_dict.
         Example: {'ca': ..., 'pca': ..., 'pc': ...}
 
@@ -470,8 +470,8 @@ class Subsetter:
     subsets_indices_dict :
         Subsets stored as dictionary with the same keys as in Representatives.repres_dict.
         Example: {'ca': {'H': ..., 'HBD': ..., ...},
-                 'pca': {'H': ..., 'HBD': ..., ...},
-                 'pc': {'H': ..., 'HBD': ..., ...}}
+                  'pca': {'H': ..., 'HBD': ..., ...},
+                  'pc': {'H': ..., 'HBD': ..., ...}}
 
     Methods
     -------
@@ -564,7 +564,7 @@ class Shapes:
     Methods
     -------
     None
-    
+
     """
 
     def __init__(self, points):
@@ -1073,10 +1073,6 @@ def get_moments(dist):
     return moments
 
 
-def get_closest_atom(coord):
-    return coord
-
-
 def get_shape_dict(ref_points, dist):
 
     """
@@ -1385,9 +1381,9 @@ def get_shape_6dim(points, scaling_factor=1):
     c7_3d = get_adjusted_3d_cross_product(c1, c4, c2)
 
     # Get remaining reference points as nearest atoms to adjusted cross products
-    c5 = get_nearest_atom(c5_3d, points, scaling_factor)
-    c6 = get_nearest_atom(c6_3d, points, scaling_factor)
-    c7 = get_nearest_atom(c7_3d, points, scaling_factor)
+    c5 = get_nearest_point(c5_3d, points, scaling_factor)
+    c6 = get_nearest_point(c6_3d, points, scaling_factor)
+    c7 = get_nearest_point(c7_3d, points, scaling_factor)
 
     # Get distances from c5, c6, and c7 to all other points
     dist_c5 = get_distances_to_point(points, c5)
@@ -1469,7 +1465,7 @@ def get_adjusted_3d_cross_product(coord_origin, coord_point_a, coord_point_b):
     return c_3d
 
 
-def get_nearest_atom(point, points, scaling_factor):
+def get_nearest_point(point, points, scaling_factor):
 
     """
     Get the point (N-dimensional) in a set of points that is nearest (in 3D) to an input point (3D).
