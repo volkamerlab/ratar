@@ -302,25 +302,36 @@ class BindingSite:
     """
     Class used to represent a binding site, containing:
 
-    - pdb_id: the PDB ID (or structure ID)
-    - mol: DataFrame containing atom lines from input file
-    - repres: Representatives instance
-    - subset: Subsetter instance
-    - coord: Coordinates instance
-    - pcprop: PCProperties instance
-    - points: Points instance
-    - shapes: Shapes instance
-
-    Attributes
+    Parameters
     ----------
     pmol : biopandas.mol2.pandas_mol2.PandasMol2 or biopandas.pdb.pandas_pdb.PandasPdb
         Content of mol2 or pdb file as BioPandas object.
     output_log_path : str
         Path to output log file.
 
+    Attributes
+    ----------
+    pdb_id :
+        PDB ID (or structure ID)
+    mol :
+        DataFrame containing atom lines from input file
+    repres :
+        Representatives.
+    subset :
+        Subsetter.
+    coord :
+        Coordinates.
+    pcprop :
+        PCProperties.
+    points :
+        Points.
+    shapes :
+        Shapes.
+
     Methods
     -------
     None
+
     """
 
     def __init__(self, pmol, output_log_path=None):
@@ -342,18 +353,22 @@ class Representatives:
     Representatives are selected atoms in a binding site,
     for instances all Calpha atoms of a binding site could serve as its representatives.
 
-    This class contains:
-    - repres_dict: Representatives stored as dictionary with several representation methods serving as key.
-      Example: {'ca': ..., 'pca': ..., 'pc': ...}
-
-    Attributes
+    Parameters
     ----------
     mol : pandas DataFrame
         DataFrame containing atom lines of mol2 or pdb file.
 
+    Attributes
+    ----------
+    repres_dict :
+        Representatives stored as dictionary with several representation methods serving as key.
+        Example: {'ca': ..., 'pca': ..., 'pc': ...}
+
+
     Methods
     -------
     None
+
     """
 
     def __init__(self, mol):
@@ -369,18 +384,21 @@ class Coordinates:
     Class used to store the coordinates of the binding site representatives,
     which were defined by the Representatives class (in its repres_dict variable).
 
-    This class contains:
-    - coord_dict: Coordinates stored as dictionary with the same keys as in Representatives.repres_dict.
-      Example: {'ca': ..., 'pca': ..., 'pc': ...}
-
-    Attributes
+    Parameters
     ----------
     repres_dict : Representatives.repres_dict (dictionary)
         Dictionary with several representation methods serving as key.
 
+    Attributes
+    ----------
+    coord_dict :
+        Coordinates stored as dictionary with the same keys as in Representatives.repres_dict.
+        Example: {'ca': ..., 'pca': ..., 'pc': ...}
+
     Methods
     -------
     None
+
     """
 
     def __init__(self, repres_dict):
@@ -399,23 +417,25 @@ class PCProperties:
     Class used to store the physicochemical properties of binding site representatives,
     which were defined by the Representatives class (in its repres_dict variable).
 
-    This class contains:
-    - pcprop_dict: Physicochemical properties stored as dictionary with the same keys as in Representatives.repres_dict.
-      Example: {'ca': ..., 'pca': ..., 'pc': ...}
-    - output_log_path: Path to output log file.
-
-    Coordinates are stored as dictionary (coord_dict), with the same keys as in Representatives.repres_dict.
-
-    Attributes
+    Parameters
     ----------
     repres_dict : Representatives.repres_dict (dictionary)
         Dictionary with several representation methods serving as key.
     output_log_path : str
         Path to output log file.
 
+    Attributes
+    ----------
+    pcprop_dict :
+        Physicochemical properties stored as dictionary with the same keys as in Representatives.repres_dict.
+        Example: {'ca': ..., 'pca': ..., 'pc': ...}
+    output_log_path :
+        Path to output log file.
+
     Methods
     -------
     None
+
     """
 
     def __init__(self, repres_dict, output_log_path=None):
@@ -439,20 +459,24 @@ class Subsetter:
     Class used to store subsets of binding site representatives,
     which were defined by the Representatives class (in its repres_dict variable).
 
-    This class contains:
-    - subsets_indices_dict: Subsets stored as dictionary with the same keys as in Representatives.repres_dict.
-      Example: {'ca': {'H': ..., 'HBD': ..., ...},
-                'pca': {'H': ..., 'HBD': ..., ...},
-                'pc': {'H': ..., 'HBD': ..., ...}}
 
-    Attributes
+    Parameters
     ----------
     repres_dict : Representatives.repres_dict (dictionary)
         Dictionary with several representation methods serving as key.
 
+    Attributes
+    ----------
+    subsets_indices_dict :
+        Subsets stored as dictionary with the same keys as in Representatives.repres_dict.
+        Example: {'ca': {'H': ..., 'HBD': ..., ...},
+                 'pca': {'H': ..., 'HBD': ..., ...},
+                 'pc': {'H': ..., 'HBD': ..., ...}}
+
     Methods
     -------
     None
+
     """
 
     def __init__(self, repres_dict):
@@ -472,17 +496,7 @@ class Points:
     - 3 dimensions (spatial properties x, y, z) or
     - more dimensions (spatial and some additional properties).
 
-    This class contains:
-    - points_dict: 3- to n-dimensional vectors for binding site representatives
-      Example: {'ca': ..., 'ca_z1': ..., 'ca_z123': ..., ..., 'pca': ..., ...}
-    - points_subsets_dict: 3- to n-dimensional vectors for binding site representatives, grouped by subsets.
-      Example: {'pc_z1': {'H': ..., 'HBD': ..., ...},
-                'pc_z12': {'H': ..., 'HBD': ..., ...},
-                ...,
-                'pca_z12': {'H': ..., 'HBD': ..., ...},
-                ...}
-
-    Attributes
+    Parameters
     ----------
     coord_dict: Coordinates.coord_dict (dictionary)
         Dictionary with spatial properties (=coordinates) for each representative.
@@ -496,9 +510,23 @@ class Points:
         Has the same top level keys as Representatives.repres_dict,
         with nested keys describing different subsetting types.
 
+    Attributes
+    ----------
+    points_dict :
+        3- to n-dimensional vectors for binding site representatives
+        Example: {'ca': ..., 'ca_z1': ..., 'ca_z123': ..., ..., 'pca': ..., ...}
+    points_subsets_dict :
+        3- to n-dimensional vectors for binding site representatives, grouped by subsets.
+        Example: {'pc_z1': {'H': ..., 'HBD': ..., ...},
+                  'pc_z12': {'H': ..., 'HBD': ..., ...},
+                  ...,
+                  'pca_z12': {'H': ..., 'HBD': ..., ...},
+                  ...}
+
     Methods
     -------
     None
+
     """
 
     def __init__(self, coord_dict, pcprop_dict, subsets_indices_dict):
@@ -513,26 +541,30 @@ class Shapes:
     Class used to store the encoded binding site representatives,
     which were defined by the Representatives class (in its repres_dict variable).
 
-    This class contains:
-    - shapes_dict: Encoding stored as dictionary with
-        - level 1 keys for representatives, e.g. 'ca',
-        - level 2 keys for encoding method, e.g. '3dim_usr',
-        - level 3 keys for reference point coordinates 'ref_points', distances 'dist', and moments 'moments'.
-    - shapes_subsets_dict: Encoding stored as dictionary
-        - level 1 keys for representatives, e.g. 'ca',
-        - level 2 keys for subsets, e.g. 'H',
-        - level 3 keys for encoding method, e.g. '3dim_usr',
-        - level 4 keys for reference point coordinates 'ref_points', distances 'dist', and moments 'moments'.
-
-    Attributes
+    Parameters
     ----------
     points: Points.points (dictionary)
         Dictionary with spatial properties (=coordinates) for each representative.
         Has the same keys as Representatives.repres_dict.
 
+    Attributes
+    ----------
+    shapes_dict :
+        Encoding stored as dictionary with
+        - level 1 keys for representatives, e.g. 'ca',
+        - level 2 keys for encoding method, e.g. '3dim_usr',
+        - level 3 keys for reference point coordinates 'ref_points', distances 'dist', and moments 'moments'.
+    shapes_subsets_dict :
+        Encoding stored as dictionary
+        - level 1 keys for representatives, e.g. 'ca',
+        - level 2 keys for subsets, e.g. 'H',
+        - level 3 keys for encoding method, e.g. '3dim_usr',
+        - level 4 keys for reference point coordinates 'ref_points', distances 'dist', and moments 'moments'.
+
     Methods
     -------
     None
+    
     """
 
     def __init__(self, points):
