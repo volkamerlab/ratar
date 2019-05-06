@@ -107,6 +107,7 @@ def save_binding_site(binding_site, output_path):
 
     """
 
+    create_folder(os.path.dirname(output_path))
     pickle.dump(binding_site, open(output_path, "wb"))
 
 
