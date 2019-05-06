@@ -61,7 +61,7 @@ def get_similarity(moments_p1, moments_p2, measure):
         print("Please choose a similarity measure: 1 (inverse of the translated and scaled Manhattan distance).")
 
 
-def get_similarity_all_against_all(output_dir):
+def get_similarity_all_against_all(output_path):
 
     """
     Get all encoded binding sites from a given output directory and calculate all-against-all matrices for each ratar
@@ -69,8 +69,8 @@ def get_similarity_all_against_all(output_dir):
 
     Parameters
     ----------
-    output_dir : String
-        Absolute path to directory containing the ratar encoding output.
+    output_path : String
+        Absolute path to encoded binding site files (can contain wildcards).
 
     Returns
     -------
@@ -80,7 +80,7 @@ def get_similarity_all_against_all(output_dir):
     """
 
     # Get list of all encoded binding site files
-    file_list = glob.glob("%s/encoding/*/ratar_encoding.p" % output_dir)
+    file_list = glob.glob(output_path)
 
     # Initialise dictionary of matrices (to be returned from function)
     sim_matrices = {}
