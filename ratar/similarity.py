@@ -32,23 +32,25 @@ package_path: str = "/home/dominique/Documents/projects/ratar/ratar"
 ########################################################################################
 
 def get_similarity(moments_p1, moments_p2, measure):
+
     """
-    Calculate the similarity between two proteins p1 and p2:
-    - 1: inverse of the translated and scaled Manhattan distance
-    - 2: tba
+    Calculate the similarity between two proteins p1 and p2 based on a similarity measure.
 
-    :param moments_p1: Fingerprint for protein (binding site) b1
-    :type moments_p1: DataFrame
+    Parameters
+    ----------
+    moments_p1 : DataFrame
+        Fingerprint for protein (binding site) p1.
+    moments_p2 : DataFrame
+        Fingerprint for protein (binding site) p2.
+    measure : int
+        Similarity measurement method:
+         - 1 (inverse of the translated and scaled Manhattan distance)
 
-    :param moments_p2: Fingerprint for protein (binding site) p2
-    :type moments_p2: DataFrame
+    Returns
+    -------
+    float
+        Similarity value.
 
-    :param measure: Integer referring to a specific similarity measurement:
-    1 (inverse of the translated and scaled Manhattan distance)
-    :type measure: Integer
-
-    :return: Similarity value
-    :rtype: float
     """
 
     # Calculate inverse of the translated and scaled Manhattan distance
@@ -60,15 +62,21 @@ def get_similarity(moments_p1, moments_p2, measure):
 
 
 def get_similarity_all_against_all(output_dir):
+
     """
-    This function retrieves all encoded binding sites from a given output directory and
-    calculates all-against-all matrices for each ratar encoding method.
+    Get all encoded binding sites from a given output directory and calculate all-against-all matrices for each ratar
+    encoding method.
 
-    :param output_dir: Absolute path to directory containing the ratar encoding output.
-    :type output_dir: String
+    Parameters
+    ----------
+    output_dir : String
+        Absolute path to directory containing the ratar encoding output.
 
-    :return: All-against-all similarity matrix (DataFrame) for each encoding method (dictionary).
-    :rtype: Dict of DataFrames
+    Returns
+    -------
+    Dict of DataFrames
+        All-against-all similarity matrix (DataFrame) for each encoding method (dictionary).
+
     """
 
     # Get list of all encoded binding site files
@@ -132,17 +140,25 @@ def get_similarity_all_against_all(output_dir):
 
 
 def get_similarity_pairs(benchmarkset):
+
     """
-    This function calculates the similarity values for binding site pairs described in different benchmarking datasets.
+    Calculate the similarity values for binding site pairs described in different benchmarking datasets.
 
-    For a given benchmark dataset, this function returns a dictionary of DataFrames that contain each
-    different similarity measures for pairs of binding sites.
+    Parameters
+    ----------
+    benchmarkset : str
+        Benchmarking dataset type.
 
-    :param benchmarkset: Benchmarking dataset type.
-    :type benchmarkset: String
+    Returns
+    -------
+    dict of DataFrames
+        Dictionary of DataFrames containing a matrix of similarity values (pair ID x similarity measurement)
 
-    :return: Dictionary of DataFrames containing a matrix of similarity values (pair ID x similarity measurement)
-    :type: Dictionary of DataFrames
+    Notes
+    -----
+    For a given benchmark dataset, return a dictionary of DataFrames that contains each different similarity measures
+    for pairs of binding sites.
+
     """
 
     benchmarksets = ["fuzcav", "tough-m1"]
@@ -210,11 +226,26 @@ def get_similarity_pairs(benchmarkset):
 
 
 def calculate_similarity_pairs(pairs, struc_path_template):
-    """
-    This method calculates the similarity between pairs of binding sites for different encoding methods and
-    returns a pairs ID x encoding method DataFrame containing the similarity values.
 
-    Example for :
+    """
+    Calculate the similarity between pairs of binding sites for different encoding methods and
+    return a pairs ID x encoding method DataFrame containing the similarity values.
+
+    Parameters
+    ----------
+    pairs : DataFrame
+        DataFrame with structure ID for pairs of binding sites (given in columns "struc1" and "struc2").
+    struc_path_template : str
+        Full path to file with encoded binding sites with %s (placeholder) for structure ID.
+
+    Returns
+    -------
+    DataFrame
+        DataFrame containing a matrix of similarity values (pair ID x similarity measurement)
+
+    Notes
+    -----
+    Example:
     Two pairs of binding sites: (p11, p12), (p21, p22)
 
     sim_dict = {"encoding_method1": [0.5, 0.9], "encoding_method2": [0.55, 0.94]}
@@ -225,15 +256,6 @@ def calculate_similarity_pairs(pairs, struc_path_template):
         p11_p12     0.5                 0.55
         p21_p22     0.9                 0.94
 
-
-    :param pairs: DataFrame with structure ID for pairs of binding sites (given in columns "struc1" and "struc2")
-    :type pairs: DataFrame
-
-    :param struc_path_template: Full path to file with encoded binding sites with %s (placeholder) for structure ID.
-    :type struc_path_template: String
-
-    :return: DataFrame containing a matrix of similarity values (pair ID x similarity measurement)
-    :type: DataFrame
     """
 
     # Initialise objects to be filled while iterating over pairs
