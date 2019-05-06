@@ -66,6 +66,7 @@ def encode_binding_site(pmol, output_log_path=None):
     -------
     encoding.BindingSite
         Encoded binding site.
+
     """
 
     if output_log_path is not None:
@@ -300,7 +301,7 @@ def load_binding_site(binding_site_path):
 class BindingSite:
 
     """
-    Class used to represent a binding site, containing:
+    Class used to represent a binding site and its encoding.
 
     Parameters
     ----------
@@ -311,22 +312,22 @@ class BindingSite:
 
     Attributes
     ----------
-    pdb_id :
+    pdb_id : str
         PDB ID (or structure ID)
-    mol :
-        DataFrame containing atom lines from input file
-    repres :
-        Representatives.
-    subset :
-        Subsetter.
-    coord :
-        Coordinates.
-    pcprop :
-        PCProperties.
-    points :
-        Points.
-    shapes :
-        Shapes.
+    mol : DataFrame
+        Data extracted from e.g. mol2 or pdb file.
+    repres : Instance of Representatives class
+        Representative atoms of binding site for different representation methods.
+    subset : Instance of Subsetter class
+        Subset of representative atoms of binding site for different subsetting methods.
+    coord : Instance of Coordinates class
+        Spatial dimensions (x, y, and z coordinates) for binding site atoms.
+    pcprop : Instance of PCProperties class
+        Physicochemical dimensions for binding site atoms.
+    points : Instance of Points class
+        Concatenated spatial and physicochemical dimensions for binding site atoms.
+    shapes : Instance of Shapes class
+        Encoded binding site (reference points, distance distribution and distribution moments).
 
     Methods
     -------
@@ -1404,11 +1405,11 @@ def get_adjusted_3d_cross_product(coord_origin, coord_point_a, coord_point_b):
     Parameters
     ----------
     coord_origin : Series
-        Point in 6D as coordinate system (part of cross product).
+        Point with a least N dimensions (N > 2).
     coord_point_a : Series
-        Point in 6D (part of cross product).
+        Point with a least N dimensions (N > 2)
     coord_point_b : Series
-        Point in 6D (part of cross product).
+        Point with a least N dimensions (N > 2)
 
     Returns
     -------
