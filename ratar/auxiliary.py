@@ -189,7 +189,7 @@ class MolFileLoader:
         # Insert additional columns
         pmol.df.insert(loc=4,
                        column='subst_name',
-                       value=['%s%s' % (i, j) for i, j in zip(pmol.df['residue_name'], pmol.df['residue_number'])])
+                       value=[f'{i}{j}' for i, j in zip(pmol.df['residue_name'], pmol.df['residue_number'])])
 
         # Rename columns
         pmol.df.rename(index=str, inplace=True, columns={'atom_number': 'atom_id',
