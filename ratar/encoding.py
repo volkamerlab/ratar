@@ -5,6 +5,7 @@ Read-across the targetome -
 An integrated structure- and ligand-based workbench for computational target prediction and novel tool compound design
 
 Handles the primary functions for encoding a single binding site.
+
 """
 
 import glob
@@ -68,7 +69,7 @@ def encode_binding_site(pmol, output_log_path=None):
 
     if output_log_path is not None:
         log_file = open(output_log_path, 'w')
-        log_file.write('%s\n\n' % pmol.code)
+        log_file.write(f'{pmol.code}\n\n')
         log_file.write('Encode binding site.\n\n')
         log_file.close()
 
@@ -94,17 +95,13 @@ def save_binding_site(binding_site, output_path):
     output_path : string
         Path to output file.
 
-    Returns
-    -------
-    None
-
     Notes
     -----
     Pickle file is saved; no return value.
 
     """
 
-    create_directory(os.path.dirname(output_path))
+    create_directory(Path(output_path).parent)
     pickle.dump(binding_site, open(output_path, 'wb'))
 
 
@@ -151,13 +148,13 @@ def save_cgo_file(binding_site, output_path):
                 ref_points = binding_site.shapes.shapes_dict[repres][method]['ref_points']
 
                 # Set descriptive name for reference points (PDB ID, representatives, dimensions, encoding method)
-                obj_name = '%s_%s_%s' % (binding_site.pdb_id[:4], repres, method)
+                obj_name = f'{binding_site.pdb_id[:4]}_{repres}_{method}'
                 obj_names.append(obj_name)
 
                 # Set size for PyMol spheres
                 size = str(1)
 
-                cgo_file.write('obj_%s = [\n' % obj_name)  # Variable cannot start with digit, thus add prefix obj_
+                cgo_file.write(f'obj_{obj_name} = [\n')  # Variable cannot start with digit, thus add prefix obj_
 
                 # Set color counter (since we iterate over colors for each reference point)
                 counter_colors = 0
@@ -170,23 +167,16 @@ def save_cgo_file(binding_site, output_path):
                     counter_colors = counter_colors + 1
 
                     # Write sphere color to file
-                    cgo_file.write('\tCOLOR, '
-                                   + str(sphere_color[0]) + ', '
-                                   + str(sphere_color[1]) + ', '
-                                   + str(sphere_color[2]) + ', \n')
+                    cgo_file.write(f'\tCOLOR, {str(sphere_color[0])}, {str(sphere_color[1])}, {str(sphere_color[2])},\n')
 
                     # Write sphere coordinates and size to file
-                    cgo_file.write('\tSPHERE, '
-                                   + str(row['x']) + ', '
-                                   + str(row['y']) + ', '
-                                   + str(row['z']) + ', '
-                                   + size + ', \n')
+                    cgo_file.write(f'\tSPHERE, {str(row["x"])}, {str(row["y"])}, {str(row["z"])}, {size},\n')
 
                 # Write command to file that will load the reference points as PyMol object
-                cgo_file.write(']\ncmd.load_cgo(obj_%s, "%s")\n\n' % (obj_name, obj_name))
+                cgo_file.write(f']\ncmd.load_cgo(obj_{obj_name}, "{obj_name}")\n\n')
 
     # Group all objects to one group
-    cgo_file.write('cmd.group("%s_ref_points", "%s")' % (binding_site.pdb_id[:4], ' '.join(obj_names)))
+    cgo_file.write(f'cmd.group("{binding_site.pdb_id[:4]}_ref_points", "{" ".join(obj_names)}")')
 
     # Close cgo file
     cgo_file.close()
@@ -219,7 +209,7 @@ def get_encoded_binding_site_path(pdb, output_path):
 
     """
     # Define wildcard for path to pickle file
-    bs_wildcard = '%s/encoding/%s/ratar_encoding.p' % (output_path, pdb)
+    bs_wildcard = f'{output_path}/encoding/{pdb}/ratar_encoding.p'
 
     # Retrieve all paths that match the wildcard
     bs_path = glob.glob(bs_wildcard)
