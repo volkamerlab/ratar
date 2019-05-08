@@ -213,7 +213,7 @@ def create_directory(directory):
     Parameters
     ----------
     directory : str
-        Full path to directory.
+        Absolute path to directory.
 
     Returns
     -------
