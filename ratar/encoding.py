@@ -8,6 +8,7 @@ Handles the primary functions for encoding a single binding site.
 """
 
 import glob
+from pathlib import Path
 import _pickle as pickle
 import re
 import sys
@@ -27,16 +28,15 @@ from auxiliary import *
 ########################################################################################
 
 # Package location
-# package_path: str = sys.path[0]
-package_path = "/home/dominique/Documents/projects/ratar/ratar"
+package_path = Path('/home/dominique/Documents/projects/ratar/ratar')
 
 # Representative and physicochemical property keys
-repres_keys = ["ca", "pca", "pc"]
-pcprop_keys = ["z1", "z12", "z123"]
+repres_keys = ['ca', 'pca', 'pc']
+pcprop_keys = ['z1', 'z12', 'z123']
 
 # Pseudocenters definition
-pc_atoms = pickle.load(open(package_path+"/data/pseudocenter_atoms.p", "rb"))
-pc_atoms = pc_atoms[pc_atoms["type"] != "HBDA"]  # Remove HBDA features information (too few data points)
+pc_atoms = pickle.load(open(package_path / 'data/pseudocenter_atoms.p', 'rb'))
+pc_atoms = pc_atoms[pc_atoms['type'] != 'HBDA']  # Remove HBDA features information (too few data points)
 pc_atoms.reset_index(drop=True, inplace=True)
 
 # Amino acid descriptors definition, e.g. Z-scales
@@ -67,9 +67,9 @@ def encode_binding_site(pmol, output_log_path=None):
     """
 
     if output_log_path is not None:
-        log_file = open(output_log_path, "w")
-        log_file.write("%s\n\n" % pmol.code)
-        log_file.write("Encode binding site.\n\n")
+        log_file = open(output_log_path, 'w')
+        log_file.write('%s\n\n' % pmol.code)
+        log_file.write('Encode binding site.\n\n')
         log_file.close()
 
     # Encode binding site
@@ -104,8 +104,8 @@ def save_binding_site(binding_site, output_path):
 
     """
 
-    create_folder(os.path.dirname(output_path))
-    pickle.dump(binding_site, open(output_path, "wb"))
+    create_directory(os.path.dirname(output_path))
+    pickle.dump(binding_site, open(output_path, 'wb'))
 
 
 def save_cgo_file(binding_site, output_path):
@@ -132,32 +132,32 @@ def save_cgo_file(binding_site, output_path):
     """
 
     # Set PyMol sphere colors (for reference points)
-    sphere_colors = sns.color_palette("hls", 7)
+    sphere_colors = sns.color_palette('hls', 7)
 
     # Open cgo file
     cgo_file = open(output_path, 'w')
-    cgo_file.write("from pymol import *\n")
-    cgo_file.write("import os\n")
-    cgo_file.write("from pymol.cgo import *\n\n")
+    cgo_file.write('from pymol import *\n')
+    cgo_file.write('import os\n')
+    cgo_file.write('from pymol.cgo import *\n\n')
 
     # Collect all PyMol objects here (in order to group them after loading them to PyMol)
     obj_names = []
 
     for repres in binding_site.shapes.shapes_dict.keys():
         for method in binding_site.shapes.shapes_dict[repres].keys():
-            if method != "na":
+            if method != 'na':
 
                 # Get reference points (coordinates)
-                ref_points = binding_site.shapes.shapes_dict[repres][method]["ref_points"]
+                ref_points = binding_site.shapes.shapes_dict[repres][method]['ref_points']
 
                 # Set descriptive name for reference points (PDB ID, representatives, dimensions, encoding method)
-                obj_name = "%s_%s_%s" % (binding_site.pdb_id[:4], repres, method)
+                obj_name = '%s_%s_%s' % (binding_site.pdb_id[:4], repres, method)
                 obj_names.append(obj_name)
 
                 # Set size for PyMol spheres
                 size = str(1)
 
-                cgo_file.write("obj_%s = [\n" % obj_name)  # Variable cannot start with digit, thus add prefix "obj_"
+                cgo_file.write('obj_%s = [\n' % obj_name)  # Variable cannot start with digit, thus add prefix obj_
 
                 # Set color counter (since we iterate over colors for each reference point)
                 counter_colors = 0
@@ -170,23 +170,23 @@ def save_cgo_file(binding_site, output_path):
                     counter_colors = counter_colors + 1
 
                     # Write sphere color to file
-                    cgo_file.write("\tCOLOR, "
-                                   + str(sphere_color[0]) + ", "
-                                   + str(sphere_color[1]) + ", "
-                                   + str(sphere_color[2]) + ", \n")
+                    cgo_file.write('\tCOLOR, '
+                                   + str(sphere_color[0]) + ', '
+                                   + str(sphere_color[1]) + ', '
+                                   + str(sphere_color[2]) + ', \n')
 
                     # Write sphere coordinates and size to file
-                    cgo_file.write("\tSPHERE, "
-                                   + str(row["x"]) + ", "
-                                   + str(row["y"]) + ", "
-                                   + str(row["z"]) + ", "
-                                   + size + ", \n")
+                    cgo_file.write('\tSPHERE, '
+                                   + str(row['x']) + ', '
+                                   + str(row['y']) + ', '
+                                   + str(row['z']) + ', '
+                                   + size + ', \n')
 
                 # Write command to file that will load the reference points as PyMol object
-                cgo_file.write("]\ncmd.load_cgo(obj_%s, '%s')\n\n" % (obj_name, obj_name))
+                cgo_file.write(']\ncmd.load_cgo(obj_%s, '%s')\n\n' % (obj_name, obj_name))
 
     # Group all objects to one group
-    cgo_file.write("cmd.group('%s_ref_points', '%s')" % (binding_site.pdb_id[:4], " ".join(obj_names)))
+    cgo_file.write('cmd.group('%s_ref_points', '%s')' % (binding_site.pdb_id[:4], ' '.join(obj_names)))
 
     # Close cgo file
     cgo_file.close()
@@ -203,7 +203,7 @@ def get_encoded_binding_site_path(pdb, output_path):
     - a four-letter PDB ID and
     - an output directory that contains ratar related files:
 
-    Wildcard: output_path + "/encoding/" + pdb + "*.p"
+    Wildcard: output_path + '/encoding/' + pdb + '*.p'
 
     Parameters
     ----------
@@ -219,24 +219,24 @@ def get_encoded_binding_site_path(pdb, output_path):
 
     """
     # Define wildcard for path to pickle file
-    bs_wildcard = "%s/encoding/%s/ratar_encoding.p" % (output_path, pdb)
+    bs_wildcard = '%s/encoding/%s/ratar_encoding.p' % (output_path, pdb)
 
     # Retrieve all paths that match the wildcard
     bs_path = glob.glob(bs_wildcard)
 
     # If wildcard matches no file, retry.
     if len(bs_path) == 0:
-        print("Error: Your input path matches no file. Please retry.")
-        print("\nYour input wildcard was the following: ")
+        print('Error: Your input path matches no file. Please retry.')
+        print('\nYour input wildcard was the following: ')
         print(bs_wildcard)
         return None
 
     # If wildcard matches multiple files, retry.
     elif len(bs_path) > 1:
-        print("Error: Your input path matches multiple files. Please select one of the following as input string: ")
+        print('Error: Your input path matches multiple files. Please select one of the following as input string: ')
         for i in bs_path:
             print(i)
-        print("\nYour input wildcard was the following: ")
+        print('\nYour input wildcard was the following: ')
         print(bs_wildcard)
         return None
 
@@ -268,25 +268,25 @@ def load_binding_site(binding_site_path):
 
     # If input path matches no file, retry.
     if len(bs_path) == 0:
-        print("Error: Your input path matches no file. Please retry.")
-        print("\nYour input path was the following: ")
+        print('Error: Your input path matches no file. Please retry.')
+        print('\nYour input path was the following: ')
         print(bs_path)
         return None
 
     # If input path matches multiple files, retry.
     elif len(bs_path) > 1:
-        print("Error: Your input path matches multiple files. Please select one of the following as input string: ")
+        print('Error: Your input path matches multiple files. Please select one of the following as input string: ')
         for i in bs_path:
             print(i)
-        print("\nYour input path was the following: ")
+        print('\nYour input path was the following: ')
         print(bs_path)
         return None
 
     # If input path matches one file, load file.
     else:
         bs_path = bs_path[0]
-        binding_site = pickle.load(open(bs_path, "rb"))
-        print("The following file was loaded: ")
+        binding_site = pickle.load(open(bs_path, 'rb'))
+        print('The following file was loaded: ')
         print(bs_path)
         return binding_site
 
@@ -405,9 +405,9 @@ class Coordinates:
         self.coord_dict = {}
         for i in repres_keys:
             if type(repres_dict[i]) is not dict:
-                self.coord_dict[i] = repres_dict[i][["x", "y", "z"]]
+                self.coord_dict[i] = repres_dict[i][['x', 'y', 'z']]
             else:
-                self.coord_dict[i] = {key: value[["x", "y", "z"]] for (key, value) in repres_dict[i].items()}
+                self.coord_dict[i] = {key: value[['x', 'y', 'z']] for (key, value) in repres_dict[i].items()}
 
 
 class PCProperties:
@@ -480,8 +480,8 @@ class Subsetter:
 
     def __init__(self, repres_dict):
 
-        self.subsets_indices_dict = {"pc": get_subset_indices(repres_dict, "pc"),
-                                     "pca": get_subset_indices(repres_dict, "pca")}
+        self.subsets_indices_dict = {'pc': get_subset_indices(repres_dict, 'pc'),
+                                     'pca': get_subset_indices(repres_dict, 'pca')}
 
 
 class Points:
@@ -605,7 +605,7 @@ def get_zscales_amino_acids(mol, output_log_path=None):
     """
 
     # Get amino acid name per row (atom)
-    mol_aa = mol["subst_name"].apply(lambda x: x[0:3])
+    mol_aa = mol['subst_name'].apply(lambda x: x[0:3])
 
     # Get only rows (atoms) that belong to Z-scales amino acids
     mol_zscales_aa = mol[mol_aa.apply(lambda y: y in aa.zscales.index)].copy()
@@ -615,12 +615,12 @@ def get_zscales_amino_acids(mol, output_log_path=None):
 
     if not mol_non_zscales_aa.empty:
         if output_log_path is not None:
-            log_file = open(output_log_path, "a+")
-            log_file.write("Atoms removed for binding site encoding:\n\n")
-            log_file.write(mol_non_zscales_aa.to_string() + "\n\n")
+            log_file = open(output_log_path, 'a+')
+            log_file.write('Atoms removed for binding site encoding:\n\n')
+            log_file.write(mol_non_zscales_aa.to_string() + '\n\n')
             log_file.close()
         else:
-            print("Atoms removed for binding site encoding:")
+            print('Atoms removed for binding site encoding:')
             print(mol_non_zscales_aa)
 
     return mol_zscales_aa
@@ -655,8 +655,8 @@ def get_representatives(mol, repres_key):
     if repres_key == repres_keys[2]:
         return get_pc(mol)
     else:
-        raise SystemExit("Unknown representative key."
-                         "Select: ", ", ".join(repres_keys))
+        raise SystemExit('Unknown representative key.'
+                         'Select: ', ', '.join(repres_keys))
 
 
 def get_ca(mol):
@@ -675,7 +675,7 @@ def get_ca(mol):
         DataFrame containing atom lines from input file described by Z-scales.
     """
 
-    bs_ca = mol[mol['atom_name'] == "CA"]
+    bs_ca = mol[mol['atom_name'] == 'CA']
 
     return bs_ca
 
@@ -697,7 +697,7 @@ def get_pca(mol):
     """
 
     # Add column containing amino acid names
-    mol["amino_acid"] = [i.split("_")[0][:3] for i in mol["subst_name"]]
+    mol['amino_acid'] = [i.split('_')[0][:3] for i in mol['subst_name']]
 
     # Per atom in binding site: get atoms that belong to pseudocenters
     matches = []  # Matching atoms
@@ -710,35 +710,35 @@ def get_pca(mol):
         line = mol.loc[i]  # Atom in binding site
 
         # Get atoms that belong to peptide bond
-        if re.search(r'^[NOC]$', line["atom_name"]):
+        if re.search(r'^[NOC]$', line['atom_name']):
             matches.append(True)
-            if line["atom_name"] == "O":
-                pc_types.append("HBA")
-                pc_ids.append("PEP_HBA_1")
-                pc_atom_ids.append("PEP_HBA_1_0")
-            elif line["atom_name"] == "N":
-                pc_types.append("HBD")
-                pc_ids.append("PEP_HBD_1")
-                pc_atom_ids.append("PEP_HBD_1_N")
-            elif line["atom_name"] == "C":
-                pc_types.append("AR")
-                pc_ids.append("PEP_AR_1")
-                pc_atom_ids.append("PEP_AR_1_C")
+            if line['atom_name'] == 'O':
+                pc_types.append('HBA')
+                pc_ids.append('PEP_HBA_1')
+                pc_atom_ids.append('PEP_HBA_1_0')
+            elif line['atom_name'] == 'N':
+                pc_types.append('HBD')
+                pc_ids.append('PEP_HBD_1')
+                pc_atom_ids.append('PEP_HBD_1_N')
+            elif line['atom_name'] == 'C':
+                pc_types.append('AR')
+                pc_ids.append('PEP_AR_1')
+                pc_atom_ids.append('PEP_AR_1_C')
 
         # Get other defined atoms
         else:
-            query = (line["amino_acid"] + "_" + line["atom_name"])
-            matches.append(query in list(pc_atoms["pattern"]))
-            if query in list(pc_atoms["pattern"]):
-                ix = pc_atoms.index[pc_atoms["pattern"] == query].tolist()[0]
-                pc_types.append(pc_atoms.iloc[ix]["type"])
-                pc_ids.append(pc_atoms.iloc[ix]["pc_id"])
-                pc_atom_ids.append(pc_atoms.iloc[ix]["pc_atom_id"])
+            query = (line['amino_acid'] + '_' + line['atom_name'])
+            matches.append(query in list(pc_atoms['pattern']))
+            if query in list(pc_atoms['pattern']):
+                ix = pc_atoms.index[pc_atoms['pattern'] == query].tolist()[0]
+                pc_types.append(pc_atoms.iloc[ix]['type'])
+                pc_ids.append(pc_atoms.iloc[ix]['pc_id'])
+                pc_atom_ids.append(pc_atoms.iloc[ix]['pc_atom_id'])
 
     bs_pc_atoms = mol[matches].copy()
-    bs_pc_atoms["pc_types"] = pd.Series(pc_types, index=bs_pc_atoms.index)
-    bs_pc_atoms["pc_id"] = pd.Series(pc_ids, index=bs_pc_atoms.index)
-    bs_pc_atoms["pc_atom_id"] = pd.Series(pc_atom_ids, index=bs_pc_atoms.index)
+    bs_pc_atoms['pc_types'] = pd.Series(pc_types, index=bs_pc_atoms.index)
+    bs_pc_atoms['pc_id'] = pd.Series(pc_ids, index=bs_pc_atoms.index)
+    bs_pc_atoms['pc_atom_id'] = pd.Series(pc_atom_ids, index=bs_pc_atoms.index)
 
     return bs_pc_atoms
 
@@ -763,25 +763,25 @@ def get_pc(mol):
     bs_pc = get_pca(mol)
 
     # Loop over binding site amino acids
-    for subst_name_id in set(bs_pc["subst_name"]):
+    for subst_name_id in set(bs_pc['subst_name']):
 
         # Loop over pseudocenters of that amino acids
-        for pc_id in set(bs_pc[bs_pc["subst_name"] == subst_name_id]["pc_id"]):
+        for pc_id in set(bs_pc[bs_pc['subst_name'] == subst_name_id]['pc_id']):
 
             # Get all rows (row indices) of binding site atoms that share the same amino acid and pseudocenter
-            ix = bs_pc[(bs_pc["subst_name"] == subst_name_id) & (bs_pc["pc_id"] == pc_id)].index
+            ix = bs_pc[(bs_pc['subst_name'] == subst_name_id) & (bs_pc['pc_id'] == pc_id)].index
             # If there is more than one atom for this pseudocenter...
 
             if len(ix) != 1:
                 # ... calculate the mean of the corresponding atom coordinates
-                bs_pc.at[ix[0], ["x", "y", "z"]] = bs_pc.loc[ix][["x", "y", "z"]].mean()
+                bs_pc.at[ix[0], ['x', 'y', 'z']] = bs_pc.loc[ix][['x', 'y', 'z']].mean()
                 # ... join all atom names to on string and add to dataframe in first row
-                bs_pc.at[ix[0], ["atom_name"]] = ",".join(list(bs_pc.loc[ix]["atom_name"]))
+                bs_pc.at[ix[0], ['atom_name']] = ','.join(list(bs_pc.loc[ix]['atom_name']))
                 # ... remove all rows except the first (i.e. merged atoms)
                 bs_pc.drop(list(ix[1:]), axis=0, inplace=True)
 
     # Drop pc atom ID column
-    bs_pc.drop("pc_atom_id", axis=1, inplace=True)
+    bs_pc.drop('pc_atom_id', axis=1, inplace=True)
 
     return bs_pc
 
@@ -818,7 +818,7 @@ def get_pcproperties(repres_dict, repres_key, pcprop_key):
         return get_zscales(repres_dict, repres_key, 3)
     else:
         raise SystemExit('Unknown representative key.'
-                         'Select: ', ", ".join(pcprop_keys))
+                         'Select: ', ', '.join(pcprop_keys))
 
 
 def get_zscales(repres_dict, repres_key, z_number):
@@ -845,7 +845,7 @@ def get_zscales(repres_dict, repres_key, z_number):
     zs = aa.zscales
 
     # Transform e.g. ALA100 to ALA
-    repres_aa = repres_dict[repres_key]["subst_name"].apply(lambda x: x[0:3])
+    repres_aa = repres_dict[repres_key]['subst_name'].apply(lambda x: x[0:3])
 
     # Transform amino acids into Z-scales
     repres_zs = []
@@ -855,8 +855,8 @@ def get_zscales(repres_dict, repres_key, z_number):
             repres_zs.append(zs.loc[i])
         # If not, terminate script and print out error message
         else:
-            sys.exit("Error: Identifier " + i + " not in pre-defined Z-scales. " +
-                     "Please contact dominique.sydow@charite.de")
+            sys.exit('Error: Identifier ' + i + ' not in pre-defined Z-scales. ' +
+                     'Please contact dominique.sydow@charite.de')
     # Cast into DataFrame
     bs_repres_zs = pd.DataFrame(repres_zs, index=repres_dict[repres_key].index, columns=zs.columns)
 
@@ -889,11 +889,11 @@ def get_subset_indices(repres_dict, repres_key):
     subset = {}
 
     # Loop over all pseudocenter types
-    for i in list(set(pc_atoms["type"])):
+    for i in list(set(pc_atoms['type'])):
 
         # If pseudocenter type exists in dataset, save corresponding subset, else save None
-        if i in set(repres["pc_types"]):
-            subset[i] = repres[repres["pc_types"] == i].index
+        if i in set(repres['pc_types']):
+            subset[i] = repres[repres['pc_types'] == i].index
         else:
             subset[i] = None
 
@@ -931,7 +931,7 @@ def get_points(coord_dict, pcprop_dict):
     for i in repres_keys:
         points_dict[i] = coord_dict[i]
         for j in pcprop_keys:
-            points_dict[i + "_" + j] = pd.concat([coord_dict[i], pcprop_dict[i][j]], axis=1)
+            points_dict[i + '_' + j] = pd.concat([coord_dict[i], pcprop_dict[i][j]], axis=1)
 
     return points_dict
 
@@ -958,7 +958,7 @@ def get_points_subsetted(points_dict, subsets_indices_dict):
     points_subsets_dict = {}
 
     for subsets_key in subsets_indices_dict.keys():
-        points_keys = [key for key in points_dict.keys() if subsets_key + "_" in key]
+        points_keys = [key for key in points_dict.keys() if subsets_key + '_' in key]
         for points_key in points_keys:
             points_subsets_dict[points_key] = {key: points_dict[points_key].loc[value, :] for key, value in
                                                subsets_indices_dict[subsets_key].items()}
@@ -990,7 +990,7 @@ def get_shape(points):
     Notes
     -----
     Calculate shape if at least as many representatives are in binding site as needed references points, else return
-    dictionary with key "na" and value None.
+    dictionary with key 'na' and value None.
 
     """
 
@@ -999,19 +999,19 @@ def get_shape(points):
 
     # Select method based on number of dimensions and points
     if n_dimensions < 3:
-        return {"na": None}
+        return {'na': None}
     if n_dimensions == 3 and n_points > 3:
-        shape_3dim_dict = {"3dim_usr": get_shape_3dim_usr(points),
-                           "3dim_csr": get_shape_3dim_csr(points)}
+        shape_3dim_dict = {'3dim_usr': get_shape_3dim_usr(points),
+                           '3dim_csr': get_shape_3dim_csr(points)}
         return shape_3dim_dict
     if n_dimensions == 4 and n_points > 4:
-        shape_4dim_dict = {"4_dim_electroshape": get_shape_4dim_electroshape(points)}
+        shape_4dim_dict = {'4_dim_electroshape': get_shape_4dim_electroshape(points)}
         return shape_4dim_dict
     if n_dimensions == 6 and n_points > 6:
-        shape_6dim_dict = {"6dim": get_shape_6dim(points)}
+        shape_6dim_dict = {'6dim': get_shape_6dim(points)}
         return shape_6dim_dict
     else:
-        return {"na": None}
+        return {'na': None}
 
 
 def get_distances_to_point(points: pd.DataFrame, ref_point: pd.Series) -> pd.Series:
@@ -1067,7 +1067,7 @@ def get_moments(dist):
 
     # Store all moments in data frame
     moments = pd.concat([m1, m2, m3], axis=1)
-    moments.columns = ["m1", "m2", "m3"]
+    moments.columns = ['m1', 'm2', 'm3']
 
     return moments
 
@@ -1093,17 +1093,17 @@ def get_shape_dict(ref_points, dist):
 
     # Store reference points as data frame
     ref_points = pd.concat(ref_points, axis=1).transpose()
-    ref_points.index = ["c" + str(i) for i in range(1, len(ref_points.index) + 1)]
+    ref_points.index = ['c' + str(i) for i in range(1, len(ref_points.index) + 1)]
 
     # Store distance distributions as data frame
     dist = pd.concat(dist, axis=1)
-    dist.columns = ["dist_c" + str(i) for i in range(1, len(dist.columns) + 1)]
+    dist.columns = ['dist_c' + str(i) for i in range(1, len(dist.columns) + 1)]
 
     # Get first, second, and third moment for each distance distribution
     moments = get_moments(dist)
 
     # Save shape as dictionary
-    shape = {"ref_points": ref_points, "dist": dist, "moments": moments}
+    shape = {'ref_points': ref_points, 'dist': dist, 'moments': moments}
 
     return shape
 
@@ -1226,7 +1226,7 @@ def get_shape_3dim_csr(points):
     cross_norm = np.sqrt(sum(cross ** 2))  # Norm of cross product
     cross_unit = cross / cross_norm  # Cross unit vector
     a_norm = np.sqrt(sum(a ** 2))  # Norm of vector a
-    c4 = pd.Series(a_norm / 2 * cross_unit, index=["x", "y", "z"])
+    c4 = pd.Series(a_norm / 2 * cross_unit, index=['x', 'y', 'z'])
 
     # Get distances from c4 to all other points
     dist_c4 = get_distances_to_point(points, c4)
@@ -1299,7 +1299,7 @@ def get_shape_4dim_electroshape(points, scaling_factor=1):
     # 3. Calculate cross product of a_s and b_s
     # (keep same units and normalise vector to have half the norm of vector a)
     cross = np.cross(a_s, b_s)
-    c_s = pd.Series(np.sqrt(sum(a ** 2)) / 2 * cross / (np.sqrt(sum(cross ** 2))), index=["x", "y", "z"])
+    c_s = pd.Series(np.sqrt(sum(a ** 2)) / 2 * cross / (np.sqrt(sum(cross ** 2))), index=['x', 'y', 'z'])
 
     # 4. Add c to c1 to define the spatial components of the forth and fifth reference points
 
@@ -1312,8 +1312,8 @@ def get_shape_4dim_electroshape(points, scaling_factor=1):
     max_value_4thdim = max(points.iloc[:, [3]].values)[0]
     min_value_4thdim = min(points.iloc[:, [3]].values)[0]
 
-    c4 = c1_s + c + pd.Series([0, 0, 0, scaling_factor * max_value_4thdim], index=["x", "y", "z", name_4thdim])
-    c5 = c1_s + c + pd.Series([0, 0, 0, scaling_factor * min_value_4thdim], index=["x", "y", "z", name_4thdim])
+    c4 = c1_s + c + pd.Series([0, 0, 0, scaling_factor * max_value_4thdim], index=['x', 'y', 'z', name_4thdim])
+    c5 = c1_s + c + pd.Series([0, 0, 0, scaling_factor * min_value_4thdim], index=['x', 'y', 'z', name_4thdim])
 
     # Get distances from c4 and c5 to all other points
     dist_c4 = get_distances_to_point(points, c4)
