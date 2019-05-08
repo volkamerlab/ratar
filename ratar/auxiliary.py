@@ -215,14 +215,13 @@ def create_directory(directory):
     directory : str
         Absolute path to directory.
 
-    Returns
-    -------
-    None
-
     """
 
+    # Cast to Path
+    directory = Path(directory)
+
     try:
-        if not os.path.exists(directory):
-            os.makedirs(directory)
+        if not directory.exists():
+            directory.mkdir(parents=True)
     except OSError:
         print(f'OSError: Creating directory {directory} failed.')
