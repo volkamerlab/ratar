@@ -25,8 +25,8 @@ def parse_arguments():
 
     # Parse arguments
     parser = argparse.ArgumentParser()
-    parser.add_argument("-i", "--input_mol2_path", help="Path to mol2 file(s).", required=True)
-    parser.add_argument("-o", "--output_dir", help="Path to output directory.", required=True)
+    parser.add_argument('-i', '--input_mol2_path', help='Path to mol2 file(s).', required=True)
+    parser.add_argument('-o', '--output_dir', help='Path to output directory.', required=True)
 
     # Set as variables
     args = parser.parse_args()
@@ -108,20 +108,20 @@ def process_encoding(input_mol2_path, output_dir):
             print(progress_string)
 
             # Log iteration process
-            log_file = open(output_dir + "/ratar.log", "a+")
+            log_file = open(output_dir + '/ratar.log', 'a+')
             log_file.write(f'{progress_string}\n')
             log_file.close()
 
             # Process single binding site:
 
             # Create output folder
-            pdb_id_encoding = output_dir + "/encoding/" + pmol.code
-            create_folder(pdb_id_encoding)
+            pdb_id_encoding = output_dir + '/encoding/' + pmol.code
+            create_directory(pdb_id_encoding)
 
             # Get output file paths
-            output_log_path = pdb_id_encoding + "/ratar_encoding.log"
-            output_enc_path = pdb_id_encoding + "/ratar_encoding.p"
-            output_cgo_path = pdb_id_encoding + "/ref_points_cgo.py"
+            output_log_path = pdb_id_encoding + '/ratar_encoding.log'
+            output_enc_path = pdb_id_encoding + '/ratar_encoding.p'
+            output_cgo_path = pdb_id_encoding + '/ref_points_cgo.py'
 
             # Encode binding site
             binding_site = encode_binding_site(pmol, output_log_path)
@@ -133,7 +133,7 @@ def process_encoding(input_mol2_path, output_dir):
             save_cgo_file(binding_site, output_cgo_path)
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
 
     # Get start time of script
     encoding_start = datetime.datetime.now()
@@ -142,10 +142,10 @@ if __name__ == "__main__":
     input_mol2_path, output_dir = parse_arguments()
 
     # Create output folder
-    create_folder(output_dir)
+    create_directory(output_dir)
 
     # Log IO files
-    log_file = open(output_dir + "/ratar.log", "w")
+    log_file = open(output_dir + '/ratar.log', 'w')
     log_file.write(f'------------------------------------------------------------\n')
     log_file.write(f'IO\n')
     log_file.write(f'------------------------------------------------------------\n\n')
@@ -166,9 +166,9 @@ if __name__ == "__main__":
     encoding_runtime = encoding_end - encoding_start
 
     # Log runtime
-    log_file = open(output_dir + "/ratar.log", "a+")
+    log_file = open(output_dir + '/ratar.log', 'a+')
     log_file.write(f'\n------------------------------------------------------------\n')
     log_file.write(f'RUNTIME\n')
     log_file.write(f'------------------------------------------------------------\n\n')
-    log_file.write(f'Encoding step: {encoding_runtime}\n"')
+    log_file.write(f'Encoding step: {encoding_runtime}\n')
     log_file.close()
