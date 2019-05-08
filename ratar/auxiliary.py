@@ -13,6 +13,7 @@ Handles the helper functions.
 ########################################################################################
 
 import os
+from pathlib import Path
 
 from biopandas.mol2 import PandasMol2, split_multimol2
 from biopandas.pdb import PandasPdb
@@ -25,7 +26,7 @@ import pandas as pd
 
 # Project location
 # package_path: str = sys.path[0]
-package_path: str = "/home/dominique/Documents/projects/ratar/ratar"
+package_path = Path('/home/dominique/Documents/projects/ratar/ratar')
 
 
 ########################################################################################
@@ -34,125 +35,189 @@ package_path: str = "/home/dominique/Documents/projects/ratar/ratar"
 
 class AminoAcidDescriptors:
     """
-    Amino acid descriptors, e.g. Z-scales.
+    Class used to store amino acid descriptor data, e.g. Z-scales.
+
+    Parameters
+    ----------
+    None
+
+    Attributes
+    ----------
+    zscales : DataFrame
+        Z-scales for standard and a few non-standard amino acids.
+
+    Methods
+    -------
+    None
+
     """
 
     def __init__(self):
         # Z-scales taken from: https://github.com/Superzchen/iFeature/blob/master/codes/ZSCALE.py
-        self.zscales = pd.read_csv(package_path+"/data/zscales.csv", index_col="aa3")
+        zscales_path = package_path / 'data/zscales.csv'
+        self.zscales = pd.read_csv(str(zscales_path), index_col='aa3')
 
 
 ########################################################################################
 # IO functions
 ########################################################################################
 
-class Mol2Loader:
-    """
-    Load binding sites from file(s).
-    """
-
-    def __init__(self, input_mol2_path):
-        self.input_mol2_path = input_mol2_path
-        self.pmols = self.read_from_mol2()
-
-    def read_from_mol2(self):
-        """
-        Read the content of a mol2 file containing multiple entries.
-        :param: Path to mol2 file.
-        :return: List of BioPandas pmol objects.
-        """
-
-        pmols = []
-
-        # In case of multiple entries in one mol2 file, include iteration step
-        for mol2 in split_multimol2(self.input_mol2_path):
-            pmol = PandasMol2().read_mol2_from_list(mol2_lines=mol2[1], mol2_code=mol2[0])
-            pmols.append(pmol)
-
-        return pmols
-
-
 class MolFileLoader:
     """
-    Load binding sites from file(s).
+    Class used to load molecule data from mol2 and pdb files in the form of unified BioPandas objects.
+
+    Parameters
+    ----------
+    input_path : str
+        Absolute path to a mol2 (can contain multiple entries) or pdb file.
+
+    Attributes
+    ----------
+    input_path : str
+        Absolute path to a mol2 (can contain multiple entries) or pdb file.
+    pmols : list of BioPandas objects
+        List of molecule data in the form of BioPandas objects.
+
+    Methods
+    -------
+    load_mol2(input_path)
+        Read mol2 file as BioPandas object.
+    load_pdb(input_path)
+        Read pdb file as BioPandas object.
+
     """
 
     def __init__(self, input_path):
-        self.input_path = input_path
+
+        self.input_path = Path(input_path)
         self.pmols = None
 
-        file_suffix = os.path.basename(input_path).split(".")[-1]
+        if self.input_path.suffix == '.pdb':
+            self.pmols = self.load_pdb()
+        elif self.input_path.suffix == '.mol2':
+            self.pmols = self.load_mol2()
 
-        if file_suffix == "pdb":
-            self.pmols = self.read_from_pdb()
-        elif file_suffix == "mol2":
-            self.pmols = self.read_from_mol2()
+    def load_mol2(self):
 
-    def read_from_mol2(self):
         """
-        Read the content of a mol2 file containing multiple entries.
-        :param: Path to mol2 file.
-        :return: List of BioPandas pmol objects.
+        Load molecule data from a mol2 file, which can contain multiple entries.
+
+        Parameters
+        ----------
+        self.input_path : str
+            Absolute path to mol2 file.
+
+        Returns
+        -------
+        List of BioPandas objects
+            List of BioPandas objects containing metadata and structural data of molecule(s) in mol2 file.
+
         """
 
         # In case of multiple entries in one mol2 file, include iteration step
         pmols = []
 
-        for mol2 in split_multimol2(self.input_path):
-            pmol = PandasMol2().read_mol2_from_list(mol2_lines=mol2[1], mol2_code=mol2[0])
+        for mol2 in split_multimol2(str(self.input_path)):
+            pmol = PandasMol2().read_mol2_from_list(
+                                                    mol2_code=mol2[0],
+                                                    mol2_lines=mol2[1],
+                                                    columns={0: ('atom_id', int),
+                                                             1: ('atom_name', str),
+                                                             2: ('x', float),
+                                                             3: ('y', float),
+                                                             4: ('z', float),
+                                                             5: ('atom_type', str),
+                                                             6: ('subst_id', str),
+                                                             7: ('subst_name', str),
+                                                             8: ('charge', float),
+                                                             9: ('status_bit', str)}
+                                                    )
+            # Select columns of interest
+            pmol._df = pmol.df.loc[:, ['atom_id',
+                                       'atom_name',
+                                       'subst_name',
+                                       'x',
+                                       'y',
+                                       'z',
+                                       'charge']]
 
-            pmol._df = pmol.df.loc[:, ["atom_id",
-                                       "atom_name",
-                                       "subst_name",
-                                       "x",
-                                       "y",
-                                       "z",
-                                       "charge"]]
-
-            # Insert needed columns
-            pmol.df.insert(loc=2, column="residue_id", value=[i[3:] for i in pmol.df["subst_name"]])
-            pmol.df.insert(loc=3, column="residue_name", value=[i[:3] for i in pmol.df["subst_name"]])
+            # Insert additional columns (split ASN22 to ASN and 22)
+            pmol.df.insert(loc=2, column='res_id', value=[i[3:] for i in pmol.df['subst_name']])
+            pmol.df.insert(loc=3, column='res_name', value=[i[:3] for i in pmol.df['subst_name']])
 
             pmols.append(pmol)
 
         return pmols
 
-    def read_from_pdb(self):
+    def load_pdb(self):
 
-        pmol = PandasPdb().read_pdb(self.input_path)
+        """
+        Load molecule data from a pdb file, which can contain multiple entries.
 
+        Parameters
+        ----------
+        self.input_path : str
+            Absolute path to pdb file.
+
+        Returns
+        -------
+        List of BioPandas objects
+            List of BioPandas objects containing metadata and structural data of molecule(s) in pdb file.
+
+        """
+
+        pmol = PandasPdb().read_pdb(str(self.input_path))
+
+        # If object has no code, set string from file stem and its folder name
         if pmol.code == "":
-            pmol.code = os.path.basename(self.input_path).split(".")[0]
+            pmol.code = '_'.join([self.input_path.parts[-2], self.input_path.stem])
 
         # Get both ATOM and HETATM lines of PDB file
-        pmol._df = pd.concat([pmol.df["ATOM"], pmol.df["HETATM"]])
+        pmol._df = pd.concat([pmol.df['ATOM'], pmol.df['HETATM']])
 
-        # Get needed columns
-        pmol._df = pmol.df.loc[:,
-                   ["atom_number", "atom_name", "residue_number", "residue_name", "x_coord", "y_coord", "z_coord",
-                    "charge"]]
+        # Select columns of interest
+        pmol._df = pmol.df.loc[:, ['atom_number',
+                                   'atom_name',
+                                   'residue_number',
+                                   'residue_name',
+                                   'x_coord',
+                                   'y_coord',
+                                   'z_coord',
+                                   'charge']]
 
-        # Insert needed columns
-        pmol.df.insert(loc=4, column="subst_name",
-                       value=["%s%s" % (i, j) for i, j in zip(pmol.df["residue_name"], pmol.df["residue_number"])])
+        # Insert additional columns
+        pmol.df.insert(loc=4,
+                       column='subst_name',
+                       value=['%s%s' % (i, j) for i, j in zip(pmol.df['residue_name'], pmol.df['residue_number'])])
 
         # Rename columns
-        pmol.df.rename(index=str, inplace=True, columns={"atom_number": "atom_id",
-                                                         "residue_number": "residue_id",
-                                                         "x_coord": "x",
-                                                         "y_coord": "y",
-                                                         "z_coord": "z"})
+        pmol.df.rename(index=str, inplace=True, columns={'atom_number': 'atom_id',
+                                                         'residue_number': 'res_id',
+                                                         'residue_name': 'res_name',
+                                                         'x_coord': 'x',
+                                                         'y_coord': 'y',
+                                                         'z_coord': 'z'})
 
-        pmols = [pmol]  # This has no meaning for pdb and is only for mol2 files that have multiple entries
+        # Cast to list only for homogeneity with reading mol2 files that can have multiple entries
+        pmols = [pmol]
 
         return pmols
 
 
-def create_folder(directory):
-    """
+def create_directory(directory):
 
-    :param directory:
-    :return:
+    """
+    Create directory if it does not exist.
+
+    Parameters
+    ----------
+    directory : str
+        Full path to directory.
+
+    Returns
+    -------
+    None
+
     """
 
     try:
