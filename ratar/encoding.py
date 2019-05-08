@@ -362,7 +362,7 @@ class Representatives:
 
     Attributes
     ----------
-    repres_dict :
+    repres_dict : dict
         Representatives stored as dictionary with several representation methods serving as key.
         Example: {'ca': ..., 'pca': ..., 'pc': ...}
 
