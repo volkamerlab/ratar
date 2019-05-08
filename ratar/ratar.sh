@@ -24,7 +24,7 @@ output_dir="/home/dominique/Documents/projects/ratar-data/results"
 #python ratar.py -i ${data_dir}"/scpdb/full_20180807/*/site.mol2" -o ${output_dir}
 
 # Subset of scPDB
-python ratar.py -i ${data_dir}"/scpdb/test_20180807/*/site.mol2" -o ${output_dir}"/scpdb/test_20180807/"
+#python ratar.py -i ${data_dir}"/scpdb/test_20180807/*/site.mol2" -o ${output_dir}"/scpdb/test_20180807/"
 
 # Benchmarking dataset - FuzCav
 #python ratar.py -i ${data_dir}"/benchmarking/fuzcav/sim_dis_pairs/structures/*/site_CA_Met.mol2" -o ${output_dir}"/benchmarking/fuzcav/sim_dis_pairs/"
@@ -32,8 +32,8 @@ python ratar.py -i ${data_dir}"/scpdb/test_20180807/*/site.mol2" -o ${output_dir
 # Benchmarking dataset - TOUGH-M1
 #python ratar.py -i ${data_dir}"/benchmarking/TOUGH-M1/structures/*/site_CA_Met.mol2" -o ${output_dir}"/benchmarking/fuzcav/sim_dis_pairs/"
 
-# KLIFS EGFR
-#python ratar.py -i ${data_dir}"/klifs/egfr_20190506/structures/HUMAN/EGFR/*/pocket.mol2" -o ${output_dir}"/klifs/egfr_20190509/HUMAN/EGRF/"
+# KLIFS test
+python ratar.py -i ${data_dir}"/klifs/test_20190506/structures/HUMAN/*/*/pocket.mol2" -o ${output_dir}"/klifs/test_20190509/HUMAN/"
 
 # KLIFS full
 #python ratar.py -i ${data_dir}"/klifs/klifs_20190506/structures/HUMAN/*/*/pocket.mol2" -o ${output_dir}"/klifs/klifs_20190506/HUMAN/"
