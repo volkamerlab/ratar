@@ -7,13 +7,12 @@ An integrated structure- and ligand-based workbench for computational target pre
 Handles the primary functions for processing the encoding of multiple binding sites.
 """
 
+import argparse
+import datetime
+import glob
 
 from auxiliary import *
 from encoding import encode_binding_site, save_binding_site, save_cgo_file
-
-import datetime
-import argparse
-import glob
 
 
 def parse_arguments():

@@ -7,22 +7,19 @@ An integrated structure- and ligand-based workbench for computational target pre
 Handles the primary functions for encoding a single binding site.
 """
 
-
-from auxiliary import *
-
+import glob
 import _pickle as pickle
-from typing import List
-
 import re
 import sys
-import glob
+from typing import List
 
 import numpy as np
 import pandas as pd
+import seaborn as sns
 from scipy.special import cbrt
 from scipy.stats.stats import skew
 
-import seaborn as sns
+from auxiliary import *
 
 
 ########################################################################################

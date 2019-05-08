@@ -12,11 +12,12 @@ Handles the primary functions for comparing binding sites.
 # Import modules
 ########################################################################################
 
-from encoding import *
-
 import glob
 import pickle
+
 import pandas as pd
+
+from encoding import *
 
 ########################################################################################
 # Global variables

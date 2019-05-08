@@ -12,10 +12,11 @@ Handles the helper functions.
 # Import modules
 ########################################################################################
 
+import os
+
 from biopandas.mol2 import PandasMol2, split_multimol2
 from biopandas.pdb import PandasPdb
 import pandas as pd
-import os
 
 
 ########################################################################################
