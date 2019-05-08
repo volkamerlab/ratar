@@ -183,10 +183,10 @@ def save_cgo_file(binding_site, output_path):
                                    + size + ', \n')
 
                 # Write command to file that will load the reference points as PyMol object
-                cgo_file.write(']\ncmd.load_cgo(obj_%s, '%s')\n\n' % (obj_name, obj_name))
+                cgo_file.write(']\ncmd.load_cgo(obj_%s, "%s")\n\n' % (obj_name, obj_name))
 
     # Group all objects to one group
-    cgo_file.write('cmd.group('%s_ref_points', '%s')' % (binding_site.pdb_id[:4], ' '.join(obj_names)))
+    cgo_file.write('cmd.group("%s_ref_points", "%s")' % (binding_site.pdb_id[:4], ' '.join(obj_names)))
 
     # Close cgo file
     cgo_file.close()
