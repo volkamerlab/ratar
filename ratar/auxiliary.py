@@ -5,6 +5,7 @@ Read-across the targetome -
 An integrated structure- and ligand-based workbench for computational target prediction and novel tool compound design
 
 Handles the helper functions.
+
 """
 
 
@@ -25,7 +26,6 @@ import pandas as pd
 ########################################################################################
 
 # Project location
-# package_path: str = sys.path[0]
 package_path = Path('/home/dominique/Documents/projects/ratar/ratar')
 
 
@@ -34,21 +34,14 @@ package_path = Path('/home/dominique/Documents/projects/ratar/ratar')
 ########################################################################################
 
 class AminoAcidDescriptors:
+
     """
     Class used to store amino acid descriptor data, e.g. Z-scales.
-
-    Parameters
-    ----------
-    None
 
     Attributes
     ----------
     zscales : DataFrame
         Z-scales for standard and a few non-standard amino acids.
-
-    Methods
-    -------
-    None
 
     """
 
@@ -63,6 +56,7 @@ class AminoAcidDescriptors:
 ########################################################################################
 
 class MolFileLoader:
+
     """
     Class used to load molecule data from mol2 and pdb files in the form of unified BioPandas objects.
 
@@ -73,17 +67,10 @@ class MolFileLoader:
 
     Attributes
     ----------
-    input_path : str
+    input_path : pathlib.PosixPath
         Absolute path to a mol2 (can contain multiple entries) or pdb file.
     pmols : list of BioPandas objects
         List of molecule data in the form of BioPandas objects.
-
-    Methods
-    -------
-    load_mol2(input_path)
-        Read mol2 file as BioPandas object.
-    load_pdb(input_path)
-        Read pdb file as BioPandas object.
 
     """
 
@@ -93,19 +80,14 @@ class MolFileLoader:
         self.pmols = None
 
         if self.input_path.suffix == '.pdb':
-            self.pmols = self.load_pdb()
+            self.pmols = self._load_pdb()
         elif self.input_path.suffix == '.mol2':
-            self.pmols = self.load_mol2()
+            self.pmols = self._load_mol2()
 
-    def load_mol2(self):
+    def _load_mol2(self):
 
         """
         Load molecule data from a mol2 file, which can contain multiple entries.
-
-        Parameters
-        ----------
-        self.input_path : str
-            Absolute path to mol2 file.
 
         Returns
         -------
@@ -118,20 +100,39 @@ class MolFileLoader:
         pmols = []
 
         for mol2 in split_multimol2(str(self.input_path)):
-            pmol = PandasMol2().read_mol2_from_list(
-                                                    mol2_code=mol2[0],
-                                                    mol2_lines=mol2[1],
-                                                    columns={0: ('atom_id', int),
-                                                             1: ('atom_name', str),
-                                                             2: ('x', float),
-                                                             3: ('y', float),
-                                                             4: ('z', float),
-                                                             5: ('atom_type', str),
-                                                             6: ('subst_id', str),
-                                                             7: ('subst_name', str),
-                                                             8: ('charge', float),
-                                                             9: ('status_bit', str)}
-                                                    )
+
+            # Mol2 files can have 9 or 10 columns.
+            try:  # Try 9 columns.
+                pmol = PandasMol2().read_mol2_from_list(
+                                                        mol2_code=mol2[0],
+                                                        mol2_lines=mol2[1],
+                                                        columns={0: ('atom_id', int),
+                                                                 1: ('atom_name', str),
+                                                                 2: ('x', float),
+                                                                 3: ('y', float),
+                                                                 4: ('z', float),
+                                                                 5: ('atom_type', str),
+                                                                 6: ('subst_id', str),
+                                                                 7: ('subst_name', str),
+                                                                 8: ('charge', float)}
+                                                        )
+
+            except AssertionError:  # If 9 columns did not work, try 10 columns.
+                pmol = PandasMol2().read_mol2_from_list(
+                                                        mol2_code=mol2[0],
+                                                        mol2_lines=mol2[1],
+                                                        columns={0: ('atom_id', int),
+                                                                 1: ('atom_name', str),
+                                                                 2: ('x', float),
+                                                                 3: ('y', float),
+                                                                 4: ('z', float),
+                                                                 5: ('atom_type', str),
+                                                                 6: ('subst_id', str),
+                                                                 7: ('subst_name', str),
+                                                                 8: ('charge', float),
+                                                                 9: ('status_bit', str)}
+                                                        )
+
             # Select columns of interest
             pmol._df = pmol.df.loc[:, ['atom_id',
                                        'atom_name',
@@ -149,7 +150,7 @@ class MolFileLoader:
 
         return pmols
 
-    def load_pdb(self):
+    def _load_pdb(self):
 
         """
         Load molecule data from a pdb file, which can contain multiple entries.
@@ -224,4 +225,4 @@ def create_directory(directory):
         if not os.path.exists(directory):
             os.makedirs(directory)
     except OSError:
-        print('Error: Creating directory. ' + directory)
+        print(f'OSError: Creating directory {directory} failed.')
