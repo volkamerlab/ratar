@@ -133,6 +133,9 @@ class MolFileLoader:
                                                                  9: ('status_bit', str)}
                                                         )
 
+            # Remove all '/' from code (code used as folder name, '/' would cause subdirectory creation)
+            pmol.code = pmol.code.replace('/', '_')
+
             # Select columns of interest
             pmol._df = pmol.df.loc[:, ['atom_id',
                                        'atom_name',
@@ -171,7 +174,7 @@ class MolFileLoader:
 
         # If object has no code, set string from file stem and its folder name
         if pmol.code == "":
-            pmol.code = '_'.join([self.input_path.parts[-2], self.input_path.stem])
+            pmol.code = '_'.join([self.input_path.parts[-2], self.input_path.stem]).replace('/', '_')
 
         # Get both ATOM and HETATM lines of PDB file
         pmol._df = pd.concat([pmol.df['ATOM'], pmol.df['HETATM']])
