@@ -104,7 +104,7 @@ def get_similarity_all_against_all(output_path):
 
                 # Set name for encoding method (representatives and method) and
                 # use as key for dictionary of all-against-all matrices
-                desc = '%s_%s' % (repres, method)
+                desc = f'{repres}_{method}'
 
                 # Add initial all-against-all matrices in dictionary
                 sim_matrices[desc] = sim_df
@@ -123,7 +123,7 @@ def get_similarity_all_against_all(output_path):
 
                         # Set name for encoding method (representatives and method) and
                         # use as key for dictionary of all-against-all matrices
-                        desc = '%s_%s' % (repres, method)
+                        desc = '{repres}_{method}'
 
                         # Get binding site ids
                         id1 = bs1.pdb_id
@@ -224,7 +224,7 @@ def get_similarity_pairs(benchmarkset):
         return similarity
 
     else:
-        return 'Selected benchmarking dataset unknown. Please choose from: %s' % ', '.join(benchmarksets)
+        return f'Selected benchmarking dataset unknown. Please choose from: {", ".join(benchmarksets)}'
 
 
 def calculate_similarity_pairs(pairs, struc_path_template):
@@ -272,7 +272,7 @@ def calculate_similarity_pairs(pairs, struc_path_template):
 
                 # Set name for encoding method (representatives and method) and
                 # use as key for dictionary
-                desc = '%s_%s' % (repres, method)
+                desc = f'{repres}_{method}'
                 sim_dict[desc] = []
 
     for i in pairs.index:
@@ -280,7 +280,7 @@ def calculate_similarity_pairs(pairs, struc_path_template):
         p1 = pairs.loc[i, 'struc1']  # Get one partner of pair
         p2 = pairs.loc[i, 'struc2']  # Get other partner of pair
 
-        pair_list.append('%s_%s' % (p1, p2))  # Save pair as string
+        pair_list.append(f'{p1}_{p2}')  # Save pair as string
 
         # Get path to structure files
         struc_path1 = struc_path_template % p1
@@ -296,7 +296,7 @@ def calculate_similarity_pairs(pairs, struc_path_template):
 
                     # Set name for encoding method (representatives and method) and
                     # use as key for dictionary
-                    desc = '%s_%s' % (repres, method)
+                    desc = f'{repres}_{method}'
 
                     # Get similarity value
                     sim = get_similarity(bs1.shapes.shapes_dict[repres][method]['moments'],
