@@ -13,7 +13,6 @@ Handles the helper functions.
 # Import modules
 ########################################################################################
 
-import os
 from pathlib import Path
 
 from biopandas.mol2 import PandasMol2, split_multimol2
