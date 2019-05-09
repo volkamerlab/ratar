@@ -45,7 +45,7 @@ aa = AminoAcidDescriptors()
 
 
 ########################################################################################
-# Process binding sites
+# Encode binding site
 ########################################################################################
 
 def encode_binding_site(pmol, output_log_path=None):
@@ -186,19 +186,19 @@ def save_cgo_file(binding_site, output_path):
 # Load encoding related files
 ########################################################################################
 
-def get_encoded_binding_site_path(pdb, output_path):
+def get_encoded_binding_site_path(code, output_path):
 
     """
     Get a binding site pickle path based on a path wildcard constructed from
-    - a four-letter PDB ID and
-    - an output directory that contains ratar related files:
+    - a molecule code (can contain only PDB ID to check for file matches) and
+    - the path to the ratar encoding output directory.
 
-    Wildcard: output_path + '/encoding/' + pdb + '*.p'
+    Constructed wildcard: f'{output_path}/encoding/*{code}*/ratar_encoding.p'
 
     Parameters
     ----------
-    pdb: string
-        Four-letter PDB ID.
+    code: string
+        Molecule code (is or contains PDB ID).
     output_path: string
         Path to output directory containing ratar related files.
 
@@ -209,7 +209,7 @@ def get_encoded_binding_site_path(pdb, output_path):
 
     """
     # Define wildcard for path to pickle file
-    bs_wildcard = f'{output_path}/encoding/{pdb}/ratar_encoding.p'
+    bs_wildcard = f'{output_path}/encoding/*{code}*/ratar_encoding.p'
 
     # Retrieve all paths that match the wildcard
     bs_path = glob.glob(bs_wildcard)
@@ -317,10 +317,6 @@ class BindingSite:
     shapes : Instance of Shapes class
         Encoded binding site (reference points, distance distribution and distribution moments).
 
-    Methods
-    -------
-    None
-
     """
 
     def __init__(self, pmol, output_log_path=None):
@@ -338,8 +334,7 @@ class BindingSite:
 class Representatives:
 
     """
-    Class used to store binding site representatives.
-    Representatives are selected atoms in a binding site,
+    Class used to store binding site representatives. Representatives are selected atoms in a binding site,
     for instances all Calpha atoms of a binding site could serve as its representatives.
 
     Parameters
@@ -352,11 +347,6 @@ class Representatives:
     repres_dict : dict
         Representatives stored as dictionary with several representation methods serving as key.
         Example: {'ca': ..., 'pca': ..., 'pc': ...}
-
-
-    Methods
-    -------
-    None
 
     """
 
@@ -383,10 +373,6 @@ class Coordinates:
     coord_dict : Coordinates.coord_dict
         Coordinates stored as dictionary with the same keys as in Representatives.repres_dict.
         Example: {'ca': ..., 'pca': ..., 'pc': ...}
-
-    Methods
-    -------
-    None
 
     """
 
@@ -420,10 +406,6 @@ class PCProperties:
         Example: {'ca': ..., 'pca': ..., 'pc': ...}
     output_log_path :
         Path to output log file.
-
-    Methods
-    -------
-    None
 
     """
 
@@ -461,10 +443,6 @@ class Subsetter:
         Example: {'ca': {'H': ..., 'HBD': ..., ...},
                   'pca': {'H': ..., 'HBD': ..., ...},
                   'pc': {'H': ..., 'HBD': ..., ...}}
-
-    Methods
-    -------
-    None
 
     """
 
@@ -512,10 +490,6 @@ class Points:
                   'pca_z12': {'H': ..., 'HBD': ..., ...},
                   ...}
 
-    Methods
-    -------
-    None
-
     """
 
     def __init__(self, coord_dict, pcprop_dict, subsets_indices_dict):
@@ -549,10 +523,6 @@ class Shapes:
         - level 2 keys for subsets, e.g. 'H',
         - level 3 keys for encoding method, e.g. '3dim_usr',
         - level 4 keys for reference point coordinates 'ref_points', distances 'dist', and moments 'moments'.
-
-    Methods
-    -------
-    None
 
     """
 
