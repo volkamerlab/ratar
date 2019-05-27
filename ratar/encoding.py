@@ -21,22 +21,18 @@ import seaborn as sns
 from scipy.special import cbrt
 from scipy.stats.stats import skew
 
-from auxiliary import *
+from ratar.auxiliary import *
 
 
 ########################################################################################
 # Global variables
 ########################################################################################
 
-# Package location
-package_path = Path('/home/dominique/Documents/projects/ratar/ratar')
-
 # Representative and physicochemical property keys
-repres_keys = ['ca', 'pca', 'pc']
 pcprop_keys = ['z1', 'z12', 'z123']
 
 # Pseudocenters definition
-pc_atoms = pickle.load(open(package_path / 'data/pseudocenter_atoms.p', 'rb'))
+pc_atoms = pickle.load(open(sys.path[0] / Path('ratar/data/pseudocenter_atoms.p'), 'rb'))
 pc_atoms = pc_atoms[pc_atoms['type'] != 'HBDA']  # Remove HBDA features information (too few data points)
 pc_atoms.reset_index(drop=True, inplace=True)
 
@@ -327,7 +323,7 @@ class BindingSite:
         self.subset = Subsetter(self.repres.repres_dict)
         self.coord = Coordinates(self.repres.repres_dict)
         self.pcprop = PCProperties(self.repres.repres_dict, output_log_path)
-        self.points = Points(self.coord.coord_dict, self.pcprop.pcprop_dict, self.subset.subsets_indices_dict)
+        self.points = Points(self.repres.repres_dict, self.coord.coord_dict, self.pcprop.pcprop_dict, self.subset.subsets_indices_dict)
         self.shapes = Shapes(self.points)
 
 
@@ -353,6 +349,8 @@ class Representatives:
     def __init__(self, mol):
 
         self.repres_dict = {}
+
+        repres_keys = ['ca', 'pca', 'pc']  # Define names für representatives types
         for repres_key in repres_keys:
             self.repres_dict[repres_key] = get_representatives(mol, repres_key)
 
@@ -379,7 +377,7 @@ class Coordinates:
     def __init__(self, repres_dict):
 
         self.coord_dict = {}
-        for i in repres_keys:
+        for i in repres_dict.keys():
             if type(repres_dict[i]) is not dict:
                 self.coord_dict[i] = repres_dict[i][['x', 'y', 'z']]
             else:
@@ -414,7 +412,7 @@ class PCProperties:
         self.pcprop_dict = {}
         self.output_log_path = output_log_path
 
-        for i in repres_keys:
+        for i in repres_dict.keys():
             self.pcprop_dict[i] = {}
             for j in pcprop_keys:
                 if type(repres_dict[i]) is not dict:
@@ -492,9 +490,9 @@ class Points:
 
     """
 
-    def __init__(self, coord_dict, pcprop_dict, subsets_indices_dict):
+    def __init__(self, repres_dict, coord_dict, pcprop_dict, subsets_indices_dict):
 
-        self.points_dict = get_points(coord_dict, pcprop_dict)
+        self.points_dict = get_points(repres_dict, coord_dict, pcprop_dict)
         self.points_subsets_dict = get_points_subsetted(self.points_dict, subsets_indices_dict)
 
 
@@ -608,15 +606,14 @@ def get_representatives(mol, repres_key):
         DataFrame containing atom lines from input file described by Z-scales.
     """
 
-    if repres_key == repres_keys[0]:
+    if repres_key == 'ca':
         return get_ca(mol)
-    if repres_key == repres_keys[1]:
+    if repres_key == 'pca':
         return get_pca(mol)
-    if repres_key == repres_keys[2]:
+    if repres_key == 'pc':
         return get_pc(mol)
     else:
-        raise SystemExit('Unknown representative key.'
-                         'Select: ', ', '.join(repres_keys))
+        raise SystemExit('Unknown representative key.')
 
 
 def get_ca(mol):
@@ -864,7 +861,7 @@ def get_subset_indices(repres_dict, repres_key):
 # Functions mainly for Points class
 ########################################################################################
 
-def get_points(coord_dict, pcprop_dict):
+def get_points(repres_dict, coord_dict, pcprop_dict):
 
     """
     Concatenate spatial (3-dimensional) and physicochemical (N-dimensional) properties
@@ -872,6 +869,8 @@ def get_points(coord_dict, pcprop_dict):
 
     Parameters
     ----------
+    repres_dict : Representatives.repres_dict (dictionary)
+        Dictionary with several representation methods serving as key.
     coord_dict : dict of DataFrames (Coordinates.coord_dict)
         Spatial properties (=coordinates) for each representative.
         Has the same keys as Representatives.repres_dict.
@@ -888,7 +887,7 @@ def get_points(coord_dict, pcprop_dict):
 
     points_dict = {}
 
-    for i in repres_keys:
+    for i in repres_dict.keys():
         points_dict[i] = coord_dict[i]
         for j in pcprop_keys:
             points_dict[i + '_' + j] = pd.concat([coord_dict[i], pcprop_dict[i][j]], axis=1)
