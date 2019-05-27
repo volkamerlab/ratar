@@ -12,37 +12,37 @@ import datetime
 import glob
 from pathlib import Path
 
-from auxiliary import *
-from encoding import encode_binding_site, save_binding_site, save_cgo_file
+from ratar.auxiliary import *
+from ratar.encoding import encode_binding_site, save_binding_site, save_cgo_file
 
 
 def parse_arguments():
     """
     Parse the arguments given when calling this script.
 
-    :return: Input mol2 file path and output directory.
+    :return: Input molecule structure file path and output directory.
     :rtype: Strings
     """
 
     # Parse arguments
     parser = argparse.ArgumentParser()
-    parser.add_argument('-i', '--input_mol2_path', help='Path to mol2 file(s).', required=True)
+    parser.add_argument('-i', '--input_mol_path', help='Path to molecule structure file(s).', required=True)
     parser.add_argument('-o', '--output_dir', help='Path to output directory.', required=True)
 
     # Set as variables
     args = parser.parse_args()
-    input_mol2_path = args.input_mol2_path
+    input_mol_path = args.input_mol_path
     output_dir = args.output_dir
 
-    print(f'Input: {input_mol2_path}')
+    print(f'Input: {input_mol_path}')
     print(f'Output: {output_dir}')
 
-    return input_mol2_path, output_dir
+    return input_mol_path, output_dir
 
 
-def process_encoding(input_mol2_path, output_dir):
+def process_encoding(input_mol_path, output_dir):
     """
-    Process a list of mol2 files (retrieved by an input path to one or multiple files) and
+    Process a list of molecule structure files (retrieved by an input path to one or multiple files) and
     save per binding site multiple output files to an output directory.
 
     Each binding site is processed as follows:
@@ -64,8 +64,8 @@ def process_encoding(input_mol2_path, output_dir):
       ratar.log
 
 
-    :param input_mol2_path: Path to mol2 file(s), can include a wildcard to match multiple files.
-    :type input_mol2_path: String
+    :param input_mol_path: Path to molecule structure file(s), can include a wildcard to match multiple files.
+    :type input_mol_path: String
 
     :param output_dir: Output directory.
     :type output_dir: String
@@ -74,36 +74,36 @@ def process_encoding(input_mol2_path, output_dir):
     :rtype: None
     """
 
-    # Get all mol2 files
-    input_mol2_path_list = glob.glob(input_mol2_path)
-    input_mol2_path_list = input_mol2_path_list
+    # Get all molecule structure files
+    input_mol_path_list = glob.glob(input_mol_path)
+    input_mol_path_list = input_mol_path_list
 
-    # Get number of mol2 files and set mol2 counter
-    mol2_sum = len(input_mol2_path_list)
-    mol2_counter = 0
+    # Get number of molecule structure files and set molecule structure counter
+    mol_sum = len(input_mol_path_list)
+    mol_counter = 0
 
-    # Iterate over all binding sites (mol2 files)
-    for mol2 in input_mol2_path_list:
+    # Iterate over all binding sites (molecule structure files)
+    for mol in input_mol_path_list:
 
-        # Increment mol2 counter
-        mol2_counter = mol2_counter + 1
+        # Increment molecule structure counter
+        mol_counter = mol_counter + 1
 
-        # Load binding site from mol2 file
-        bs_loader = MolFileLoader(mol2)
+        # Load binding site from molecule structure file
+        bs_loader = MolFileLoader(mol)
         pmols = bs_loader.pmols
 
         # Get number of pmol objects and set pmol counter
         pmol_sum = len(pmols)
         pmol_counter = 0
 
-        # Iterate over all binding sites in mol2 file
+        # Iterate over all binding sites in molecule structure file
         for pmol in pmols:
 
             # Increment pmol counter
             pmol_counter = pmol_counter + 1
 
             # Get iteration progress
-            progress_string = f'{mol2_counter}/{mol2_sum} mol2 files - {pmol_counter}/{pmol_sum} pmol objects: {pmol.code}'
+            progress_string = f'{mol_counter}/{mol_sum} molecule structure files - {pmol_counter}/{pmol_sum} pmol objects: {pmol.code}'
 
             # Print iteration process
             print(progress_string)
@@ -140,7 +140,7 @@ if __name__ == '__main__':
     encoding_start = datetime.datetime.now()
 
     # Parse arguments
-    input_mol2_path, output_dir = parse_arguments()
+    input_mol_path, output_dir = parse_arguments()
 
     # Create output folder
     create_directory(output_dir)
@@ -150,7 +150,7 @@ if __name__ == '__main__':
     log_file.write(f'------------------------------------------------------------\n')
     log_file.write(f'IO\n')
     log_file.write(f'------------------------------------------------------------\n\n')
-    log_file.write(f'Input: {input_mol2_path}\n')
+    log_file.write(f'Input: {input_mol_path}\n')
 
     # Log encoding step processing
     log_file.write(f'Output: {output_dir}\n\n')
@@ -160,7 +160,7 @@ if __name__ == '__main__':
     log_file.close()
 
     # Process encoding
-    process_encoding(input_mol2_path, output_dir)
+    process_encoding(input_mol_path, output_dir)
 
     # Get end time of encoding step and runtime
     encoding_end = datetime.datetime.now()
