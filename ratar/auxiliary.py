@@ -13,6 +13,8 @@ Handles the helper functions.
 # Import modules
 ########################################################################################
 
+import sys
+
 from pathlib import Path
 
 from biopandas.mol2 import PandasMol2, split_multimol2
@@ -77,6 +79,12 @@ class MolFileLoader:
 
         self.input_path = Path(input_path)
         self.pmols = None
+
+        try:
+            open(Path(input_path), 'r')
+        except FileNotFoundError:
+            print('File does not exist.')
+            sys.exit(1)
 
         if self.input_path.suffix == '.pdb':
             self.pmols = self._load_pdb()
