@@ -17,6 +17,7 @@ import glob
 import pickle
 
 import pandas as pd
+from pathlib import Path
 
 from encoding import *
 
@@ -89,13 +90,17 @@ def get_similarity_all_against_all(output_path):
 
     # Get binding site ids and initialise all-against-all DataFrame with similarities of one (identical binding site)
     pdb_ids = []
-    for f in file_list:
-        bs = pickle.load(open(f, 'rb'))
+
+    for file in file_list:
+        with open(file, 'rb') as f:
+            bs = pickle.load(f)
         pdb_ids.append(bs.pdb_id)
+
     sim_df = pd.DataFrame(float(1), index=pdb_ids, columns=pdb_ids)
 
     # Get example encoded binding site to retrieve binding site data architecture
-    bs = pickle.load(open(file_list[0], 'rb'))
+    with open(file_list[0], 'rb') as f:
+        bs = pickle.load(f)
 
     # Initialise each encoding method with all-against-all DataFrame with similarities of one
     for repres in bs.shapes.shapes_dict.keys():
@@ -114,8 +119,10 @@ def get_similarity_all_against_all(output_path):
         for j in range(i + 1, len(file_list)):
 
             # Load binding site pair
-            bs1 = pickle.load(open(file_list[i], 'rb'))
-            bs2 = pickle.load(open(file_list[j], 'rb'))
+            with open(file_list[i], 'rb') as f:
+                bs1 = pickle.load(f)
+            with open(file_list[j], 'rb') as f:
+                bs2 = pickle.load()
 
             for repres in bs1.shapes.shapes_dict.keys():
                 for method in bs1.shapes.shapes_dict[repres].keys():
@@ -191,7 +198,8 @@ def get_similarity_pairs(benchmarkset):
         # Save to file
         output_path = '/home/dominique/Documents/projects/ratar-data/results/benchmarking/' \
                       'fuzcav/sim_dis_pairs/similarity/pairs_similarity.p'
-        pickle.dump(similarity, open(output_path, 'wb'))
+        with open(output_path, 'wb') as f:
+            pickle.dump(similarity, f)
 
         return similarity
 
@@ -219,7 +227,8 @@ def get_similarity_pairs(benchmarkset):
         # Save to file
         output_path = '/home/dominique/Documents/projects/ratar-data/results/benchmarking/' \
                       'TOUGH-M1/similarity/pairs_similarity.p'
-        pickle.dump(similarity, open(output_path, 'wb'))
+        with open(output_path, 'wb') as f:
+            pickle.dump(similarity, f)
 
         return similarity
 
@@ -265,7 +274,11 @@ def calculate_similarity_pairs(pairs, struc_path_template):
     pair_list = []  # This list will serve as index for that DataFrame
 
     # Initialise sim_dict with encoding method type (as keys) and empty lists (as values)
-    bs = pickle.load(open(struc_path_template % pairs.loc[0, 'struc1'], 'rb'))  # Load example binding site
+
+    # Load example binding site
+    with open(struc_path_template % pairs.loc[0, 'struc1'], 'rb') as f:
+        bs = pickle.load(f)
+
     for repres in bs.shapes.shapes_dict.keys():
         for method in bs.shapes.shapes_dict[repres].keys():
             if method != 'na':
@@ -287,8 +300,10 @@ def calculate_similarity_pairs(pairs, struc_path_template):
         struc_path2 = struc_path_template % p2
 
         # Load binding sites
-        bs1 = pickle.load(open(struc_path1, 'rb'))
-        bs2 = pickle.load(open(struc_path2, 'rb'))
+        with open(struc_path1, 'rb') as f:
+            bs1 = pickle.load(f)
+        with open(struc_path2, 'rb') as f:
+            bs2 = pickle.load(f)
 
         for repres in bs1.shapes.shapes_dict.keys():
             for method in bs1.shapes.shapes_dict[repres].keys():
