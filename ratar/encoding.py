@@ -223,17 +223,13 @@ def save_cgo_file(binding_site, output_path):
     # Set PyMol sphere colors (for reference points)
     sphere_colors = sns.color_palette('hls', 7)
 
-    # Open cgo file
-    cgo_file = open(output_path, 'w')
-    cgo_file.write('from pymol import *\n')
-    cgo_file.write('import os\n')
-    cgo_file.write('from pymol.cgo import *\n\n')
-    # lines = [
-    #     'from pymol import *',
-    #     'import os',
-    #     'from pymol.cgo import *',
-    #     ''
-    # ]
+    # List contains lines for python script
+    lines = [
+        'from pymol import *',
+        'import os',
+        'from pymol.cgo import *',
+        ''
+    ]
     # Collect all PyMol objects here (in order to group them after loading them to PyMol)
     obj_names = []
 
@@ -251,32 +247,34 @@ def save_cgo_file(binding_site, output_path):
                 # Set size for PyMol spheres
                 size = str(1)
 
-                cgo_file.write(f'obj_{obj_name} = [\n')  # Variable cannot start with digit, thus add prefix obj_
+                lines.append(f'obj_{obj_name} = [')  # Variable cannot start with digit, thus add prefix obj_
 
                 # Set color counter (since we iterate over colors for each reference point)
                 counter_colors = 0
 
                 # For each reference point, write sphere color, coordinates and size to file
                 for index, row in ref_points.iterrows():
-
+                    
                     # Set sphere color
                     sphere_color = list(sphere_colors[counter_colors])
                     counter_colors = counter_colors + 1
 
                     # Write sphere color to file
-                    cgo_file.write(f'\tCOLOR, {str(sphere_color[0])}, {str(sphere_color[1])}, {str(sphere_color[2])},\n')
+                    lines.append(f'\tCOLOR, {str(sphere_color[0])}, {str(sphere_color[1])}, {str(sphere_color[2])},')
 
                     # Write sphere coordinates and size to file
-                    cgo_file.write(f'\tSPHERE, {str(row["x"])}, {str(row["y"])}, {str(row["z"])}, {size},\n')
+                    lines.append(f'\tSPHERE, {str(row["x"])}, {str(row["y"])}, {str(row["z"])}, {size},')
 
                 # Write command to file that will load the reference points as PyMol object
-                cgo_file.write(f']\ncmd.load_cgo(obj_{obj_name}, "{obj_name}")\n\n')
+                lines.append(f']')
+                lines.append(f'cmd.load_cgo(obj_{obj_name}, "{obj_name}")')
+                lines.append('')
 
     # Group all objects to one group
-    cgo_file.write(f'cmd.group("{binding_site.pdb_id[:4]}_ref_points", "{" ".join(obj_names)}")')
-    # cgo_file.write('\n'.join(lines))
-    # Close cgo file
-    cgo_file.close()
+    lines.append(f'cmd.group("{binding_site.pdb_id[:4]}_ref_points", "{" ".join(obj_names)}")')
+
+    with open(output_path, 'w') as f:
+        f.write('\n'.join(lines))
 
 
 ########################################################################################
