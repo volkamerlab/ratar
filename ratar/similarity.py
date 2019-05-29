@@ -16,18 +16,7 @@ Handles the primary functions for comparing binding sites.
 import glob
 import pickle
 
-import pandas as pd
-from pathlib import Path
-
-from encoding import *
-
-########################################################################################
-# Global variables
-########################################################################################
-
-# Package location
-# package_path: str = sys.path[0]
-package_path: str = '/home/dominique/Documents/projects/ratar/ratar'
+from ratar.encoding import *
 
 
 ########################################################################################
