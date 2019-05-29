@@ -49,19 +49,20 @@ def main():
     # Create output folder
     create_directory(output_dir)
 
-    # Log IO files
-    log_file = open(Path(output_dir) / 'ratar.log', 'w')
-    log_file.write(f'------------------------------------------------------------\n')
-    log_file.write(f'IO\n')
-    log_file.write(f'------------------------------------------------------------\n\n')
-    log_file.write(f'Input: {input_mol_path}\n')
-
-    # Log encoding step processing
-    log_file.write(f'Output: {output_dir}\n\n')
-    log_file.write(f'------------------------------------------------------------\n')
-    log_file.write(f'PROCESS ENCODING\n')
-    log_file.write(f'------------------------------------------------------------\n\n')
-    log_file.close()
+    # Log IO and encdoding step processing
+    lines = [
+        f'------------------------------------------------------------',
+        f'IO',
+        f'------------------------------------------------------------',
+        f'',
+        f'Input: {input_mol_path}',
+        f'Output: {output_dir}',
+        f'',
+        f'------------------------------------------------------------',
+        f'PROCESS ENCODING',
+        f'------------------------------------------------------------',
+        f''
+    ]
 
     # Process encoding
     process_encoding(input_mol_path, output_dir)
@@ -71,12 +72,19 @@ def main():
     encoding_runtime = encoding_end - encoding_start
 
     # Log runtime
-    log_file = open(Path(output_dir) / 'ratar.log', 'a+')
-    log_file.write(f'\n------------------------------------------------------------\n')
-    log_file.write(f'RUNTIME\n')
-    log_file.write(f'------------------------------------------------------------\n\n')
-    log_file.write(f'Encoding step: {encoding_runtime}\n')
-    log_file.close()
+    lines.extend(
+        [
+            f'------------------------------------------------------------',
+            f'RUNTIME',
+            f'------------------------------------------------------------',
+            f'',
+            f'Encoding step: {encoding_runtime}'
+        ]
+    )
+
+    # Write logs to file
+    with open(Path(output_dir) / 'ratar.log', 'w') as f:
+        f.write('\n'.join(lines))
 
 
 if __name__ == '__main__':
