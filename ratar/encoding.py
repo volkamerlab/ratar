@@ -30,19 +30,19 @@ from ratar.auxiliary import *
 ########################################################################################
 
 # Representative and physicochemical property keys
-pcprop_keys = ['z1', 'z12', 'z123']
+PCPROP_KEYS = ['z1', 'z12', 'z123']
 
 ratar_path = Path(ratar.__file__).parent
 
 # Pseudocenters definition
 with open(ratar_path / 'data' / 'pseudocenter_atoms.p', 'rb') as f:
-    pc_atoms = pickle.load(f)
+    PC_ATOMS = pickle.load(f)
 
-pc_atoms = pc_atoms[pc_atoms['type'] != 'HBDA']  # Remove HBDA features information (too few data points)
-pc_atoms.reset_index(drop=True, inplace=True)
+PC_ATOMS = PC_ATOMS[PC_ATOMS['type'] != 'HBDA']  # Remove HBDA features information (too few data points)
+PC_ATOMS.reset_index(drop=True, inplace=True)
 
 # Amino acid descriptors definition, e.g. Z-scales
-aa = AminoAcidDescriptors()
+AA = AminoAcidDescriptors()
 
 
 ########################################################################################
@@ -78,7 +78,6 @@ def encode_binding_site(pmol, output_log_path=None):
     binding_site = BindingSite(pmol, output_log_path)
 
     return binding_site
-
 
 
 def process_encoding(input_mol_path, output_dir):
@@ -515,7 +514,7 @@ class PCProperties:
 
         for i in repres_dict.keys():
             self.pcprop_dict[i] = {}
-            for j in pcprop_keys:
+            for j in PCPROP_KEYS:
                 if type(repres_dict[i]) is not dict:
                     self.pcprop_dict[i][j] = get_pcproperties(repres_dict, i, j)
                 else:
@@ -667,10 +666,10 @@ def get_zscales_amino_acids(mol, output_log_path=None):
     mol_aa = mol['subst_name'].apply(lambda x: x[0:3])
 
     # Get only rows (atoms) that belong to Z-scales amino acids
-    mol_zscales_aa = mol[mol_aa.apply(lambda y: y in aa.zscales.index)].copy()
+    mol_zscales_aa = mol[mol_aa.apply(lambda y: y in AA.zscales.index)].copy()
 
     # Get only rows (atoms) that DO NOT belong to Z-scales amino acids
-    mol_non_zscales_aa = mol[mol_aa.apply(lambda y: y not in aa.zscales.index)].copy()
+    mol_non_zscales_aa = mol[mol_aa.apply(lambda y: y not in AA.zscales.index)].copy()
 
     if not mol_non_zscales_aa.empty:
         if output_log_path is not None:
@@ -791,12 +790,12 @@ def get_pca(mol):
         # Get other defined atoms
         else:
             query = (line['amino_acid'] + '_' + line['atom_name'])
-            matches.append(query in list(pc_atoms['pattern']))
-            if query in list(pc_atoms['pattern']):
-                ix = pc_atoms.index[pc_atoms['pattern'] == query].tolist()[0]  # FIXME tolist needed and why [0]?
-                pc_types.append(pc_atoms.iloc[ix]['type'])
-                pc_ids.append(pc_atoms.iloc[ix]['pc_id'])
-                pc_atom_ids.append(pc_atoms.iloc[ix]['pc_atom_id'])
+            matches.append(query in list(PC_ATOMS['pattern']))
+            if query in list(PC_ATOMS['pattern']):
+                ix = PC_ATOMS.index[PC_ATOMS['pattern'] == query].tolist()[0]  # FIXME tolist needed and why [0]?
+                pc_types.append(PC_ATOMS.iloc[ix]['type'])
+                pc_ids.append(PC_ATOMS.iloc[ix]['pc_id'])
+                pc_atom_ids.append(PC_ATOMS.iloc[ix]['pc_atom_id'])
 
     bs_pc_atoms = mol[matches].copy()
     bs_pc_atoms['pc_types'] = pd.Series(pc_types, index=bs_pc_atoms.index)
@@ -873,15 +872,15 @@ def get_pcproperties(repres_dict, repres_key, pcprop_key):
         DataFrame containing physicochemical properties.
     """
 
-    if pcprop_key == pcprop_keys[0]:
+    if pcprop_key == PCPROP_KEYS[0]:
         return get_zscales(repres_dict, repres_key, 1)
-    if pcprop_key == pcprop_keys[1]:
+    if pcprop_key == PCPROP_KEYS[1]:
         return get_zscales(repres_dict, repres_key, 2)
-    if pcprop_key == pcprop_keys[2]:
+    if pcprop_key == PCPROP_KEYS[2]:
         return get_zscales(repres_dict, repres_key, 3)
     else:
         raise SystemExit('Unknown representative key.'    
-                         'Select: ', ', '.join(pcprop_keys)) # FIXME SystemError should not be used, KeyError better
+                         'Select: ', ', '.join(PCPROP_KEYS)) # FIXME SystemError should not be used, KeyError better
 
 
 def get_zscales(repres_dict, repres_key, z_number):
@@ -905,7 +904,7 @@ def get_zscales(repres_dict, repres_key, z_number):
     """
 
     # Get amino acid to Z-scales transformation matrix
-    zs = aa.zscales
+    zs = AA.zscales
 
     # Transform e.g. ALA100 to ALA
     repres_aa = repres_dict[repres_key]['subst_name'].apply(lambda x: x[0:3])
@@ -952,7 +951,7 @@ def get_subset_indices(repres_dict, repres_key):
     subset = {}
 
     # Loop over all pseudocenter types
-    for i in list(set(pc_atoms['type'])):
+    for i in list(set(PC_ATOMS['type'])):
 
         # If pseudocenter type exists in dataset, save corresponding subset, else save None
         if i in set(repres['pc_types']):
@@ -995,7 +994,7 @@ def get_points(repres_dict, coord_dict, pcprop_dict):
 
     for i in repres_dict.keys():
         points_dict[i] = coord_dict[i]
-        for j in pcprop_keys:
+        for j in PCPROP_KEYS:
             points_dict[i + '_' + j] = pd.concat([coord_dict[i], pcprop_dict[i][j]], axis=1)
 
     return points_dict
