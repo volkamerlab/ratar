@@ -222,7 +222,7 @@ def create_directory(directory):
 
     Parameters
     ----------
-    directory : str
+    directory : str or pathlib.Path
         Absolute path to directory.
 
     """

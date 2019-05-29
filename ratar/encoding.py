@@ -121,13 +121,9 @@ def process_encoding(input_mol_path, output_dir):
 
     # Get number of molecule structure files and set molecule structure counter
     mol_sum = len(input_mol_path_list)
-    mol_counter = 0
 
     # Iterate over all binding sites (molecule structure files)
-    for mol in input_mol_path_list:
-
-        # Increment molecule structure counter
-        mol_counter = mol_counter + 1
+    for mol_counter, mol in enumerate(input_mol_path_list, 1):
 
         # Load binding site from molecule structure file
         bs_loader = MolFileLoader(mol)
@@ -135,13 +131,9 @@ def process_encoding(input_mol_path, output_dir):
 
         # Get number of pmol objects and set pmol counter
         pmol_sum = len(pmols)
-        pmol_counter = 0
 
         # Iterate over all binding sites in molecule structure file
-        for pmol in pmols:
-
-            # Increment pmol counter
-            pmol_counter = pmol_counter + 1
+        for pmol_counter, pmol in enumerate(pmols, 1):
 
             # Get iteration progress
             progress_string = f'{mol_counter}/{mol_sum} molecule structure files - {pmol_counter}/{pmol_sum} pmol objects: {pmol.code}'
@@ -158,7 +150,7 @@ def process_encoding(input_mol_path, output_dir):
 
             # Create output folder
             pdb_id_encoding = Path(output_dir) / 'encoding' / pmol.code
-            create_directory(str(pdb_id_encoding))
+            create_directory(pdb_id_encoding)
 
             # Get output file paths
             output_log_path = pdb_id_encoding / 'ratar_encoding.log'
@@ -235,7 +227,12 @@ def save_cgo_file(binding_site, output_path):
     cgo_file.write('from pymol import *\n')
     cgo_file.write('import os\n')
     cgo_file.write('from pymol.cgo import *\n\n')
-
+    # lines = [
+    #     'from pymol import *',
+    #     'import os',
+    #     'from pymol.cgo import *',
+    #     ''
+    # ]
     # Collect all PyMol objects here (in order to group them after loading them to PyMol)
     obj_names = []
 
@@ -276,7 +273,7 @@ def save_cgo_file(binding_site, output_path):
 
     # Group all objects to one group
     cgo_file.write(f'cmd.group("{binding_site.pdb_id[:4]}_ref_points", "{" ".join(obj_names)}")')
-
+    # cgo_file.write('\n'.join(lines))
     # Close cgo file
     cgo_file.close()
 
@@ -453,8 +450,7 @@ class Representatives:
 
         self.repres_dict = {}
 
-        repres_keys = ['ca', 'pca', 'pc']  # Define names für representatives types
-        for repres_key in repres_keys:
+        for repres_key in ['ca', 'pca', 'pc']:  # Define names für representatives types
             self.repres_dict[repres_key] = get_representatives(mol, repres_key)
 
 
@@ -481,7 +477,9 @@ class Coordinates:
 
         self.coord_dict = {}
         for i in repres_dict.keys():
-            if type(repres_dict[i]) is not dict:
+        #for k, value in repres_dict.items():
+            if type(repres_dict[i]) is not dict:  #
+            # if  isinstance(repres_dict, (dict, list, tuple)):
                 self.coord_dict[i] = repres_dict[i][['x', 'y', 'z']]
             else:
                 self.coord_dict[i] = {key: value[['x', 'y', 'z']] for (key, value) in repres_dict[i].items()}
@@ -708,7 +706,11 @@ def get_representatives(mol, repres_key):
     pandas DataFrame
         DataFrame containing atom lines from input file described by Z-scales.
     """
-
+    # return {
+    #     'ca': get_ca,
+    #     'pca': get_pca,
+    #     'pc': get_pc
+    # }[repres_key](mol)
     if repres_key == 'ca':
         return get_ca(mol)
     if repres_key == 'pca':
@@ -765,6 +767,7 @@ def get_pca(mol):
     pc_ids = []  # Pc ids of matching atoms
     pc_atom_ids = []  # Pc atom ids of matching atoms
 
+    # TODO: review because it is very old code
     # Iterate over all atoms (lines) in binding site
     for i in mol.index:
         line = mol.loc[i]  # Atom in binding site
@@ -790,7 +793,7 @@ def get_pca(mol):
             query = (line['amino_acid'] + '_' + line['atom_name'])
             matches.append(query in list(pc_atoms['pattern']))
             if query in list(pc_atoms['pattern']):
-                ix = pc_atoms.index[pc_atoms['pattern'] == query].tolist()[0]
+                ix = pc_atoms.index[pc_atoms['pattern'] == query].tolist()[0]  # FIXME tolist needed and why [0]?
                 pc_types.append(pc_atoms.iloc[ix]['type'])
                 pc_ids.append(pc_atoms.iloc[ix]['pc_id'])
                 pc_atom_ids.append(pc_atoms.iloc[ix]['pc_atom_id'])
@@ -823,7 +826,7 @@ def get_pc(mol):
     bs_pc = get_pca(mol)
 
     # Loop over binding site amino acids
-    for subst_name_id in set(bs_pc['subst_name']):
+    for subst_name_id in set(bs_pc['subst_name']):  # FIXME use pandas groupby
 
         # Loop over pseudocenters of that amino acids
         for pc_id in set(bs_pc[bs_pc['subst_name'] == subst_name_id]['pc_id']):
@@ -877,8 +880,8 @@ def get_pcproperties(repres_dict, repres_key, pcprop_key):
     if pcprop_key == pcprop_keys[2]:
         return get_zscales(repres_dict, repres_key, 3)
     else:
-        raise SystemExit('Unknown representative key.'
-                         'Select: ', ', '.join(pcprop_keys))
+        raise SystemExit('Unknown representative key.'    
+                         'Select: ', ', '.join(pcprop_keys)) # FIXME SystemError should not be used, KeyError better
 
 
 def get_zscales(repres_dict, repres_key, z_number):
