@@ -16,18 +16,18 @@ Handles the helper functions.
 import sys
 
 from pathlib import Path
-
 from biopandas.mol2 import PandasMol2, split_multimol2
 from biopandas.pdb import PandasPdb
 import pandas as pd
 
+import ratar
 
 ########################################################################################
 # Global variables
 ########################################################################################
 
 # Project location
-package_path = Path('/home/dominique/Documents/projects/ratar/ratar')
+ratar_path = Path(ratar.__file__).parent
 
 
 ########################################################################################
@@ -48,7 +48,7 @@ class AminoAcidDescriptors:
 
     def __init__(self):
         # Z-scales taken from: https://github.com/Superzchen/iFeature/blob/master/codes/ZSCALE.py
-        zscales_path = package_path / 'data/zscales.csv'
+        zscales_path = ratar_path / 'data' / 'zscales.csv'
         self.zscales = pd.read_csv(str(zscales_path), index_col='aa3')
 
 
