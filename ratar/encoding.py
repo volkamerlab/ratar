@@ -192,7 +192,9 @@ def save_binding_site(binding_site, output_path):
     """
 
     create_directory(Path(output_path).parent)
-    pickle.dump(binding_site, open(output_path, 'wb'))
+
+    with open(output_path, 'wb') as f:
+        pickle.dump(binding_site, f)
 
 
 def save_cgo_file(binding_site, output_path):
