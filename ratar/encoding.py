@@ -69,10 +69,9 @@ def encode_binding_site(pmol, output_log_path=None):
     """
 
     if output_log_path is not None:
-        log_file = open(output_log_path, 'w')
-        log_file.write(f'{pmol.code}\n\n')
-        log_file.write('Encode binding site.\n\n')
-        log_file.close()
+        with open(output_log_path, 'w') as f:
+            f.write(f'{pmol.code}\n\n')
+            f.write('Encode binding site.\n\n')
 
     # Encode binding site
     binding_site = BindingSite(pmol, output_log_path)
@@ -141,9 +140,8 @@ def process_encoding(input_mol_path, output_dir):
             print(progress_string)
 
             # Log iteration process
-            log_file = open(Path(output_dir) / 'ratar.log', 'a+')
-            log_file.write(f'{progress_string}\n')
-            log_file.close()
+            with open(Path(output_dir) / 'ratar.log', 'a+') as f:
+                f.write(f'{progress_string}\n')
 
             # Process single binding site:
 
@@ -164,9 +162,6 @@ def process_encoding(input_mol_path, output_dir):
 
             # Save binding site reference points as cgo file
             save_cgo_file(binding_site, str(output_cgo_path))
-
-
-
 
 
 ########################################################################################
@@ -254,7 +249,7 @@ def save_cgo_file(binding_site, output_path):
 
                 # For each reference point, write sphere color, coordinates and size to file
                 for index, row in ref_points.iterrows():
-                    
+
                     # Set sphere color
                     sphere_color = list(sphere_colors[counter_colors])
                     counter_colors = counter_colors + 1
@@ -370,7 +365,9 @@ def load_binding_site(binding_site_path):
     # If input path matches one file, load file.
     else:
         bs_path = bs_path[0]
-        binding_site = pickle.load(open(bs_path, 'rb'))
+        with open(bs_path, 'rb') as f:
+            binding_site = pickle.load(f)
+
         print('The following file was loaded: ')
         print(bs_path)
         return binding_site
@@ -673,10 +670,9 @@ def get_zscales_amino_acids(mol, output_log_path=None):
 
     if not mol_non_zscales_aa.empty:
         if output_log_path is not None:
-            log_file = open(output_log_path, 'a+')
-            log_file.write('Atoms removed for binding site encoding:\n\n')
-            log_file.write(mol_non_zscales_aa.to_string() + '\n\n')
-            log_file.close()
+            with open(output_log_path, 'a+') as f:
+                f.write('Atoms removed for binding site encoding:\n\n')
+                f.write(mol_non_zscales_aa.to_string() + '\n\n')
         else:
             print('Atoms removed for binding site encoding:')
             print(mol_non_zscales_aa)
