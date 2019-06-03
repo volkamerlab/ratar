@@ -15,6 +15,7 @@ import re
 import sys
 from typing import List
 
+from flatten_dict import flatten
 import numpy as np
 import pandas as pd
 import seaborn as sns
@@ -32,7 +33,7 @@ from ratar.auxiliary import *
 ratar_path = Path(ratar.__file__).parent
 
 # Physicochemical property keys
-PCPROP_KEYS = ['z1', 'z12', 'z123']
+PCPROP_KEYS = ['z1', 'z123']
 
 # Pseudocenters definition
 with open(ratar_path / 'data' / 'pseudocenter_atoms.p', 'rb') as f:
@@ -428,6 +429,24 @@ class BindingSite:
         self.points = Points(self.repres.repres_dict, self.coord.coord_dict, self.pcprop.pcprop_dict, self.subset.subsets_indices_dict)
         self.shapes = Shapes(self.points)
 
+    def __eq__(self, other):
+        """Override the default Equals behavior"""
+
+        rules = [
+            self.pdb_id == other.pdb_id,
+            self.mol.equals(other.mol),
+            self.repres == other.repres,
+            self.subset == other.subset,
+            self.coord == other.coord,
+            self.pcprop == other.pcprop,
+            self.points == other.points,
+            self.shapes == other.shapes
+        ]
+
+        print(rules)
+
+        return all(rules)
+
 
 class Representatives:
 
@@ -455,6 +474,26 @@ class Representatives:
         for repres_key in ['ca', 'pca', 'pc']:  # Define names für representatives types
             self.repres_dict[repres_key] = get_representatives(mol, repres_key)
 
+    def __eq__(self, other):
+
+        """
+        Check if two Representatives objects are equal.
+        Return True if dictionary keys (strings) and dictionary values (DataFrames) are equal, else return False.
+        """
+
+        obj1 = self.repres_dict
+        obj2 = other.repres_dict
+
+        try:
+            rules = [
+                obj1.keys() == obj2.keys(),
+                all([v.equals(obj2[k]) for k, v in obj1.items()])
+            ]
+        except KeyError:
+            rules = False
+
+        return all(rules)
+
 
 class Coordinates:
 
@@ -478,6 +517,7 @@ class Coordinates:
     def __init__(self, repres_dict):
 
         self.coord_dict = {}
+
         for i in repres_dict.keys():
         #for k, value in repres_dict.items():
             if type(repres_dict[i]) is not dict:  #
@@ -485,6 +525,26 @@ class Coordinates:
                 self.coord_dict[i] = repres_dict[i][['x', 'y', 'z']]
             else:
                 self.coord_dict[i] = {key: value[['x', 'y', 'z']] for (key, value) in repres_dict[i].items()}
+
+    def __eq__(self, other):
+
+        """
+        Check if two Coordinates objects are equal.
+        Return True if dictionary keys (strings) and dictionary values (DataFrames) are equal, else return False.
+        """
+
+        obj1 = self.coord_dict
+        obj2 = other.coord_dict
+
+        try:
+            rules = [
+                obj1.keys() == obj2.keys(),
+                all([v.equals(obj2[k]) for k, v in obj1.items()])
+            ]
+        except KeyError:
+            rules = False
+
+        return all(rules)
 
 
 class PCProperties:
@@ -524,6 +584,28 @@ class PCProperties:
                     self.pcprop_dict[i] = {key: get_pcproperties(repres_dict, i, j)
                                            for (key, value) in repres_dict[i].items()}
 
+    def __eq__(self, other):
+
+        """
+        Check if two PCProperties objects are equal.
+        Return True if dictionary keys (strings) and dictionary values (DataFrames) are equal, else return False.
+        """
+
+        print('bla_pc')
+
+        obj1 = flatten(self.pcprop_dict, reducer='path')
+        obj2 = flatten(other.pcprop_dict, reducer='path')
+
+        try:
+            rules = [
+                obj1.keys() == obj2.keys(),
+                all([v.equals(obj2[k]) for k, v in obj1.items()])
+            ]
+        except KeyError:
+            rules = False
+
+        return all(rules)
+
 
 class Subsetter:
 
@@ -551,6 +633,26 @@ class Subsetter:
 
         self.subsets_indices_dict = {'pc': get_subset_indices(repres_dict, 'pc'),
                                      'pca': get_subset_indices(repres_dict, 'pca')}
+
+    def __eq__(self, other):
+
+        """
+        Check if two Subsetter objects are equal.
+        Return True if dictionary keys (strings) and dictionary values (DataFrames) are equal, else return False.
+        """
+
+        obj1 = flatten(self.subsets_indices_dict, reducer='path')
+        obj2 = flatten(other.subsets_indices_dict, reducer='path')
+
+        try:
+            rules = [
+                obj1.keys() == obj2.keys(),
+                all([v.equals(obj2[k]) for k, v in obj1.items()])
+            ]
+        except KeyError:
+            rules = False
+
+        return all(rules)
 
 
 class Points:
@@ -598,6 +700,35 @@ class Points:
         self.points_dict = get_points(repres_dict, coord_dict, pcprop_dict)
         self.points_subsets_dict = get_points_subsetted(self.points_dict, subsets_indices_dict)
 
+    def __eq__(self, other):
+
+        """
+        Check if two Points objects are equal.
+        Return True if dictionary keys (strings) and dictionary values (DataFrames) are equal, else return False.
+        """
+
+        obj1 = (
+            flatten(self.points_dict, reducer='path'),
+            flatten(self.points_subsets_dict, reducer='path')
+        )
+
+        obj2 = (
+            flatten(other.points_dict, reducer='path'),
+            flatten(other.points_subsets_dict, reducer='path')
+        )
+
+        try:
+            rules = [
+                obj1[0].keys() == obj2[0].keys(),
+                obj1[1].keys() == obj2[1].keys(),
+                all([v.equals(obj2[0][k]) for k, v in obj1[0].items()]),
+                all([v.equals(obj2[1][k]) for k, v in obj1[1].items()])
+            ]
+        except KeyError:
+            rules = False
+
+        return all(rules)
+
 
 class Shapes:
 
@@ -640,6 +771,35 @@ class Shapes:
             self.shapes_subsets_dict[ko] = {}
             for ki in points.points_subsets_dict[ko]:  # ki is inner key
                 self.shapes_subsets_dict[ko][ki] = get_shape(points.points_subsets_dict[ko][ki])
+
+    def __eq__(self, other):
+
+        """
+        Check if two Shapes objects are equal.
+        Return True if dictionary keys (strings) and dictionary values (DataFrames) are equal, else return False.
+        """
+
+        obj1 = (
+            flatten(self.shapes_dict, reducer='path'),
+            flatten(self.shapes_subsets_dict, reducer='path')
+        )
+
+        obj2 = (
+            flatten(other.shapes_dict, reducer='path'),
+            flatten(other.shapes_subsets_dict, reducer='path')
+        )
+
+        try:
+            rules = [
+                obj1[0].keys() == obj2[0].keys(),
+                obj1[1].keys() == obj2[1].keys(),
+                all([v.equals(obj2[0][k]) for k, v in obj1[0].items()]),
+                all([v.equals(obj2[1][k]) for k, v in obj1[1].items()])
+            ]
+        except KeyError:
+            rules = False
+
+        return all(rules)
 
 
 ########################################################################################
@@ -877,8 +1037,6 @@ def get_pcproperties(repres_dict, repres_key, pcprop_key):
     if pcprop_key == PCPROP_KEYS[0]:
         return get_zscales(repres_dict, repres_key, 1)
     if pcprop_key == PCPROP_KEYS[1]:
-        return get_zscales(repres_dict, repres_key, 2)
-    if pcprop_key == PCPROP_KEYS[2]:
         return get_zscales(repres_dict, repres_key, 3)
     else:
         raise SystemExit('Unknown representative key.'    
