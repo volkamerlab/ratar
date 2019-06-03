@@ -29,10 +29,10 @@ from ratar.auxiliary import *
 # Global variables
 ########################################################################################
 
-# Representative and physicochemical property keys
-PCPROP_KEYS = ['z1', 'z12', 'z123']
-
 ratar_path = Path(ratar.__file__).parent
+
+# Physicochemical property keys
+PCPROP_KEYS = ['z1', 'z12', 'z123']
 
 # Pseudocenters definition
 with open(ratar_path / 'data' / 'pseudocenter_atoms.p', 'rb') as f:
@@ -254,16 +254,22 @@ def save_cgo_file(binding_site, output_path):
                     sphere_color = list(sphere_colors[counter_colors])
                     counter_colors = counter_colors + 1
 
-                    # Write sphere color to file
-                    lines.append(f'\tCOLOR, {str(sphere_color[0])}, {str(sphere_color[1])}, {str(sphere_color[2])},')
-
-                    # Write sphere coordinates and size to file
-                    lines.append(f'\tSPHERE, {str(row["x"])}, {str(row["y"])}, {str(row["z"])}, {size},')
+                    # Write sphere a) color and b) coordinates and size to file
+                    lines.extend(
+                        [
+                            f'\tCOLOR, {str(sphere_color[0])}, {str(sphere_color[1])}, {str(sphere_color[2])},',
+                            f'\tSPHERE, {str(row["x"])}, {str(row["y"])}, {str(row["z"])}, {size},'
+                        ]
+                    )
 
                 # Write command to file that will load the reference points as PyMol object
-                lines.append(f']')
-                lines.append(f'cmd.load_cgo(obj_{obj_name}, "{obj_name}")')
-                lines.append('')
+                lines.extend(
+                    [
+                        f']',
+                        f'cmd.load_cgo(obj_{obj_name}, "{obj_name}")',
+                        ''
+                    ]
+                )
 
     # Group all objects to one group
     lines.append(f'cmd.group("{binding_site.pdb_id[:4]}_ref_points", "{" ".join(obj_names)}")')
