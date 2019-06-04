@@ -430,7 +430,10 @@ class BindingSite:
         self.shapes = Shapes(self.points)
 
     def __eq__(self, other):
-        """Override the default Equals behavior"""
+
+        """
+        Check if two BindingSite objects are equal.
+        """
 
         rules = [
             self.pdb_id == other.pdb_id,
@@ -456,7 +459,7 @@ class Representatives:
 
     Parameters
     ----------
-    mol : pandas DataFrame
+    mol : pandas.DataFrame
         DataFrame containing atom lines of mol2 or pdb file.
 
     Attributes
@@ -530,7 +533,6 @@ class Coordinates:
 
         """
         Check if two Coordinates objects are equal.
-        Return True if dictionary keys (strings) and dictionary values (DataFrames) are equal, else return False.
         """
 
         obj1 = self.coord_dict
@@ -588,7 +590,6 @@ class PCProperties:
 
         """
         Check if two PCProperties objects are equal.
-        Return True if dictionary keys (strings) and dictionary values (DataFrames) are equal, else return False.
         """
 
         print('bla_pc')
@@ -638,7 +639,6 @@ class Subsetter:
 
         """
         Check if two Subsetter objects are equal.
-        Return True if dictionary keys (strings) and dictionary values (DataFrames) are equal, else return False.
         """
 
         obj1 = flatten(self.subsets_indices_dict, reducer='path')
@@ -704,7 +704,6 @@ class Points:
 
         """
         Check if two Points objects are equal.
-        Return True if dictionary keys (strings) and dictionary values (DataFrames) are equal, else return False.
         """
 
         obj1 = (
@@ -776,7 +775,6 @@ class Shapes:
 
         """
         Check if two Shapes objects are equal.
-        Return True if dictionary keys (strings) and dictionary values (DataFrames) are equal, else return False.
         """
 
         obj1 = (
@@ -813,9 +811,9 @@ def get_zscales_amino_acids(mol, output_log_path=None):
 
     Parameters
     ----------
-    mol : pandas DataFrame
+    mol : pandas.DataFrame
         DataFrame containing atom lines from input file.
-    output_log_path : string
+    output_log_path : str
         output_log_path: Path to log file.
 
     Returns
@@ -857,9 +855,9 @@ def get_representatives(mol, repres_key):
 
     Parameters
     ----------
-    mol : pandas DataFrame
+    mol : pandas.DataFrame
         DataFrame containing atom lines from input file.
-    repres_key : string
+    repres_key : str
         repres_key: Representatives name; key in repres_dict.
 
     Returns
@@ -889,7 +887,7 @@ def get_ca(mol):
 
     Parameters
     ----------
-    mol : pandas DataFrame
+    mol : pandas.DataFrame
         DataFrame containing atom lines from input file.
 
     Returns
@@ -910,12 +908,12 @@ def get_pca(mol):
 
     Parameters
     ----------
-    mol: pandas DataFrame
+    mol: pandas.DataFrame
         DataFrame containing atom lines from input file.
 
     Returns
     -------
-    pandas DataFrame
+    pandas.DataFrame
         DataFrame containing atom lines from input file described by Z-scales.
     """
 
@@ -974,12 +972,12 @@ def get_pc(mol):
 
     Parameters
     ----------
-    mol : pandas DataFrame
+    mol : pandas.DataFrame
         DataFrame containing atom lines from input file.
 
     Returns
     -------
-    pandas DataFrame
+    pandas.DataFrame
         DataFrame containing atom lines from input file described by Z-scales.
     """
 
@@ -1023,14 +1021,14 @@ def get_pcproperties(repres_dict, repres_key, pcprop_key):
     ----------
     repres_dict : Representatives.repres_dict
         Representatives stored as dictionary with several representation methods serving as key.
-    repres_key : String
+    repres_key : str
         Representatives name; key in repres_dict.
-    pcprop_key : String
+    pcprop_key : str
         Physicochemical property name; key in pcprop_key.
 
     Returns
     -------
-    pandas DataFrame
+    pandas.DataFrame
         DataFrame containing physicochemical properties.
     """
 
@@ -1052,14 +1050,14 @@ def get_zscales(repres_dict, repres_key, z_number):
     ----------
     repres_dict : Representatives.repres_dict
         Representatives stored as dictionary with several representation methods serving as key.
-    repres_key : string
+    repres_key : str
         Representatives name; key in repres_dict.
     z_number : int
         Number of Z-scales to be included.
 
     Returns
     -------
-    pandas DataFrame
+    pandas.DataFrame
         DataFrame containing Z-scales.
     """
 
@@ -1099,7 +1097,7 @@ def get_subset_indices(repres_dict, repres_key):
     ----------
     repres_dict : Representatives.repres_dict
         Representatives stored as dictionary with several representation methods serving as key.
-    repres_key : string
+    repres_key : str
         Representatives name; key in repres_dict.
 
     Returns
@@ -1247,12 +1245,12 @@ def get_distances_to_point(points: pd.DataFrame, ref_point: pd.Series) -> pd.Ser
     ----------
     points : DataFrame
         Coordinates of representatives (points) in binding site.
-    ref_point : Series
+    ref_point : pandas.Series
         Coordinates of one reference point.
 
     Returns
     -------
-    Series
+    pandas.Series
         Distances from reference point to representatives.
 
     """
@@ -1269,12 +1267,12 @@ def get_moments(dist):
 
     Parameters
     ----------
-    dist : Series
+    dist : pandas.Series
         Distance distribution, i.e. distances from reference point to all representatives (points)
 
     Returns
     -------
-    Series
+    pandas.Series
         First, second, and third moment of distance distribution.
 
     """
@@ -1303,9 +1301,9 @@ def get_shape_dict(ref_points, dist):
 
     Parameters
     ----------
-    ref_points : List of Series
+    ref_points : list of pandas.Series
         Reference points (spatial and physicochemical properties).
-    dist : List of Series
+    dist : list of pandas.Series
         Distances from each reference point to representatives (points).
 
     Returns
@@ -1626,16 +1624,16 @@ def get_adjusted_3d_cross_product(coord_origin, coord_point_a, coord_point_b):
 
     Parameters
     ----------
-    coord_origin : Series
+    coord_origin : pandas.Series
         Point with a least N dimensions (N > 2).
-    coord_point_a : Series
+    coord_point_a : pandas.Series
         Point with a least N dimensions (N > 2)
-    coord_point_b : Series
+    coord_point_b : pandas.Series
         Point with a least N dimensions (N > 2)
 
     Returns
     -------
-    Series
+    pandas.Series
         Translated and scaled cross product 3D.
 
     Notes
@@ -1650,9 +1648,9 @@ def get_adjusted_3d_cross_product(coord_origin, coord_point_a, coord_point_b):
     """
 
     if not coord_origin.size == coord_point_a.size == coord_point_b.size:
-        sys.exit('Error: The three input Series are not of same length.')
+        sys.exit('Error: The three input pandas.Series are not of same length.')
     if not coord_origin.size > 2:
-        sys.exit('Error: The three input Series are not at least of length 3.')
+        sys.exit('Error: The three input pandas.Series are not at least of length 3.')
 
     # Span vectors to point a and b from origin point
     a = coord_point_a - coord_origin
@@ -1695,14 +1693,14 @@ def get_nearest_point(point, points, scaling_factor):
 
     Parameters
     ----------
-    point : Series
+    point : pandas.Series
         Point in 3D
     points : DataFrame
         Points in at least 3D.
 
     Returns
     -------
-    Series
+    pandas.Series
         Point in **points** with all dimensions that is nearest in 3D to **point**.
 
     """
