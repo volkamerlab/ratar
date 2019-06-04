@@ -51,7 +51,6 @@ AA = AminoAcidDescriptors()
 ########################################################################################
 
 def encode_binding_site(pmol, output_log_path=None):
-
     """
     Encode the binding site stored in a pmol object, and optionally save progress to a log file.
 
@@ -59,14 +58,13 @@ def encode_binding_site(pmol, output_log_path=None):
     ----------
     pmol : biopandas.mol2.pandas_mol2.PandasMol2
         Coordinates and PDB ID for one binding site.
-    output_log_path : string
+    output_log_path : str
         Path to log file.
 
     Returns
     -------
     encoding.BindingSite
         Encoded binding site.
-
     """
 
     if output_log_path is not None:
@@ -103,15 +101,12 @@ def process_encoding(input_mol_path, output_dir):
           ...
       ratar.log
 
-
-    :param input_mol_path: Path to molecule structure file(s), can include a wildcard to match multiple files.
-    :type input_mol_path: String
-
-    :param output_dir: Output directory.
-    :type output_dir: String
-
-    :return: No return value.
-    :rtype: None
+    Parameters
+    ----------
+    input_mol_path : str
+        Path to molecule structure file(s), can include a wildcard to match multiple files.
+    output_dir : str
+        Output directory.
     """
 
     # Get all molecule structure files
@@ -170,7 +165,6 @@ def process_encoding(input_mol_path, output_dir):
 ########################################################################################
 
 def save_binding_site(binding_site, output_path):
-
     """
     Save an encoded binding site to a pickle file in an output directory.
 
@@ -178,13 +172,8 @@ def save_binding_site(binding_site, output_path):
     ----------
     binding_site : encoding.BindingSite
         Encoded binding site.
-    output_path : string
+    output_path : str
         Path to output file.
-
-    Notes
-    -----
-    Pickle file is saved; no return value.
-
     """
 
     create_directory(Path(output_path).parent)
@@ -194,26 +183,19 @@ def save_binding_site(binding_site, output_path):
 
 
 def save_cgo_file(binding_site, output_path):
-
     """
     Generate a CGO file containing reference points for different encoding methods.
 
     Parameters
     ----------
-
     binding_site : encoding.BindingSite
         Encoded binding site.
-    output_path : string
+    output_path : str
         Path to output file.
-
-    Returns
-    -------
-    None
 
     Notes
     -----
     Python script (cgo file) for PyMol.
-
     """
 
     # Set PyMol sphere colors (for reference points)
@@ -284,7 +266,6 @@ def save_cgo_file(binding_site, output_path):
 ########################################################################################
 
 def get_encoded_binding_site_path(code, output_path):
-
     """
     Get a binding site pickle path based on a path wildcard constructed from
     - a molecule code (can contain only PDB ID to check for file matches) and
@@ -294,17 +275,17 @@ def get_encoded_binding_site_path(code, output_path):
 
     Parameters
     ----------
-    code: string
+    code: str
         Molecule code (is or contains PDB ID).
-    output_path: string
+    output_path: str
         Path to output directory containing ratar related files.
 
     Returns
     -------
     String
         Path to binding site pickle file.
-
     """
+
     # Define wildcard for path to pickle file
     bs_wildcard = f'{output_path}/encoding/*{code}*/ratar_encoding.p'
 
@@ -334,20 +315,18 @@ def get_encoded_binding_site_path(code, output_path):
 
 
 def load_binding_site(binding_site_path):
-
     """
     Load an encoded binding site from a pickle file.
 
     Parameters
     ----------
-    binding_site_path : string
+    binding_site_path : str
         Path to binding site pickle file.
 
     Returns
     -------
     encoding.BindingSite
         Encoded binding site.
-
     """
 
     # Retrieve all paths that match the input path
@@ -386,7 +365,6 @@ def load_binding_site(binding_site_path):
 
 
 class BindingSite:
-
     """
     Class used to represent a binding site and its encoding.
 
@@ -415,7 +393,6 @@ class BindingSite:
         Concatenated spatial and physicochemical dimensions for binding site atoms.
     shapes : Instance of Shapes class
         Encoded binding site (reference points, distance distribution and distribution moments).
-
     """
 
     def __init__(self, pmol, output_log_path=None):
@@ -452,7 +429,6 @@ class BindingSite:
 
 
 class Representatives:
-
     """
     Class used to store binding site representatives. Representatives are selected atoms in a binding site,
     for instances all Calpha atoms of a binding site could serve as its representatives.
@@ -467,7 +443,6 @@ class Representatives:
     repres_dict : dict
         Representatives stored as dictionary with several representation methods serving as key.
         Example: {'ca': ..., 'pca': ..., 'pc': ...}
-
     """
 
     def __init__(self, mol):
@@ -499,7 +474,6 @@ class Representatives:
 
 
 class Coordinates:
-
     """
     Class used to store the coordinates of the binding site representatives,
     which were defined by the Representatives class (in its repres_dict variable).
@@ -514,7 +488,6 @@ class Coordinates:
     coord_dict : Coordinates.coord_dict
         Coordinates stored as dictionary with the same keys as in Representatives.repres_dict.
         Example: {'ca': ..., 'pca': ..., 'pc': ...}
-
     """
 
     def __init__(self, repres_dict):
@@ -530,7 +503,6 @@ class Coordinates:
                 self.coord_dict[i] = {key: value[['x', 'y', 'z']] for (key, value) in repres_dict[i].items()}
 
     def __eq__(self, other):
-
         """
         Check if two Coordinates objects are equal.
         """
@@ -550,7 +522,6 @@ class Coordinates:
 
 
 class PCProperties:
-
     """
     Class used to store the physicochemical properties of binding site representatives,
     which were defined by the Representatives class (in its repres_dict variable).
@@ -569,7 +540,6 @@ class PCProperties:
         Example: {'ca': ..., 'pca': ..., 'pc': ...}
     output_log_path :
         Path to output log file.
-
     """
 
     def __init__(self, repres_dict, output_log_path=None):
@@ -587,7 +557,6 @@ class PCProperties:
                                            for (key, value) in repres_dict[i].items()}
 
     def __eq__(self, other):
-
         """
         Check if two PCProperties objects are equal.
         """
@@ -609,11 +578,9 @@ class PCProperties:
 
 
 class Subsetter:
-
     """
     Class used to store subsets of binding site representatives,
     which were defined by the Representatives class (in its repres_dict variable).
-
 
     Parameters
     ----------
@@ -627,7 +594,6 @@ class Subsetter:
         Example: {'ca': {'H': ..., 'HBD': ..., ...},
                   'pca': {'H': ..., 'HBD': ..., ...},
                   'pc': {'H': ..., 'HBD': ..., ...}}
-
     """
 
     def __init__(self, repres_dict):
@@ -656,7 +622,6 @@ class Subsetter:
 
 
 class Points:
-
     """
     Class used to store the vectors for the binding site representatives,
     which were defined by the Representatives class (in its repres_dict variable).
@@ -692,7 +657,6 @@ class Points:
                   ...,
                   'pca_z12': {'H': ..., 'HBD': ..., ...},
                   ...}
-
     """
 
     def __init__(self, repres_dict, coord_dict, pcprop_dict, subsets_indices_dict):
@@ -701,7 +665,6 @@ class Points:
         self.points_subsets_dict = get_points_subsetted(self.points_dict, subsets_indices_dict)
 
     def __eq__(self, other):
-
         """
         Check if two Points objects are equal.
         """
@@ -730,7 +693,6 @@ class Points:
 
 
 class Shapes:
-
     """
     Class used to store the encoded binding site representatives,
     which were defined by the Representatives class (in its repres_dict variable).
@@ -754,7 +716,6 @@ class Shapes:
         - level 2 keys for subsets, e.g. 'H',
         - level 3 keys for encoding method, e.g. '3dim_usr',
         - level 4 keys for reference point coordinates 'ref_points', distances 'dist', and moments 'moments'.
-
     """
 
     def __init__(self, points):
@@ -772,7 +733,6 @@ class Shapes:
                 self.shapes_subsets_dict[ko][ki] = get_shape(points.points_subsets_dict[ko][ki])
 
     def __eq__(self, other):
-
         """
         Check if two Shapes objects are equal.
         """
@@ -805,7 +765,6 @@ class Shapes:
 ########################################################################################
 
 def get_zscales_amino_acids(mol, output_log_path=None):
-
     """
     Get all amino acids atoms that are described by Z-scales.
 
@@ -820,7 +779,6 @@ def get_zscales_amino_acids(mol, output_log_path=None):
     -------
     pandas DataFrame
         DataFrame containing atom lines from input file described by Z-scales.
-
     """
 
     # Get amino acid name per row (atom)
@@ -849,7 +807,6 @@ def get_zscales_amino_acids(mol, output_log_path=None):
 ########################################################################################
 
 def get_representatives(mol, repres_key):
-
     """
     Extract binding site representatives.
 
@@ -865,6 +822,7 @@ def get_representatives(mol, repres_key):
     pandas DataFrame
         DataFrame containing atom lines from input file described by Z-scales.
     """
+
     # return {
     #     'ca': get_ca,
     #     'pca': get_pca,
@@ -881,7 +839,6 @@ def get_representatives(mol, repres_key):
 
 
 def get_ca(mol):
-
     """
     Extract Calpha atoms from binding site.
 
@@ -902,7 +859,6 @@ def get_ca(mol):
 
 
 def get_pca(mol):
-
     """
     Extract pseudocenter atoms from binding site.
 
@@ -966,7 +922,6 @@ def get_pca(mol):
 
 
 def get_pc(mol):
-
     """
     Extract pseudocenters from binding site.
 
@@ -1013,7 +968,6 @@ def get_pc(mol):
 ########################################################################################
 
 def get_pcproperties(repres_dict, repres_key, pcprop_key):
-
     """
     Extract physicochemical properties (main function).
 
@@ -1042,7 +996,6 @@ def get_pcproperties(repres_dict, repres_key, pcprop_key):
 
 
 def get_zscales(repres_dict, repres_key, z_number):
-
     """
     Extract Z-scales from binding site representatives.
 
@@ -1089,7 +1042,6 @@ def get_zscales(repres_dict, repres_key, z_number):
 
 
 def get_subset_indices(repres_dict, repres_key):
-
     """
     Extract feature subsets from pseudocenters (pseudocenter atoms).
 
@@ -1125,7 +1077,6 @@ def get_subset_indices(repres_dict, repres_key):
 ########################################################################################
 
 def get_points(repres_dict, coord_dict, pcprop_dict):
-
     """
     Concatenate spatial (3-dimensional) and physicochemical (N-dimensional) properties
     to an 3+N-dimensional vector for each point in dataset (i.e. representative atoms in a binding site).
@@ -1159,7 +1110,6 @@ def get_points(repres_dict, coord_dict, pcprop_dict):
 
 
 def get_points_subsetted(points_dict, subsets_indices_dict):
-
     """
     Get
 
@@ -1174,7 +1124,6 @@ def get_points_subsetted(points_dict, subsets_indices_dict):
     -------
     Dict of dict of DataFrames
         #FIXME
-
     """
 
     points_subsets_dict = {}
@@ -1193,7 +1142,6 @@ def get_points_subsetted(points_dict, subsets_indices_dict):
 ########################################################################################
 
 def get_shape(points):
-
     """
     Get binding site shape with different encoding methods, depending on number of representatives (points).
     Check if
@@ -1213,7 +1161,6 @@ def get_shape(points):
     -----
     Calculate shape if at least as many representatives are in binding site as needed references points, else return
     dictionary with key 'na' and value None.
-
     """
 
     n_points = points.shape[0]
@@ -1237,7 +1184,6 @@ def get_shape(points):
 
 
 def get_distances_to_point(points: pd.DataFrame, ref_point: pd.Series) -> pd.Series:
-
     """
     Calculate distances from one point (reference point) to all other points.
 
@@ -1252,7 +1198,6 @@ def get_distances_to_point(points: pd.DataFrame, ref_point: pd.Series) -> pd.Ser
     -------
     pandas.Series
         Distances from reference point to representatives.
-
     """
 
     distances: pd.Series = np.sqrt(((points - ref_point) ** 2).sum(axis=1))
@@ -1261,7 +1206,6 @@ def get_distances_to_point(points: pd.DataFrame, ref_point: pd.Series) -> pd.Ser
 
 
 def get_moments(dist):
-
     """
     Calculate first, second, and third moment (mean, standard deviation, and skewness) for a distance distribution.
 
@@ -1274,7 +1218,6 @@ def get_moments(dist):
     -------
     pandas.Series
         First, second, and third moment of distance distribution.
-
     """
 
     # Get first, second, and third moment (mean, standard deviation, and skewness) for a distance distribution
@@ -1295,7 +1238,6 @@ def get_moments(dist):
 
 
 def get_shape_dict(ref_points, dist):
-
     """
     Get shape of binding site, i.e. reference points, distance distributions, and moments.
 
@@ -1310,7 +1252,6 @@ def get_shape_dict(ref_points, dist):
     -------
     Dict of DataFrames
         Reference points, distance distributions, and moments.
-
     """
 
     # Store reference points as data frame
@@ -1331,10 +1272,8 @@ def get_shape_dict(ref_points, dist):
 
 
 def get_shape_3dim_usr(points):
-
     """
     Encode binding site (3-dimensional points) based on the USR method.
-
 
     Parameters
     ----------
@@ -1360,7 +1299,6 @@ def get_shape_3dim_usr(points):
     ----------
     [1]_ Ballester and Richards, "Ultrafast shape Recognition to search compound databases for similar molecular
     shapes", J Comput Chem, 2007.
-
     """
 
     if points.shape[1] != 3:
@@ -1392,10 +1330,8 @@ def get_shape_3dim_usr(points):
 
 
 def get_shape_3dim_csr(points):
-
     """
     Encode binding site (3-dimensional points) based on the CSR method.
-
 
     Parameters
     ----------
@@ -1420,7 +1356,6 @@ def get_shape_3dim_csr(points):
     References
     ----------
     [1]_ Armstrong et al., "Molecular similarity including chirality", J Mol Graph Mod, 2009
-
     """
 
     if points.shape[1] != 3:
@@ -1460,10 +1395,8 @@ def get_shape_3dim_csr(points):
 
 
 def get_shape_4dim_electroshape(points, scaling_factor=1):
-
     """
     Encode binding site (4-dimensional points) based on the ElectroShape method.
-
 
     Parameters
     ----------
@@ -1491,7 +1424,6 @@ def get_shape_4dim_electroshape(points, scaling_factor=1):
     ----------
     [1]_ Armstrong et al., "ElectroShape: fast molecular similarity calculations incorporating shape, chirality and
     electrostatics", J Comput Aided Mol Des, 2010.
-
     """
 
     if points.shape[1] != 4:
@@ -1548,7 +1480,6 @@ def get_shape_4dim_electroshape(points, scaling_factor=1):
 
 
 def get_shape_6dim(points, scaling_factor=1):
-
     """
     Encode binding site in 6D.
 
@@ -1562,7 +1493,6 @@ def get_shape_6dim(points, scaling_factor=1):
     Returns
     -------
 
-
     Notes
     -----
     1. Calculate reference points for a set of points:
@@ -1575,7 +1505,6 @@ def get_shape_6dim(points, scaling_factor=1):
        - c7, nearest atom to translated and scaled cross product of two vectors spanning c1, c4, and c2
     2. Calculate distances (distance distribution) from reference points to all other points.
     3. Calculate first, second, and third moment for each distance distribution.
-
     """
 
     if points.shape[1] != 6:
@@ -1618,7 +1547,6 @@ def get_shape_6dim(points, scaling_factor=1):
 
 
 def get_adjusted_3d_cross_product(coord_origin, coord_point_a, coord_point_b):
-
     """
     Calculates a translated and scaled 3D cross product vector based on three input vectors.
 
@@ -1644,7 +1572,6 @@ def get_adjusted_3d_cross_product(coord_origin, coord_point_a, coord_point_b):
        - scaled to length of the mean of both vectors and
        - translated to the origin.
     3. Get nearest point in points (in 3D) and return its 6D vector.
-
     """
 
     if not coord_origin.size == coord_point_a.size == coord_point_b.size:
@@ -1687,7 +1614,6 @@ def get_adjusted_3d_cross_product(coord_origin, coord_point_a, coord_point_b):
 
 
 def get_nearest_point(point, points, scaling_factor):
-
     """
     Get the point (N-dimensional) in a set of points that is nearest (in 3D) to an input point (3D).
 
@@ -1702,7 +1628,6 @@ def get_nearest_point(point, points, scaling_factor):
     -------
     pandas.Series
         Point in **points** with all dimensions that is nearest in 3D to **point**.
-
     """
 
     if not point.size == 3:
