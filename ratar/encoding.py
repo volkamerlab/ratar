@@ -282,7 +282,7 @@ def get_encoded_binding_site_path(code, output_path):
 
     Returns
     -------
-    String
+    str
         Path to binding site pickle file.
     """
 
@@ -381,17 +381,17 @@ class BindingSite:
         PDB ID (or structure ID)
     mol : DataFrame
         Data extracted from e.g. mol2 or pdb file.
-    repres : Instance of Representatives class
+    repres : Representatives
         Representative atoms of binding site for different representation methods.
-    subset : Instance of Subsetter class
+    subset : Subsetter
         Subset of representative atoms of binding site for different subsetting methods.
-    coord : Instance of Coordinates class
+    coord : Coordinates
         Spatial dimensions (x, y, and z coordinates) for binding site atoms.
-    pcprop : Instance of PCProperties class
+    pcprop : PCProperties
         Physicochemical dimensions for binding site atoms.
-    points : Instance of Points class
+    points : Points
         Concatenated spatial and physicochemical dimensions for binding site atoms.
-    shapes : Instance of Shapes class
+    shapes : Shapes
         Encoded binding site (reference points, distance distribution and distribution moments).
     """
 
@@ -633,14 +633,14 @@ class Points:
 
     Parameters
     ----------
-    coord_dict: Coordinates.coord_dict (dictionary)
+    coord_dict: Coordinates.coord_dict (dict)
         Dictionary with spatial properties (=coordinates) for each representative.
         Has the same keys as Representatives.repres_dict.
-    pcprop_dict: PCProperties.pcprop_dict (dictionary)
+    pcprop_dict: PCProperties.pcprop_dict (dict)
         Dictionary with physicochemical properties for each representative.
         Has the same top level keys as Representatives.repres_dict,
         with nested keys describing different physicochemical properties per representative type.
-    subsets_indices_dict: Subsetter.subsets_indices_dict (dictionary)
+    subsets_indices_dict: Subsetter.subsets_indices_dict (dict)
         Dictionary with subsets of representatives.
         Has the same top level keys as Representatives.repres_dict,
         with nested keys describing different subsetting types.
@@ -699,7 +699,7 @@ class Shapes:
 
     Parameters
     ----------
-    points: Points.points (dictionary)
+    points: Points.points (dict)
         Dictionary with spatial properties (=coordinates) for each representative.
         Has the same keys as Representatives.repres_dict.
 
@@ -777,7 +777,7 @@ def get_zscales_amino_acids(mol, output_log_path=None):
 
     Returns
     -------
-    pandas DataFrame
+    pandas.DataFrame
         DataFrame containing atom lines from input file described by Z-scales.
     """
 
@@ -819,7 +819,7 @@ def get_representatives(mol, repres_key):
 
     Returns
     -------
-    pandas DataFrame
+    pandas.DataFrame
         DataFrame containing atom lines from input file described by Z-scales.
     """
 
@@ -849,7 +849,7 @@ def get_ca(mol):
 
     Returns
     -------
-    pandas DataFrame
+    pandas.DataFrame
         DataFrame containing atom lines from input file described by Z-scales.
     """
 
@@ -1095,7 +1095,7 @@ def get_points(repres_dict, coord_dict, pcprop_dict):
 
     Returns
     -------
-    Dict of dict of DataFrames
+    dict of dict of pandas.DataFrames
          Spatial and physicochemical properties for each representative.
     """
 
@@ -1115,14 +1115,14 @@ def get_points_subsetted(points_dict, subsets_indices_dict):
 
     Parameters
     ----------
-    points_dict : dict of dict of DataFrames
+    points_dict : dict of dict of pandas.DataFrames
         Spatial and physicochemical properties for each representative.
-    subsets_indices_dict : dict of dict of DataFrames
+    subsets_indices_dict : dict of dict of pandas.DataFrames
         #FIXME
 
     Returns
     -------
-    Dict of dict of DataFrames
+    dict of dict of pandas.DataFrames
         #FIXME
     """
 
@@ -1148,12 +1148,12 @@ def get_shape(points):
 
     Parameters
     ----------
-    points : DataFrame
+    points : pandas.DataFrame
         Spatial and physicochemical properties of representatives (points).
 
     Returns
     -------
-    Dict of dicts
+    dict of dict of dict of pandas.DataFrames
         Encoded binding site information such as reference points, distances, and moments (lower level keys)
         for different encoding methods (top level keys).
 
@@ -1189,7 +1189,7 @@ def get_distances_to_point(points: pd.DataFrame, ref_point: pd.Series) -> pd.Ser
 
     Parameters
     ----------
-    points : DataFrame
+    points : pandas.DataFrame
         Coordinates of representatives (points) in binding site.
     ref_point : pandas.Series
         Coordinates of one reference point.
@@ -1250,7 +1250,7 @@ def get_shape_dict(ref_points, dist):
 
     Returns
     -------
-    Dict of DataFrames
+    dict of DataFrames
         Reference points, distance distributions, and moments.
     """
 
@@ -1277,7 +1277,7 @@ def get_shape_3dim_usr(points):
 
     Parameters
     ----------
-    points : DataFrame
+    points : pandas.DataFrame
         Coordinates of representatives (points) in binding site.
 
     Returns
@@ -1335,7 +1335,7 @@ def get_shape_3dim_csr(points):
 
     Parameters
     ----------
-    points : DataFrame
+    points : pandas.DataFrame
         Coordinates of representatives (points) in binding site.
 
     Returns
@@ -1400,7 +1400,7 @@ def get_shape_4dim_electroshape(points, scaling_factor=1):
 
     Parameters
     ----------
-    points : DataFrame
+    points : pandas.DataFrame
         Coordinates of representatives (points) in binding site.
     scaling_factor : int or float
         Scaling factor that can put higher or lower weight on non-spatial dimensions.
@@ -1485,7 +1485,7 @@ def get_shape_6dim(points, scaling_factor=1):
 
     Parameters
     ----------
-    points : DataFrame
+    points : pandas.DataFrame
         Coordinates of representatives (points) in binding site.
     scaling_factor : int or float
         Scaling factor that can put higher or lower weight on non-spatial dimensions.

@@ -24,15 +24,14 @@ from ratar.encoding import *
 ########################################################################################
 
 def get_similarity(moments_p1, moments_p2, measure):
-
     """
     Calculate the similarity between two proteins p1 and p2 based on a similarity measure.
 
     Parameters
     ----------
-    moments_p1 : DataFrame
+    moments_p1 : pandas.DataFrame
         Fingerprint for protein (binding site) p1.
-    moments_p2 : DataFrame
+    moments_p2 : pandas.DataFrame
         Fingerprint for protein (binding site) p2.
     measure : int
         Similarity measurement method:
@@ -42,7 +41,6 @@ def get_similarity(moments_p1, moments_p2, measure):
     -------
     float
         Similarity value.
-
     """
 
     # Calculate inverse of the translated and scaled Manhattan distance
@@ -61,12 +59,12 @@ def get_similarity_all_against_all(output_path):
 
     Parameters
     ----------
-    output_path : String
+    output_path : str
         Absolute path to encoded binding site files (can contain wildcards).
 
     Returns
     -------
-    Dict of DataFrames
+    dict of pandas.DataFrame
         All-against-all similarity matrix (DataFrame) for each encoding method (dictionary).
 
     """
@@ -149,7 +147,7 @@ def get_similarity_pairs(benchmarkset):
 
     Returns
     -------
-    dict of DataFrames
+    dict of pandas.DataFrame
         Dictionary of DataFrames containing a matrix of similarity values (pair ID x similarity measurement)
 
     Notes
@@ -233,14 +231,14 @@ def calculate_similarity_pairs(pairs, struc_path_template):
 
     Parameters
     ----------
-    pairs : DataFrame
+    pairs : pandas.DataFrame
         DataFrame with structure ID for pairs of binding sites (given in columns 'struc1' and 'struc2').
     struc_path_template : str
         Full path to file with encoded binding sites with %s (placeholder) for structure ID.
 
     Returns
     -------
-    DataFrame
+    pandas.DataFrame
         DataFrame containing a matrix of similarity values (pair ID x similarity measurement)
 
     Notes

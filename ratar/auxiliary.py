@@ -35,15 +35,13 @@ ratar_path = Path(ratar.__file__).parent
 ########################################################################################
 
 class AminoAcidDescriptors:
-
     """
     Class used to store amino acid descriptor data, e.g. Z-scales.
 
     Attributes
     ----------
-    zscales : DataFrame
+    zscales : pandas.DataFrame
         Z-scales for standard and a few non-standard amino acids.
-
     """
 
     def __init__(self):
@@ -57,7 +55,6 @@ class AminoAcidDescriptors:
 ########################################################################################
 
 class MolFileLoader:
-
     """
     Class used to load molecule data from mol2 and pdb files in the form of unified BioPandas objects.
 
@@ -70,9 +67,8 @@ class MolFileLoader:
     ----------
     input_path : pathlib.PosixPath
         Absolute path to a mol2 (can contain multiple entries) or pdb file.
-    pmols : list of BioPandas objects
+    pmols : list of biopandas.mol2.pandas_mol2.PandasMol2 or biopandas.pdb.pandas_pdb.PandasPdb
         List of molecule data in the form of BioPandas objects.
-
     """
 
     def __init__(self, input_path):
@@ -92,15 +88,13 @@ class MolFileLoader:
             self.pmols = self._load_mol2()
 
     def _load_mol2(self):
-
         """
         Load molecule data from a mol2 file, which can contain multiple entries.
 
         Returns
         -------
-        List of BioPandas objects
+        list of biopandas.mol2.pandas_mol2.PandasMol2
             List of BioPandas objects containing metadata and structural data of molecule(s) in mol2 file.
-
         """
 
         # In case of multiple entries in one mol2 file, include iteration step
@@ -161,7 +155,6 @@ class MolFileLoader:
         return pmols
 
     def _load_pdb(self):
-
         """
         Load molecule data from a pdb file, which can contain multiple entries.
 
@@ -172,9 +165,8 @@ class MolFileLoader:
 
         Returns
         -------
-        List of BioPandas objects
+        list of biopandas.pdb.pandas_pdb.PandasPdb
             List of BioPandas objects containing metadata and structural data of molecule(s) in pdb file.
-
         """
 
         pmol = PandasPdb().read_pdb(str(self.input_path))
@@ -216,7 +208,6 @@ class MolFileLoader:
 
 
 def create_directory(directory):
-
     """
     Create directory if it does not exist.
 
@@ -224,7 +215,6 @@ def create_directory(directory):
     ----------
     directory : str or pathlib.Path
         Absolute path to directory.
-
     """
 
     # Cast to Path

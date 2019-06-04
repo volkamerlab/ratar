@@ -19,8 +19,10 @@ def parse_arguments():
     """
     Parse the arguments given when calling this script.
 
-    :return: Input molecule structure file path and output directory.
-    :rtype: Strings
+    Returns
+    -------
+    Tuple of str
+        Input molecule structure file path and output directory.
     """
 
     # Parse arguments
@@ -40,6 +42,10 @@ def parse_arguments():
 
 
 def main():
+    """
+    Main ratar function to process one or multiple binding sites.
+    """
+
     # Get start time of script
     encoding_start = datetime.datetime.now()
 
