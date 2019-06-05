@@ -415,7 +415,6 @@ class BindingSite:
         self.shapes = Shapes(self.points)
 
     def __eq__(self, other):
-
         """
         Check if two BindingSite objects are equal.
         """
@@ -430,9 +429,6 @@ class BindingSite:
             self.points == other.points,
             self.shapes == other.shapes
         ]
-
-        print(rules)
-
         return all(rules)
 
 
@@ -457,7 +453,7 @@ class Representatives:
 
         self.repres_dict = {}
 
-        for repres_key in REPRES_KEYS:  # Define names für representatives types
+        for repres_key in REPRES_KEYS:
             self.repres_dict[repres_key] = get_representatives(mol, repres_key)
 
     def __eq__(self, other):
@@ -467,8 +463,8 @@ class Representatives:
         Return True if dictionary keys (strings) and dictionary values (DataFrames) are equal, else return False.
         """
 
-        obj1 = self.repres_dict
-        obj2 = other.repres_dict
+        obj1 = flatten(self.repres_dict, reducer='path')
+        obj2 = flatten(other.repres_dict, reducer='path')
 
         try:
             rules = [
@@ -502,21 +498,21 @@ class Coordinates:
 
         self.coord_dict = {}
 
-        for i in repres_dict.keys():
-        #for k, value in repres_dict.items():
-            if type(repres_dict[i]) is not dict:  #
-            # if  isinstance(repres_dict, (dict, list, tuple)):
-                self.coord_dict[i] = repres_dict[i][['x', 'y', 'z']]
+        for k, v in repres_dict.items():
+            if isinstance(v, pd.DataFrame):
+                self.coord_dict[k] = v[['x', 'y', 'z']]
+            elif isinstance(v, dict):
+                self.coord_dict[k] = {kk: vv[['x', 'y', 'z']] for (kk, vv) in v.items()}
             else:
-                self.coord_dict[i] = {key: value[['x', 'y', 'z']] for (key, value) in repres_dict[i].items()}
+                print('Warning: Check why type of repres_dict is either pd.DataFrame nor dict.')
 
     def __eq__(self, other):
         """
         Check if two Coordinates objects are equal.
         """
 
-        obj1 = self.coord_dict
-        obj2 = other.coord_dict
+        obj1 = flatten(self.coord_dict, reducer='path')
+        obj2 = flatten(other.coord_dict, reducer='path')
 
         try:
             rules = [
@@ -555,21 +551,20 @@ class PCProperties:
         self.pcprop_dict = {}
         self.output_log_path = output_log_path
 
-        for i in repres_dict.keys():
-            self.pcprop_dict[i] = {}
-            for j in PCPROP_KEYS:
-                if type(repres_dict[i]) is not dict:
-                    self.pcprop_dict[i][j] = get_pcproperties(repres_dict, i, j)
+        for k, v in repres_dict.items():
+            self.pcprop_dict[k] = {}
+            for pcprop_key in PCPROP_KEYS:
+                if isinstance(v, pd.DataFrame):
+                    self.pcprop_dict[k][pcprop_key] = get_pcproperties(v, pcprop_key)
+                elif isinstance(v, dict):
+                    self.pcprop_dict[k] = {kk: get_pcproperties(vv, pcprop_key) for (kk, vv) in v.items()}
                 else:
-                    self.pcprop_dict[i] = {key: get_pcproperties(repres_dict, i, j)
-                                           for (key, value) in repres_dict[i].items()}
+                    print('Warning: Check why type of repres_dict is either pd.DataFrame nor dict.')
 
     def __eq__(self, other):
         """
         Check if two PCProperties objects are equal.
         """
-
-        print('bla_pc')
 
         obj1 = flatten(self.pcprop_dict, reducer='path')
         obj2 = flatten(other.pcprop_dict, reducer='path')
@@ -587,8 +582,8 @@ class PCProperties:
 
 class Subsetter:
     """
-    Class used to store subsets of binding site representatives,
-    which were defined by the Representatives class (in its repres_dict variable).
+    Class used to store subset indices (DataFrame indices) of binding site representatives,
+    which were defined by the Representatives class.
 
     Parameters
     ----------
@@ -598,7 +593,7 @@ class Subsetter:
     Attributes
     ----------
     subsets_indices_dict :
-        Subsets stored as dictionary with the same keys as in Representatives.repres_dict.
+        Subset indices stored as dictionary with the same keys as in Representatives.repres_dict.
         Example: {'ca': {'H': ..., 'HBD': ..., ...},
                   'pca': {'H': ..., 'HBD': ..., ...},
                   'pc': {'H': ..., 'HBD': ..., ...}}
@@ -606,11 +601,12 @@ class Subsetter:
 
     def __init__(self, repres_dict):
 
-        self.subsets_indices_dict = {'pc': get_subset_indices(repres_dict, 'pc'),
-                                     'pca': get_subset_indices(repres_dict, 'pca')}
+        self.subsets_indices_dict = {
+            'pc': get_subset_indices(repres_dict, 'pc'),
+            'pca': get_subset_indices(repres_dict, 'pca')
+        }
 
     def __eq__(self, other):
-
         """
         Check if two Subsetter objects are equal.
         """
@@ -730,15 +726,15 @@ class Shapes:
 
         # Full datasets
         self.shapes_dict = {}
-        for key in points.points_dict:
-            self.shapes_dict[key] = get_shape(points.points_dict[key])
+        for k, v in points.points_dict.items():
+            self.shapes_dict[k] = get_shape(v)
 
         # Subset datasets
         self.shapes_subsets_dict = {}
-        for ko in points.points_subsets_dict:  # ko is outer key
-            self.shapes_subsets_dict[ko] = {}
-            for ki in points.points_subsets_dict[ko]:  # ki is inner key
-                self.shapes_subsets_dict[ko][ki] = get_shape(points.points_subsets_dict[ko][ki])
+        for k, v in points.points_subsets_dict.items():
+            self.shapes_subsets_dict[k] = {}
+            for kk, vv in points.points_subsets_dict[k].items():
+                self.shapes_subsets_dict[k][kk] = get_shape(vv)
 
     def __eq__(self, other):
         """
@@ -975,18 +971,16 @@ def get_pc(mol):
 # Functions mainly for PCProperties class
 ########################################################################################
 
-def get_pcproperties(repres_dict, repres_key, pcprop_key):
+def get_pcproperties(representatives, pcprop_key):
     """
     Extract physicochemical properties (main function).
 
     Parameters
     ----------
-    repres_dict : Representatives.repres_dict
-        Representatives stored as dictionary with several representation methods serving as key.
-    repres_key : str
-        Representatives name; key in repres_dict.
+    representatives : pandas.DataFrame
+        Representatives' data for a certain represenatives type.
     pcprop_key : str
-        Physicochemical property name; key in pcprop_key.
+        Physicochemical property name; key in PCPROP_KEYS.
 
     Returns
     -------
@@ -995,24 +989,22 @@ def get_pcproperties(repres_dict, repres_key, pcprop_key):
     """
 
     if pcprop_key == PCPROP_KEYS[0]:
-        return get_zscales(repres_dict, repres_key, 1)
+        return get_zscales(representatives, 1)
     if pcprop_key == PCPROP_KEYS[1]:
-        return get_zscales(repres_dict, repres_key, 3)
+        return get_zscales(representatives, 3)
     else:
         raise SystemExit('Unknown representative key.'    
                          'Select: ', ', '.join(PCPROP_KEYS)) # FIXME SystemError should not be used, KeyError better
 
 
-def get_zscales(repres_dict, repres_key, z_number):
+def get_zscales(representatives, z_number):
     """
     Extract Z-scales from binding site representatives.
 
     Parameters
     ----------
-    repres_dict : Representatives.repres_dict
-        Representatives stored as dictionary with several representation methods serving as key.
-    repres_key : str
-        Representatives name; key in repres_dict.
+    representatives : pandas.DataFrame
+        Representatives' data for a certain representatives type.
     z_number : int
         Number of Z-scales to be included.
 
@@ -1026,7 +1018,7 @@ def get_zscales(repres_dict, repres_key, z_number):
     zs = AA.zscales
 
     # Transform e.g. ALA100 to ALA
-    repres_aa = repres_dict[repres_key]['subst_name'].apply(lambda x: x[0:3])
+    repres_aa = representatives['subst_name'].apply(lambda x: x[0:3])
 
     # Transform amino acids into Z-scales
     repres_zs = []
@@ -1039,7 +1031,7 @@ def get_zscales(repres_dict, repres_key, z_number):
             sys.exit('Error: Identifier ' + i + ' not in pre-defined Z-scales. ' +
                      'Please contact dominique.sydow@charite.de')
     # Cast into DataFrame
-    bs_repres_zs = pd.DataFrame(repres_zs, index=repres_dict[repres_key].index, columns=zs.columns)
+    bs_repres_zs = pd.DataFrame(repres_zs, index=representatives.index, columns=zs.columns)
 
     return bs_repres_zs.iloc[:, :z_number]
 
@@ -1109,10 +1101,10 @@ def get_points(repres_dict, coord_dict, pcprop_dict):
 
     points_dict = {}
 
-    for i in repres_dict.keys():
-        points_dict[i] = coord_dict[i]
-        for j in PCPROP_KEYS:
-            points_dict[i + '_' + j] = pd.concat([coord_dict[i], pcprop_dict[i][j]], axis=1)
+    for k in repres_dict.keys():
+        points_dict[k] = coord_dict[k]
+        for pcprop_key in PCPROP_KEYS:
+            points_dict[k + '_' + pcprop_key] = pd.concat([coord_dict[k], pcprop_dict[k][pcprop_key]], axis=1)
 
     return points_dict
 
