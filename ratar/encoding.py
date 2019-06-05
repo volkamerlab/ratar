@@ -406,12 +406,15 @@ class BindingSite:
     def __init__(self, pmol, output_log_path=None):
 
         self.pdb_id = pmol.code
+
         self.mol = get_zscales_amino_acids(pmol.df, output_log_path)
+
         self.repres = Representatives(self.mol)
         self.subset = Subsetter(self.repres.repres_dict)
         self.coord = Coordinates(self.repres.repres_dict)
         self.pcprop = PCProperties(self.repres.repres_dict, output_log_path)
         self.points = Points(self.repres.repres_dict, self.coord.coord_dict, self.pcprop.pcprop_dict, self.subset.subsets_indices_dict)
+
         self.shapes = Shapes(self.points)
 
     def __eq__(self, other):
@@ -431,6 +434,23 @@ class BindingSite:
         ]
         return all(rules)
 
+    def _calc_representatives(self):
+        pass
+    def _calc_subset(self, representatives):
+        pass
+    def _calc_coordinates(self, representatives):
+        pass
+    def _calc_physicochemicalproperties(self, representatives, log=None):
+        pass
+    def _calc_points(self, representatives, coordinates, physicochemicalproperties, subsets):
+        pass
+    def _calc_shapes(self, points):
+        pass
+
+    def run(self):
+        # self.calc_...
+        pass
+
 
 class Representatives:
     """
@@ -449,12 +469,40 @@ class Representatives:
         Example: {'ca': ..., 'pca': ..., 'pc': ...}
     """
 
-    def __init__(self, mol):
+    def __init__(self, ca=None, pca=None, pc=None):
+        self._data = {
+            'ca': ca,
+            'pca': pca,
+            'pc': pc,
+        }
 
-        self.repres_dict = {}
+    @classmethod
+    def from_molecule(cls, molecule):
+        data = {
+            'ca': None,
+            'pca': None,
+            'pc': None,
+        }
+        for key in data.keys():
+            data[key] = get_representatives(molecule, key)
+        cls.__init__(**data)
 
-        for repres_key in REPRES_KEYS:
-            self.repres_dict[repres_key] = get_representatives(mol, repres_key)
+    @property
+    def ca(self):
+        return self._data['ca']
+
+    @ca.setter
+    def ca(self, value):
+        # Make tests on value
+        self._data['ca'] = value
+
+    @property
+    def pca(self):
+        return self._data['pca']
+
+    @property
+    def pc(self):
+        return self._data['pc']
 
     def __eq__(self, other):
 
@@ -504,7 +552,7 @@ class Coordinates:
             elif isinstance(v, dict):
                 self.coord_dict[k] = {kk: vv[['x', 'y', 'z']] for (kk, vv) in v.items()}
             else:
-                print('Warning: Check why type of repres_dict is either pd.DataFrame nor dict.')
+                raise TypeError(f'Expected dict or pandas.DataFrame but got {type(v)}')
 
     def __eq__(self, other):
         """
@@ -839,7 +887,7 @@ def get_representatives(mol, repres_key):
     if repres_key == 'pc':
         return get_pc(mol)
     else:
-        raise SystemExit('Unknown representative key.')
+        raise KeyError(f'Unknown representative key: {repres_key}')  # FIXME check
 
 
 def get_ca(mol):
@@ -1128,6 +1176,7 @@ def get_points_subsetted(points_dict, subsets_indices_dict):
 
     points_subsets_dict = {}
 
+    # FIXME: Check dictionary iteration here
     for subsets_key in subsets_indices_dict.keys():
         points_keys = [key for key in points_dict.keys() if subsets_key + '_' in key]
         for points_key in points_keys:
@@ -1199,7 +1248,7 @@ def get_distances_to_point(points: pd.DataFrame, ref_point: pd.Series) -> pd.Ser
     pandas.Series
         Distances from reference point to representatives.
     """
-
+    # np.linalg.norm
     distances: pd.Series = np.sqrt(((points - ref_point) ** 2).sum(axis=1))
 
     return distances
