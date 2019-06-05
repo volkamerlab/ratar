@@ -19,6 +19,7 @@ from pathlib import Path
 from biopandas.mol2 import PandasMol2, split_multimol2
 from biopandas.pdb import PandasPdb
 import pandas as pd
+import pickle
 
 import ratar
 
@@ -48,6 +49,25 @@ class AminoAcidDescriptors:
         # Z-scales taken from: https://github.com/Superzchen/iFeature/blob/master/codes/ZSCALE.py
         zscales_path = ratar_path / 'data' / 'zscales.csv'
         self.zscales = pd.read_csv(str(zscales_path), index_col='aa3')
+
+
+def load_pseudocenters():
+    """
+    Load pseudocenters from file.
+    Remove HBDA features, since they contain too few data points for encoding.
+
+    Returns
+    -------
+
+    """
+    with open(ratar_path / 'data' / 'pseudocenter_atoms.p', 'rb') as f:
+        pc_atoms = pickle.load(f)
+
+    # Remove HBDA features information (too few data points)
+    pc_atoms = pc_atoms[pc_atoms['type'] != 'HBDA']
+    pc_atoms.reset_index(drop=True, inplace=True)
+
+    return pc_atoms
 
 
 ########################################################################################
