@@ -58,7 +58,8 @@ def load_pseudocenters():
 
     Returns
     -------
-
+    pandas.DataFrame
+        DataFrame containing pseudocenter information.
     """
     with open(ratar_path / 'data' / 'pseudocenter_atoms.p', 'rb') as f:
         pc_atoms = pickle.load(f)
