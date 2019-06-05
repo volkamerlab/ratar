@@ -13,7 +13,6 @@ from pathlib import Path
 import _pickle as pickle
 import re
 import sys
-from typing import List
 
 from flatten_dict import flatten
 import numpy as np
@@ -32,15 +31,12 @@ from ratar.auxiliary import *
 
 ratar_path = Path(ratar.__file__).parent
 
-# Physicochemical property keys
+# Representatives and physicochemical property keys
+REPRES_KEYS = ['ca', 'pca', 'pc']
 PCPROP_KEYS = ['z1', 'z123']
 
 # Pseudocenters definition
-with open(ratar_path / 'data' / 'pseudocenter_atoms.p', 'rb') as f:
-    PC_ATOMS = pickle.load(f)
-
-PC_ATOMS = PC_ATOMS[PC_ATOMS['type'] != 'HBDA']  # Remove HBDA features information (too few data points)
-PC_ATOMS.reset_index(drop=True, inplace=True)
+PC_ATOMS = load_pseudocenters()
 
 # Amino acid descriptors definition, e.g. Z-scales
 AA = AminoAcidDescriptors()
@@ -294,18 +290,23 @@ def get_encoded_binding_site_path(code, output_path):
 
     # If wildcard matches no file, retry.
     if len(bs_path) == 0:
-        print('Error: Your input path matches no file. Please retry.')
-        print('\nYour input wildcard was the following: ')
-        print(bs_wildcard)
+        lines = [
+            'Error: Your input path matches no file. Please retry.',
+            'Your input wildcard was the following: ',
+            bs_wildcard
+        ]
+        print('\n'.join(lines))
         return None
 
     # If wildcard matches multiple files, retry.
     elif len(bs_path) > 1:
-        print('Error: Your input path matches multiple files. Please select one of the following as input string: ')
-        for i in bs_path:
-            print(i)
-        print('\nYour input wildcard was the following: ')
-        print(bs_wildcard)
+        lines = [
+            'Error: Your input path matches multiple files. Please select one of the following as input string: ',
+            bs_path,
+            'Your input wildcard was the following: ',
+            bs_wildcard
+        ]
+        print('\n'.join(lines))
         return None
 
     # If wildcard matches one file, return file path.
@@ -314,13 +315,13 @@ def get_encoded_binding_site_path(code, output_path):
         return bs_path
 
 
-def load_binding_site(binding_site_path):
+def load_binding_site(output_path):
     """
     Load an encoded binding site from a pickle file.
 
     Parameters
     ----------
-    binding_site_path : str
+    output_path : str
         Path to binding site pickle file.
 
     Returns
@@ -330,22 +331,27 @@ def load_binding_site(binding_site_path):
     """
 
     # Retrieve all paths that match the input path
-    bs_path = glob.glob(binding_site_path)
+    bs_path = glob.glob(output_path)
 
     # If input path matches no file, retry.
     if len(bs_path) == 0:
-        print('Error: Your input path matches no file. Please retry.')
-        print('\nYour input path was the following: ')
-        print(bs_path)
+        lines = [
+            'Error: Your input path matches no file. Please retry.',
+            'Your input path was the following: ',
+            bs_path
+        ]
+        print('\n'.join(lines))
         return None
 
     # If input path matches multiple files, retry.
     elif len(bs_path) > 1:
-        print('Error: Your input path matches multiple files. Please select one of the following as input string: ')
-        for i in bs_path:
-            print(i)
-        print('\nYour input path was the following: ')
-        print(bs_path)
+        lines = [
+            'Error: Your input path matches multiple files. Please select one of the following as input string: ',
+            bs_path,
+            '\nYour input path was the following: ',
+            output_path
+        ]
+        print('\n'.join(lines))
         return None
 
     # If input path matches one file, load file.
@@ -353,9 +359,11 @@ def load_binding_site(binding_site_path):
         bs_path = bs_path[0]
         with open(bs_path, 'rb') as f:
             binding_site = pickle.load(f)
-
-        print('The following file was loaded: ')
-        print(bs_path)
+        lines = [
+            'The following file was loaded: ',
+            bs_path
+        ]
+        print('\n'.join(lines))
         return binding_site
 
 
@@ -449,7 +457,7 @@ class Representatives:
 
         self.repres_dict = {}
 
-        for repres_key in ['ca', 'pca', 'pc']:  # Define names für representatives types
+        for repres_key in REPRES_KEYS:  # Define names für representatives types
             self.repres_dict[repres_key] = get_representatives(mol, repres_key)
 
     def __eq__(self, other):
