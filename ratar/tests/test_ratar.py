@@ -47,6 +47,7 @@ def test_molfileloader(filename, mol_code, mol_df_n_rows, mol_df_n_cols):
     assert mol_loader.pmols[0].code == mol_code
     assert mol_loader.pmols[0].df.shape[0] == mol_df_n_cols
     assert mol_loader.pmols[0].df.shape[1] == mol_df_n_rows
+    # TODO test centroid of structure
 
 
 @pytest.mark.parametrize('mol_file1, mol_file2', [
