@@ -53,7 +53,7 @@ class AminoAcidDescriptors:
         zscales_path = ratar_path / 'data' / 'zscales.csv'
         self.zscales = pd.read_csv(str(zscales_path), index_col='aa3')
 
-    def _get_zscales_amino_acids(self, molecule, log=None):
+    def _get_zscales_amino_acids(self, molecule, output_log_path=None):
         """
         Get all amino acids atoms that are described by Z-scales.
 
@@ -61,8 +61,8 @@ class AminoAcidDescriptors:
         ----------
         molecule : pandas.DataFrame
             DataFrame containing atom lines from input file.
-        log : str
-            output_log_path: Path to log file.
+        output_log_path : str
+            Path to log file.
 
         Returns
         -------
@@ -71,7 +71,7 @@ class AminoAcidDescriptors:
         """
 
         # Get amino acid name per row (atom)
-        mol_aa = molecule['subst_name'].apply(lambda x: x[0:3])
+        mol_aa = molecule['res_name']
 
         # Get only rows (atoms) that belong to Z-scales amino acids
         mol_zscales_aa = molecule[mol_aa.apply(lambda y: y in self.zscales.index)].copy()
@@ -80,8 +80,8 @@ class AminoAcidDescriptors:
         mol_non_zscales_aa = molecule[mol_aa.apply(lambda y: y not in self.zscales.index)].copy()
 
         if not mol_non_zscales_aa.empty:
-            if log is not None:
-                with open(log, 'a+') as f:
+            if output_log_path is not None:
+                with open(output_log_path, 'a+') as f:
                     f.write('Atoms removed for binding site encoding:\n\n')
                     f.write(mol_non_zscales_aa.to_string() + '\n\n')
             else:
