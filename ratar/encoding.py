@@ -348,7 +348,11 @@ class Coordinates:
     """
 
     def __init__(self):
-        self.data = None
+        self.data = {
+            'ca': None,
+            'pca': None,
+            'pc': None,
+        }
 
     def __eq__(self, other):
         """
@@ -367,6 +371,18 @@ class Coordinates:
             rules = False
 
         return all(rules)
+
+    @property
+    def ca(self):
+        return self.data['ca']
+
+    @property
+    def pca(self):
+        return self.data['pca']
+
+    @property
+    def pc(self):
+        return self.data['pc']
 
     def _get_coordinates(self, representatives):
         """
