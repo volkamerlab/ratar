@@ -137,6 +137,18 @@ class Representatives:
             'pc':  None,
         }
 
+    @property
+    def ca(self):
+        return self.data['ca']
+
+    @property
+    def pca(self):
+        return self.data['pca']
+
+    @property
+    def pc(self):
+        return self.data['pc']
+
     def __eq__(self, other):
         """
         Check if two Representatives objects are equal.
@@ -155,18 +167,6 @@ class Representatives:
             rules = False
 
         return all(rules)
-
-    @property
-    def ca(self):
-        return self.data['ca']
-
-    @property
-    def pca(self):
-        return self.data['pca']
-
-    @property
-    def pc(self):
-        return self.data['pc']
 
     def _get_representatives(self, molecule):
         """
@@ -343,6 +343,18 @@ class Coordinates:
             'pc': None,
         }
 
+    @property
+    def ca(self):
+        return self.data['ca']
+
+    @property
+    def pca(self):
+        return self.data['pca']
+
+    @property
+    def pc(self):
+        return self.data['pc']
+
     def __eq__(self, other):
         """
         Check if two Coordinates objects are equal.
@@ -360,18 +372,6 @@ class Coordinates:
             rules = False
 
         return all(rules)
-
-    @property
-    def ca(self):
-        return self.data['ca']
-
-    @property
-    def pca(self):
-        return self.data['pca']
-
-    @property
-    def pc(self):
-        return self.data['pc']
 
     def _get_coordinates(self, representatives):
         """
@@ -430,6 +430,18 @@ class PCProperties:
         }
         self.output_log_path = output_log_path
 
+    @property
+    def ca(self):
+        return self.data['ca']
+
+    @property
+    def pca(self):
+        return self.data['pca']
+
+    @property
+    def pc(self):
+        return self.data['pc']
+
     def __eq__(self, other):
         """
         Check if two PCProperties objects are equal.
@@ -447,18 +459,6 @@ class PCProperties:
             rules = False
 
         return all(rules)
-
-    @property
-    def ca(self):
-        return self.data['ca']
-
-    @property
-    def pca(self):
-        return self.data['pca']
-
-    @property
-    def pc(self):
-        return self.data['pc']
 
     def _get_pcproperties(self, representatives):
         """
