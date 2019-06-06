@@ -43,12 +43,52 @@ class AminoAcidDescriptors:
     ----------
     zscales : pandas.DataFrame
         Z-scales for standard and a few non-standard amino acids.
+
+    Notes
+    -----
+    Z-scales taken from: https://github.com/Superzchen/iFeature/blob/master/codes/ZSCALE.py
     """
 
     def __init__(self):
-        # Z-scales taken from: https://github.com/Superzchen/iFeature/blob/master/codes/ZSCALE.py
         zscales_path = ratar_path / 'data' / 'zscales.csv'
         self.zscales = pd.read_csv(str(zscales_path), index_col='aa3')
+
+    def _get_zscales_amino_acids(self, molecule, log=None):
+        """
+        Get all amino acids atoms that are described by Z-scales.
+
+        Parameters
+        ----------
+        molecule : pandas.DataFrame
+            DataFrame containing atom lines from input file.
+        log : str
+            output_log_path: Path to log file.
+
+        Returns
+        -------
+        pandas.DataFrame
+            DataFrame containing atom lines from input file described by Z-scales.
+        """
+
+        # Get amino acid name per row (atom)
+        mol_aa = molecule['subst_name'].apply(lambda x: x[0:3])
+
+        # Get only rows (atoms) that belong to Z-scales amino acids
+        mol_zscales_aa = molecule[mol_aa.apply(lambda y: y in self.zscales.index)].copy()
+
+        # Get only rows (atoms) that DO NOT belong to Z-scales amino acids
+        mol_non_zscales_aa = molecule[mol_aa.apply(lambda y: y not in self.zscales.index)].copy()
+
+        if not mol_non_zscales_aa.empty:
+            if log is not None:
+                with open(log, 'a+') as f:
+                    f.write('Atoms removed for binding site encoding:\n\n')
+                    f.write(mol_non_zscales_aa.to_string() + '\n\n')
+            else:
+                print('Atoms removed for binding site encoding:')
+                print(mol_non_zscales_aa)
+
+        return mol_zscales_aa
 
 
 def load_pseudocenters():
@@ -75,7 +115,7 @@ def load_pseudocenters():
 # IO functions
 ########################################################################################
 
-class MolFileLoader:
+class MoleculeLoader:
     """
     Class used to load molecule data from mol2 and pdb files in the form of unified BioPandas objects.
 
