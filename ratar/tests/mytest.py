@@ -4,8 +4,13 @@ import pytest
 from pathlib import Path
 import pickle
 
-from ratar.auxiliary import MolFileLoader
+from ratar.auxiliary import MoleculeLoader
 from ratar.encoding import BindingSite
+
+mol_file = 'scpdb_1a9p1.mol2'
+path_mol = Path('/home/dominique/Documents/projects/ratar/ratar/tests/data') / mol_file
+pmols = MoleculeLoader(path_mol)
+bs = BindingSite(pmols.pmols[0])
 
 
 def test_bindingsites(mol_file, encoding_file):
@@ -23,7 +28,7 @@ def test_bindingsites(mol_file, encoding_file):
 
     # Encode binding site
     path_mol = Path('/home/dominique/Documents/projects/ratar/ratar/tests/data/') / mol_file
-    pmols = MolFileLoader(path_mol)
+    pmols = MoleculeLoader(path_mol)
     bs = BindingSite(pmols.pmols[0])
 
     # Load reference binding site encoding
@@ -38,3 +43,14 @@ def test_bindingsites(mol_file, encoding_file):
 
 
 bs = test_bindingsites('AAK1_4wsq_altA_chainA.mol2', 'AAK1_4wsq_altA_chainA_encoded.p')
+
+
+
+
+encoding_file = 'AAK1_4wsq_altA_chainA_encoded.p'
+path_encoding = Path('/home/dominique/Documents/projects/ratar/ratar/tests/data/') / encoding_file
+with open(path_encoding, 'rb') as f:
+    bs_ref = pickle.load(f)
+
+import pandas as pd
+zs=pd.read_csv(str('/home/dominique/Documents/projects/ratar/ratar/data/zscales.csv'), index_col='aa3')
