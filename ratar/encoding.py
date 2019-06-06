@@ -29,7 +29,6 @@ from ratar.auxiliary import *
 
 # Global variables
 
-REPRESENTATIVES_KEYS = ['ca', 'pca', 'pc']  # Representatives keys
 PHYSICOCHEMISTRY_KEYS = ['z1', 'z123']  # Physicochemical property keys
 PSEUDOCENTER_ATOMS = load_pseudocenters()  # Pseudocenters definition
 AMINOACID_DESCRIPTORS = AminoAcidDescriptors()  # Amino acid descriptors definition, e.g. Z-scales
@@ -63,7 +62,6 @@ class BindingSite:
     def __init__(self, pmol, output_log_path=None):
 
         self.pdb_id = pmol.code
-        #self.molecule = AMINOACID_DESCRIPTORS._get_zscales_amino_acids(pmol.df, output_log_path)  # TODO move subsetting outside of this class
         self.molecule = pmol.df
         self.representatives = self._get_representatives()
         self.shapes = self.run()
@@ -82,24 +80,34 @@ class BindingSite:
         return all(rules)
 
     def _get_representatives(self):
-        representatives = Representatives(self.molecule)
+        representatives = Representatives()
         representatives._get_representatives(self.molecule)
         return representatives
 
-    def _get_subsets(self, representatives):
-        subsets = Subsetter(representatives.data)
-        return subsets
-
     def _get_coordinates(self, representatives):
-        coordinates = Coordinates(representatives.data)
+        coordinates = Coordinates()
+        coordinates._get_coordinates(representatives)
         return coordinates
 
     def _get_physicochemicalproperties(self, representatives, output_log_path=None):
-        physicochemicalproperties = PCProperties(representatives.data, output_log_path)
+        physicochemicalproperties = PCProperties(
+            representatives.data,
+            output_log_path
+        )
         return physicochemicalproperties
 
+    def _get_subsets(self, representatives):
+        subsets = Subsets()
+        subsets._get_pseudocenter_subsets_indices(representatives)
+        return subsets
+
     def _get_points(self, representatives, coordinates, physicochemicalproperties, subsets):
-        points = Points(representatives.data, coordinates.coord_dict, physicochemicalproperties.pcprop_dict, subsets.subsets_indices_dict)
+        points = Points(
+            representatives.data,
+            coordinates.data,
+            physicochemicalproperties.pcprop_dict,
+            subsets.data_pseudocenter_subsets
+        )
         return points
 
     def _get_shapes(self, points):
@@ -108,9 +116,9 @@ class BindingSite:
 
     def run(self):
         representatives = self._get_representatives()
-        subsets = self._get_subsets(representatives)
         coordinates = self._get_coordinates(representatives)
         physicochemicalproperties = self._get_physicochemicalproperties(representatives, output_log_path=None)
+        subsets = self._get_subsets(representatives)
         points = self._get_points(representatives, coordinates, physicochemicalproperties, subsets)
         shapes = self._get_shapes(points)
         return shapes
@@ -121,11 +129,6 @@ class Representatives:
     Class used to store binding site representatives. Representatives are selected atoms in a binding site,
     for instances all Calpha atoms of a binding site could serve as its representatives.
 
-    Parameters
-    ----------
-    molecule : pandas.DataFrame
-        DataFrame containing atom lines of mol2 or pdb file.
-
     Attributes
     ----------
     data : dict
@@ -133,7 +136,7 @@ class Representatives:
         Example: {'ca': ..., 'pca': ..., 'pc': ...}
     """
 
-    def __init__(self, molecule):
+    def __init__(self):
         self.data = {
             'ca':  None,
             'pca':  None,
@@ -334,34 +337,25 @@ class Coordinates:
 
     Parameters
     ----------
-    representatives : Representatives.data (dictionary)
+    representatives : Representatives
         Dictionary with several representation methods serving as key.
 
     Attributes
     ----------
-    coord_dict : Coordinates.coord_dict
+    data : Coordinates.coord_dict
         Coordinates stored as dictionary with the same keys as in Representatives.data.
         Example: {'ca': ..., 'pca': ..., 'pc': ...}
     """
 
-    def __init__(self, representatives):
-
-        self.coord_dict = {}
-
-        for k, v in representatives.items():
-            if isinstance(v, pd.DataFrame):
-                self.coord_dict[k] = v[['x', 'y', 'z']]
-            elif isinstance(v, dict):
-                self.coord_dict[k] = {kk: vv[['x', 'y', 'z']] for (kk, vv) in v.items()}
-            else:
-                raise TypeError(f'Expected dict or pandas.DataFrame but got {type(v)}')
+    def __init__(self):
+        self.data = None
 
     def __eq__(self, other):
         """
         Check if two Coordinates objects are equal.
         """
 
-        obj1 = flatten(self.coord_dict, reducer='path')
+        obj1 = flatten(self.data, reducer='path')
         obj2 = flatten(other.coord_dict, reducer='path')
 
         try:
@@ -373,6 +367,34 @@ class Coordinates:
             rules = False
 
         return all(rules)
+
+    def _get_coordinates(self, representatives):
+        """
+        Get coordinates (x, y, z) for molecule reprentatives.
+
+        Parameters
+        ----------
+        representatives : Representatives
+            Representatives class instance.
+
+        Returns
+        -------
+        dict of DataFrames
+            Dictionary (representatives types, e.g. 'pc') of DataFrames containing molecule coordinates.
+        """
+
+        self.data = {}
+
+        for k, v in representatives.data.items():
+            if isinstance(v, pd.DataFrame):
+                self.data[k] = v[['x', 'y', 'z']]
+            elif isinstance(v, dict):
+                self.data[k] = {kk: vv[['x', 'y', 'z']] for (kk, vv) in v.items()}
+            else:
+                raise TypeError(f'Expected dict or pandas.DataFrame but got {type(v)}')
+
+        return self.data
+
 
 
 class PCProperties:
@@ -502,39 +524,35 @@ class PCProperties:
         return representatives_zscales_df.iloc[:, :z_number]
 
 
-class Subsetter:
+class Subsets:
     """
     Class used to store subset indices (DataFrame indices) of binding site representatives,
     which were defined by the Representatives class.
 
     Parameters
     ----------
-    representatives : Representatives.data (dictionary)
-        Dictionary with several representation methods serving as key.
+    representatives : Representatives
+        Representatives class instance.
 
     Attributes
     ----------
     subsets_indices_dict :
         Subset indices stored as dictionary with the same keys as in Representatives.data.
-        Example: {'ca': {'H': ..., 'HBD': ..., ...},
-                  'pca': {'H': ..., 'HBD': ..., ...},
+        Example: {'pca': {'H': ..., 'HBD': ..., ...},
                   'pc': {'H': ..., 'HBD': ..., ...}}
     """
 
-    def __init__(self, representatives):
+    def __init__(self):
 
-        self.subsets_indices_dict = {
-            'pc': self._get_subset_indices(representatives, 'pc'),
-            'pca': self._get_subset_indices(representatives, 'pca')
-        }
+        self.data_pseudocenter_subsets = None
 
     def __eq__(self, other):
         """
-        Check if two Subsetter objects are equal.
+        Check if two Subsets objects are equal.
         """
 
-        obj1 = flatten(self.subsets_indices_dict, reducer='path')
-        obj2 = flatten(other.subsets_indices_dict, reducer='path')
+        obj1 = flatten(self.data_pseudocenter_subsets, reducer='path')
+        obj2 = flatten(other.data_pseudocenter_subsets, reducer='path')
 
         try:
             rules = [
@@ -546,36 +564,40 @@ class Subsetter:
 
         return all(rules)
 
-    def _get_subset_indices(self, representatives, repres_key):
+    def _get_pseudocenter_subsets_indices(self, representatives):
         """
         Extract feature subsets from pseudocenters (pseudocenter atoms).
 
         Parameters
         ----------
-        representatives : Representatives.data
-            Representatives stored as dictionary with several representation methods serving as key.
-        repres_key : str
-            Representatives name; key in representatives.
+        representatives : Representatives
+            Representatives class instance.
 
         Returns
         -------
-        list of int
-            List of DataFrame indices.
+        dict of dict of list of int
+            List of DataFrame indices in a dictionary (representatives types, e.g. 'pc') of dictionaries (pseudocenter
+            subset types, e.g. 'HBA').
         """
 
-        repres = representatives[repres_key]
-        subset = {}
+        self.data_pseudocenter_subsets = {}
 
-        # Loop over all pseudocenter types
-        for i in list(set(PSEUDOCENTER_ATOMS['type'])):
+        for k1 in ['pc', 'pca']:
 
-            # If pseudocenter type exists in dataset, save corresponding subset, else save None
-            if i in set(repres['pc_types']):
-                subset[i] = list(repres[repres['pc_types'] == i].index)
-            else:
-                subset[i] = []
+            self.data_pseudocenter_subsets[k1] = {}
 
-        return subset
+            repres = representatives.data[k1]
+
+            # Loop over all pseudocenter subset types
+            for k2 in list(set(PSEUDOCENTER_ATOMS['type'])):
+
+                # If pseudocenter type exists in dataset, save corresponding subset, else save None
+                if k2 in set(repres['pc_types']):
+                    self.data_pseudocenter_subsets[k1][k2] = list(repres[repres['pc_types'] == k2].index)
+                else:
+                    self.data_pseudocenter_subsets[k1][k2] = []
+
+        return self.data_pseudocenter_subsets
 
 
 class Points:
@@ -597,7 +619,7 @@ class Points:
         Dictionary with physicochemical properties for each representative.
         Has the same top level keys as Representatives.data,
         with nested keys describing different physicochemical properties per representative type.
-    subsets_indices_dict: Subsetter.subsets_indices_dict (dict)
+    subsets_indices_dict: Subsets.subsets_indices_dict (dict)
         Dictionary with subsets of representatives.
         Has the same top level keys as Representatives.data,
         with nested keys describing different subsetting types.
