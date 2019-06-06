@@ -59,7 +59,7 @@ class BindingSite:
         Encoded binding site (reference points, distance distribution and distribution moments).
     """
 
-    def __init__(self, pmol, output_log_path=None):
+    def __init__(self, pmol):
 
         self.pdb_id = pmol.code
         self.molecule = pmol.df
@@ -79,29 +79,29 @@ class BindingSite:
         ]
         return all(rules)
 
-    def _get_representatives(self):
+    def get_representatives(self):
         representatives = Representatives()
         representatives._get_representatives(self.molecule)
         return representatives
 
-    def _get_coordinates(self, representatives):
+    def get_coordinates(self, representatives):
         coordinates = Coordinates()
         coordinates._get_coordinates(representatives)
         return coordinates
 
-    def _get_physicochemicalproperties(self, representatives, output_log_path=None):
+    def get_physicochemicalproperties(self, representatives, output_log_path=None):
         physicochemicalproperties = PCProperties(
             representatives.data,
             output_log_path
         )
         return physicochemicalproperties
 
-    def _get_subsets(self, representatives):
+    def get_subsets(self, representatives):
         subsets = Subsets()
         subsets._get_pseudocenter_subsets_indices(representatives)
         return subsets
 
-    def _get_points(self, representatives, coordinates, physicochemicalproperties, subsets):
+    def get_points(self, representatives, coordinates, physicochemicalproperties, subsets):
         points = Points(
             representatives.data,
             coordinates.data,
@@ -110,17 +110,17 @@ class BindingSite:
         )
         return points
 
-    def _get_shapes(self, points):
+    def get_shapes(self, points):
         shapes = Shapes(points)
         return shapes
 
     def run(self):
-        representatives = self._get_representatives()
-        coordinates = self._get_coordinates(representatives)
-        physicochemicalproperties = self._get_physicochemicalproperties(representatives, output_log_path=None)
-        subsets = self._get_subsets(representatives)
-        points = self._get_points(representatives, coordinates, physicochemicalproperties, subsets)
-        shapes = self._get_shapes(points)
+        representatives = self.get_representatives()
+        coordinates = self.get_coordinates(representatives)
+        physicochemicalproperties = self.get_physicochemicalproperties(representatives, output_log_path=None)
+        subsets = self.get_subsets(representatives)
+        points = self.get_points(representatives, coordinates, physicochemicalproperties, subsets)
+        shapes = self.get_shapes(points)
         return shapes
 
 
@@ -165,11 +165,6 @@ class Representatives:
     @property
     def ca(self):
         return self.data['ca']
-
-    @ca.setter
-    def ca(self, value):
-        # Make tests on value
-        self.data['ca'] = value
 
     @property
     def pca(self):
