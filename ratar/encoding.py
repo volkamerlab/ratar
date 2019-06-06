@@ -23,13 +23,11 @@ from scipy.special import cbrt
 from scipy.stats.stats import skew
 import warnings
 
-# import ratar
 from ratar.auxiliary import *
 
 
 # Global variables
 
-PHYSICOCHEMISTRY_KEYS = ['z1', 'z123']  # Physicochemical property keys
 PSEUDOCENTER_ATOMS = load_pseudocenters()  # Pseudocenters definition
 AMINOACID_DESCRIPTORS = AminoAcidDescriptors()  # Amino acid descriptors definition, e.g. Z-scales
 
@@ -44,8 +42,6 @@ class BindingSite:
     ----------
     pmol : biopandas.mol2.pandas_mol2.PandasMol2 or biopandas.pdb.pandas_pdb.PandasPdb
         Content of mol2 or pdb file as BioPandas object.
-    output_log_path : str
-        Path to output log file.
 
     Attributes
     ----------
@@ -63,7 +59,7 @@ class BindingSite:
 
         self.pdb_id = pmol.code
         self.molecule = pmol.df
-        self.representatives = self._get_representatives()
+        self.representatives = self.get_representatives()
         self.shapes = self.run()
 
     def __eq__(self, other):
@@ -90,10 +86,8 @@ class BindingSite:
         return coordinates
 
     def get_physicochemicalproperties(self, representatives, output_log_path=None):
-        physicochemicalproperties = PCProperties(
-            representatives.data,
-            output_log_path
-        )
+        physicochemicalproperties = PCProperties(output_log_path)
+
         return physicochemicalproperties
 
     def get_subsets(self, representatives):
@@ -103,9 +97,9 @@ class BindingSite:
 
     def get_points(self, representatives, coordinates, physicochemicalproperties, subsets):
         points = Points(
-            representatives.data,
-            coordinates.data,
-            physicochemicalproperties.pcprop_dict,
+            representatives,
+            coordinates,
+            physicochemicalproperties,
             subsets.data_pseudocenter_subsets
         )
         return points
@@ -415,42 +409,34 @@ class PCProperties:
 
     Parameters
     ----------
-    representatives: Representatives.data (dictionary)
-        Dictionary with several representation methods serving as key.
     output_log_path : str
         Path to output log file.
 
     Attributes
     ----------
-    pcprop_dict :
-        Physicochemical properties stored as dictionary with the same keys as in Representatives.data.
-        Example: {'ca': ..., 'pca': ..., 'pc': ...}
-    output_log_path :
+    data : dict of dict of pandas.DataFrame
+        Dictionary (representatives types, e.g. 'pc') of dictionaries (physicochemical properties types, e.g. 'z123') of
+        DataFrames containing physicochemical properties.
+    output_log_path : str or pathlib.Posix
         Path to output log file.
     """
 
-    def __init__(self, representatives, output_log_path=None):
+    def __init__(self, output_log_path=None):
 
-        self.pcprop_dict = {}
+        self.data = {
+            'ca': {},
+            'pca': {},
+            'pc': {},
+        }
         self.output_log_path = output_log_path
-
-        for k, v in representatives.items():
-            self.pcprop_dict[k] = {}
-            for pcprop_key in PHYSICOCHEMISTRY_KEYS:
-                if isinstance(v, pd.DataFrame):
-                    self.pcprop_dict[k][pcprop_key] = self._get_pcproperties(v, pcprop_key)
-                elif isinstance(v, dict):
-                    self.pcprop_dict[k] = {kk: self._get_pcproperties(vv, pcprop_key) for (kk, vv) in v.items()}
-                else:
-                    raise TypeError('Check why type of representatives is neither pd.DataFrame nor dict.')
 
     def __eq__(self, other):
         """
         Check if two PCProperties objects are equal.
         """
 
-        obj1 = flatten(self.pcprop_dict, reducer='path')
-        obj2 = flatten(other.pcprop_dict, reducer='path')
+        obj1 = flatten(self.data, reducer='path')
+        obj2 = flatten(other.data, reducer='path')
 
         try:
             rules = [
@@ -462,16 +448,26 @@ class PCProperties:
 
         return all(rules)
 
-    def _get_pcproperties(self, representatives, pcprop_key):
+    @property
+    def ca(self):
+        return self.data['ca']
+
+    @property
+    def pca(self):
+        return self.data['pca']
+
+    @property
+    def pc(self):
+        return self.data['pc']
+
+    def _get_pcproperties(self, representatives):
         """
         Extract physicochemical properties (main function).
 
         Parameters
         ----------
         representatives : pandas.DataFrame
-            Representatives' data for a certain represenatives type.
-        pcprop_key : str
-            Physicochemical property name; key in PHYSICOCHEMISTRY_KEYS.
+            Representatives' data for a certain representatives type.
 
         Returns
         -------
@@ -479,12 +475,20 @@ class PCProperties:
             DataFrame containing physicochemical properties.
         """
 
-        if pcprop_key == 'z1':
-            return self._get_zscales(representatives, 1)
-        if pcprop_key == 'z123':
-            return self._get_zscales(representatives, 3)
-        else:
-            raise KeyError(f'Unknown representatives key: {pcprop_key}. Select: {", ".join(PHYSICOCHEMISTRY_KEYS)}')
+        for k1, v1 in representatives.data.items():
+            self.data[k1] = {}
+
+            physicochemicalproperties_keys = ['z1', 'z123']
+
+            for k2 in physicochemicalproperties_keys:
+
+                if k2 == 'z1':
+                    return self._get_zscales(representatives, 1)
+                if k2 == 'z123':
+                    return self._get_zscales(representatives, 3)
+                else:
+                    raise KeyError(f'Unknown representatives key: {k2}. '
+                                   f'Select: {", ".join(physicochemicalproperties_keys)}')
 
     def _get_zscales(self, representatives, z_number):
         """
@@ -626,7 +630,7 @@ class Points:
     coord_dict: Coordinates.coord_dict (dict)
         Dictionary with spatial properties (=coordinates) for each representative.
         Has the same keys as Representatives.data.
-    pcprop_dict: PCProperties.pcprop_dict (dict)
+    data: PCProperties.data (dict)
         Dictionary with physicochemical properties for each representative.
         Has the same top level keys as Representatives.data,
         with nested keys describing different physicochemical properties per representative type.
@@ -681,22 +685,19 @@ class Points:
 
         return all(rules)
 
-    def _get_points(self, representatives, coord_dict, pcprop_dict):
+    def _get_points(self, representatives, coordinates, physicochemicalproperties):
         """
         Concatenate spatial (3-dimensional) and physicochemical (N-dimensional) properties
         to an 3+N-dimensional vector for each point in dataset (i.e. representative atoms in a binding site).
 
         Parameters
         ----------
-        representatives : Representatives.data (dictionary)
-            Dictionary with several representation methods serving as key.
-        coord_dict : dict of DataFrames (Coordinates.coord_dict)
-            Spatial properties (=coordinates) for each representative.
-            Has the same keys as Representatives.data.
-        pcprop_dict : dict of dict of DataFrames (PCProperties.pcprop_dict)
-            Physicochemical properties for each representative.
-            Has the same top level keys as Representatives.data,
-            with nested keys describing different physicochemical properties per representative type.
+        representatives : ratar.Representatives
+            Representatives class instance.
+        coordinates : ratar.Coordinates
+            Coordinates class instance.
+        physicochemicalproperties : ratar.PCProperties
+            PCProperties class instance.
 
         Returns
         -------
@@ -706,12 +707,20 @@ class Points:
 
         data = {}
 
-        for k in representatives.keys():
-            data[k] = coord_dict[k].copy()
+        for k in representatives.data.keys():
+            data[k] = coordinates.data[k].copy()
             data[k].dropna(inplace=True)
 
-            for pcprop_key in PHYSICOCHEMISTRY_KEYS:
-                data[k + '_' + pcprop_key] = pd.concat([coord_dict[k], pcprop_dict[k][pcprop_key]], axis=1)
+            physicochemicalproperties_keys = physicochemicalproperties.data['ca'].keys()
+
+            for pcprop_key in physicochemicalproperties_keys:
+                data[k + '_' + pcprop_key] = pd.concat(
+                    [
+                        coordinates.data[k],
+                        physicochemicalproperties.data[k][pcprop_key]
+                    ],
+                    axis=1
+                )
                 data[k + '_' + pcprop_key].dropna(inplace=True)
 
         return data
