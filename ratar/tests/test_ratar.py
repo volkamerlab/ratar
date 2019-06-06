@@ -9,7 +9,7 @@ import pytest
 from pathlib import Path
 import pickle
 
-from ratar.auxiliary import MolFileLoader
+from ratar.auxiliary import MoleculeLoader
 from ratar.encoding import BindingSite
 
 
@@ -41,7 +41,7 @@ def test_molfileloader(filename, mol_code, mol_df_n_rows, mol_df_n_cols):
     """
 
     path = Path(sys.path[0]) / 'ratar' / 'tests' / 'data' / filename
-    mol_loader = MolFileLoader(path)
+    mol_loader = MoleculeLoader(path)
 
     assert len(mol_loader.pmols) == 1
     assert mol_loader.pmols[0].code == mol_code
@@ -69,8 +69,8 @@ def test_bindingsites_eq(mol_file1, mol_file2):
     path1 = Path(sys.path[0]) / 'ratar' / 'tests' / 'data' / mol_file1
     path2 = Path(sys.path[0]) / 'ratar' / 'tests' / 'data' / mol_file2
 
-    pmols1 = MolFileLoader(path1)
-    pmols2 = MolFileLoader(path2)
+    pmols1 = MoleculeLoader(path1)
+    pmols2 = MoleculeLoader(path2)
 
     bs1 = BindingSite(pmols1.pmols[0])
     bs2 = BindingSite(pmols1.pmols[0])
@@ -98,7 +98,7 @@ def test_bindingsites(mol_file, encoding_file):
 
     # Encode binding site
     path_mol = Path(sys.path[0]) / 'ratar' / 'tests' / 'data' / mol_file
-    pmols = MolFileLoader(path_mol)
+    pmols = MoleculeLoader(path_mol)
     bs = BindingSite(pmols.pmols[0])
 
     # Load reference binding site encoding
