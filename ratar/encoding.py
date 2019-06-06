@@ -49,7 +49,7 @@ class BindingSite:
         PDB ID (or structure ID)
     molecule : DataFrame
         Data extracted from e.g. mol2 or pdb file.
-    representatives : Representatives
+    representatives : ratar.encoding.Representatives
         Representative atoms of binding site for different representation methods.
     shapes : Shapes
         Encoded binding site (reference points, distance distribution and distribution moments).
@@ -87,7 +87,7 @@ class BindingSite:
 
     def get_physicochemicalproperties(self, representatives, output_log_path=None):
         physicochemicalproperties = PCProperties(output_log_path)
-
+        physicochemicalproperties._get_physicochemicalproperties(representatives)
         return physicochemicalproperties
 
     def get_subsets(self, representatives):
@@ -96,12 +96,9 @@ class BindingSite:
         return subsets
 
     def get_points(self, representatives, coordinates, physicochemicalproperties, subsets):
-        points = Points(
-            representatives,
-            coordinates,
-            physicochemicalproperties,
-            subsets.data_pseudocenter_subsets
-        )
+        points = Points()
+        points._get_points(representatives, coordinates, physicochemicalproperties)
+        points._get_points_pseudocenter_subsets(subsets)
         return points
 
     def get_shapes(self, points):
@@ -326,13 +323,13 @@ class Coordinates:
 
     Parameters
     ----------
-    representatives : Representatives
+    representatives : ratar.encoding.Representatives
         Dictionary with several representation methods serving as key.
 
     Attributes
     ----------
-    data : Coordinates.coord_dict
-        Coordinates stored as dictionary with the same keys as in Representatives.data.
+    data : dict of pandas.DataFrames
+        Dictionary (representatives types, e.g. 'pc') of DataFrames containing coordinates.
         Example: {'ca': ..., 'pca': ..., 'pc': ...}
     """
 
@@ -379,7 +376,7 @@ class Coordinates:
 
         Parameters
         ----------
-        representatives : Representatives
+        representatives : ratar.encoding.Representatives
             Representatives class instance.
 
         Returns
@@ -399,7 +396,6 @@ class Coordinates:
                 raise TypeError(f'Expected dict or pandas.DataFrame but got {type(v)}')
 
         return self.data
-
 
 
 class PCProperties:
@@ -460,7 +456,7 @@ class PCProperties:
 
         return all(rules)
 
-    def _get_pcproperties(self, representatives):
+    def _get_physicochemicalproperties(self, representatives):
         """
         Extract physicochemical properties (main function).
 
@@ -475,28 +471,28 @@ class PCProperties:
             DataFrame containing physicochemical properties.
         """
 
+        physicochemicalproperties_keys = ['z1', 'z123']
+
         for k1, v1 in representatives.data.items():
             self.data[k1] = {}
-
-            physicochemicalproperties_keys = ['z1', 'z123']
 
             for k2 in physicochemicalproperties_keys:
 
                 if k2 == 'z1':
-                    return self._get_zscales(representatives, 1)
+                    return self._get_zscales(v1, 1)
                 if k2 == 'z123':
-                    return self._get_zscales(representatives, 3)
+                    return self._get_zscales(v1, 3)
                 else:
                     raise KeyError(f'Unknown representatives key: {k2}. '
                                    f'Select: {", ".join(physicochemicalproperties_keys)}')
 
-    def _get_zscales(self, representatives, z_number):
+    def _get_zscales(self, representatives_df, z_number):
         """
         Extract Z-scales from binding site representatives.
 
         Parameters
         ----------
-        representatives : pandas.DataFrame
+        representatives_df : pandas.DataFrame
             Representatives' data for a certain representatives type.
         z_number : int
             Number of Z-scales to be included.
@@ -512,7 +508,7 @@ class PCProperties:
 
         # Get Z-scales for representatives' amino acids
         representatives_zscales = []
-        for index, row in representatives.iterrows():
+        for index, row in representatives_df.iterrows():
             aminoacid = row['res_name']
 
             if aminoacid in zscales.index:
@@ -532,7 +528,7 @@ class PCProperties:
         # Cast into DataFrame
         representatives_zscales_df = pd.DataFrame(
             representatives_zscales,
-            index=representatives.index,
+            index=representatives_df.index,
             columns=zscales.columns
         )
 
@@ -544,22 +540,29 @@ class Subsets:
     Class used to store subset indices (DataFrame indices) of binding site representatives,
     which were defined by the Representatives class.
 
-    Parameters
-    ----------
-    representatives : Representatives
-        Representatives class instance.
-
     Attributes
     ----------
-    subsets_indices_dict :
-        Subset indices stored as dictionary with the same keys as in Representatives.data.
+    data_pseudocenter_subsets : dict of dict of pandas.DataFrames
+        Dictionary (representatives types, e.g. 'pc') of dictionaries (pseudocenter subset types, e.g. 'HBA') of
+        DataFrames containing subset indices.
         Example: {'pca': {'H': ..., 'HBD': ..., ...},
                   'pc': {'H': ..., 'HBD': ..., ...}}
     """
 
     def __init__(self):
 
-        self.data_pseudocenter_subsets = None
+        self.data_pseudocenter_subsets = {
+            'pca': {},
+            'pc': {}
+        }
+
+    @property
+    def pseudocenters(self):
+        return self.data_pseudocenter_subsets['pc']
+
+    @property
+    def pseudocenter_atoms(self):
+        return self.data_pseudocenter_subsets['pca']
 
     def __eq__(self, other):
         """
@@ -585,7 +588,7 @@ class Subsets:
 
         Parameters
         ----------
-        representatives : Representatives
+        representatives : ratar.encoding.Representatives
             Representatives class instance.
 
         Returns
@@ -625,20 +628,6 @@ class Points:
     - 3 dimensions (spatial properties x, y, z) or
     - more dimensions (spatial and some additional properties).
 
-    Parameters
-    ----------
-    coord_dict: Coordinates.coord_dict (dict)
-        Dictionary with spatial properties (=coordinates) for each representative.
-        Has the same keys as Representatives.data.
-    data: PCProperties.data (dict)
-        Dictionary with physicochemical properties for each representative.
-        Has the same top level keys as Representatives.data,
-        with nested keys describing different physicochemical properties per representative type.
-    subsets_indices_dict: Subsets.subsets_indices_dict (dict)
-        Dictionary with subsets of representatives.
-        Has the same top level keys as Representatives.data,
-        with nested keys describing different subsetting types.
-
     Attributes
     ----------
     data :
@@ -651,12 +640,40 @@ class Points:
                   ...,
                   'pca_z12': {'H': ..., 'HBD': ..., ...},
                   ...}
+    # TODO Update docstring
     """
 
-    def __init__(self, representatives, coord_dict, pcprop_dict, subsets_indices_dict):
+    def __init__(self):
 
-        self.data = self._get_points(representatives, coord_dict, pcprop_dict)
-        self.data_pseudocenter_subsets = self._get_points_pseudocenter_subsets(subsets_indices_dict)
+        self.data = {
+            'ca': {},
+            'pca': {},
+            'pc': {}
+        }
+        self.data_pseudocenter_subsets = {
+            'pc': {},
+            'pca': {}
+        }
+
+    @property
+    def ca(self):
+        return self.data['ca']
+
+    @property
+    def pca(self):
+        return self.data['pca']
+
+    @property
+    def pc(self):
+        return self.data['pc']
+
+    @property
+    def pca_subsets(self):
+        return self.data_pseudocenter_subsets['pca']
+
+    @property
+    def pc_subsets(self):
+        return self.data_pseudocenter_subsets['pc']
 
     def __eq__(self, other):
         """
@@ -692,9 +709,9 @@ class Points:
 
         Parameters
         ----------
-        representatives : ratar.Representatives
+        representatives : ratar.encoding.Representatives
             Representatives class instance.
-        coordinates : ratar.Coordinates
+        coordinates : ratar.encoding.Coordinates
             Coordinates class instance.
         physicochemicalproperties : ratar.PCProperties
             PCProperties class instance.
@@ -705,35 +722,39 @@ class Points:
              Spatial and physicochemical properties for each representative.
         """
 
-        data = {}
+        self.data = {}
 
-        for k in representatives.data.keys():
-            data[k] = coordinates.data[k].copy()
-            data[k].dropna(inplace=True)
+        # Get physicochemical properties
+        physicochemicalproperties_keys = physicochemicalproperties.data['ca'].keys()
 
-            physicochemicalproperties_keys = physicochemicalproperties.data['ca'].keys()
+        for k1 in representatives.data.keys():
+            self.data[k1] = {}
+            self.data[k1]['None'] = coordinates.data[k1].copy()
 
-            for pcprop_key in physicochemicalproperties_keys:
-                data[k + '_' + pcprop_key] = pd.concat(
+            # Drop rows (atoms) with empty entries (e.g. atoms without Z-scales assignment)
+            self.data[k1]['None'].dropna(inplace=True)
+
+            for k2 in physicochemicalproperties_keys:
+                self.data[k1][k2] = pd.concat(
                     [
-                        coordinates.data[k],
-                        physicochemicalproperties.data[k][pcprop_key]
+                        coordinates.data[k1],
+                        physicochemicalproperties.data[k1][k2]
                     ],
                     axis=1
                 )
-                data[k + '_' + pcprop_key].dropna(inplace=True)
+                # Drop rows (atoms) with empty entries (e.g. atoms without Z-scales assignment)
+                self.data[k1][k2].dropna(inplace=True)
 
-        return data
+        return self.data
 
-    def _get_points_pseudocenter_subsets(self, subsets_indices_dict):
+    def _get_points_pseudocenter_subsets(self, subsets):
         """
         Get
 
         Parameters
         ----------
-        subsets_indices_dict : dict of dict of lists
-            Dictionary (representatives types, e.g. 'pc') of dictionaries (subset types, e.g. 'HBA')
-            containing list of indices of atoms belonging to a subset.
+        subsets : ratar.encoding.Subsets
+            Subsets class instance.
 
         Returns
         -------
@@ -744,18 +765,22 @@ class Points:
 
         data_pseudocenter_subsets = {}
 
-        for k1, v1 in self.data.items():
+        for k1, v1 in self.data.items():  # Representatives
 
             # Select points keys that we want to subset, e.g. we want to subset pseudocenters but not Calpha atoms
-            if any([k2 in k1 for k2 in subsets_indices_dict.keys()]):
-
+            if k1 in subsets.data_pseudocenter_subsets.keys():
                 data_pseudocenter_subsets[k1] = {}
 
-                for k2, v2 in subsets_indices_dict[k1.split('_')[0]].items():
-                    # Select only subsets indices that are in points
-                    # In points, e.g.amino acid atoms with missing Z-scales are discarded
-                    labels = v1.index.intersection(v2)
-                    data_pseudocenter_subsets[k1][k2] = v1.loc[labels, :]
+                for k2, v2 in v1.items():  # Physicochemical properties
+                    data_pseudocenter_subsets[k1][k2] = {}
+
+                    for k3, v3 in subsets.data_pseudocenter_subsets[k1].items():
+                        # Select only subsets indices that are in points
+                        # In points, e.g.amino acid atoms with missing Z-scales are discarded
+                        labels = v2.index.intersection(v3)
+                        data_pseudocenter_subsets[k1][k2][k3] = v2.loc[labels, :]
+
+        print(flatten(data_pseudocenter_subsets, reducer='path'))
 
         return data_pseudocenter_subsets
 
@@ -784,6 +809,8 @@ class Shapes:
         - level 2 keys for subsets, e.g. 'H',
         - level 3 keys for encoding method, e.g. '3dim_usr',
         - level 4 keys for reference point coordinates 'ref_points', distances 'dist', and moments 'moments'.
+
+    # TODO Update docstring
     """
 
     def __init__(self, points):
