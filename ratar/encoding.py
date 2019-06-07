@@ -15,7 +15,7 @@ import _pickle as pickle
 import re
 # import sys
 
-from flatten_dict import flatten
+from flatten_dict import flatten, unflatten
 import numpy as np
 # import pandas as pd
 import seaborn as sns
@@ -83,30 +83,28 @@ class BindingSite:
     def get_coordinates(self, representatives):
         coordinates = Coordinates()
         coordinates._get_coordinates(representatives)
-        #print(coordinates.ca)
         return coordinates
 
     def get_physicochemicalproperties(self, representatives, output_log_path=None):
         physicochemicalproperties = PCProperties(output_log_path)
         physicochemicalproperties._get_physicochemicalproperties(representatives)
-        #print(physicochemicalproperties.ca)
         return physicochemicalproperties
 
     def get_subsets(self, representatives):
         subsets = Subsets()
         subsets._get_pseudocenter_subsets_indices(representatives)
-        #print(subsets)
         return subsets
 
     def get_points(self, coordinates, physicochemicalproperties, subsets):
         points = Points()
         points._get_points(coordinates, physicochemicalproperties)
         points._get_points_pseudocenter_subsets(subsets)
-        #print(points)
         return points
 
     def get_shapes(self, points):
-        shapes = Shapes(points)
+        shapes = Shapes()
+        shapes._get_shapes(points)
+        shapes._get_shapes_pseudocenter_subsets(points)
         return shapes
 
     def run(self):
@@ -731,7 +729,6 @@ class Points:
 
         # Get physicochemical properties
         physicochemicalproperties_keys = physicochemicalproperties.data['ca'].keys()
-        #print(physicochemicalproperties_keys)
 
         for k1 in coordinates.data.keys():
             self.data[k1] = {}
@@ -748,6 +745,7 @@ class Points:
                     ],
                     axis=1
                 )
+
                 # Drop rows (atoms) with empty entries (e.g. atoms without Z-scales assignment)
                 self.data[k1][k2].dropna(inplace=True)
 
@@ -786,8 +784,6 @@ class Points:
                         labels = v2.index.intersection(v3)
                         self.data_pseudocenter_subsets[k1][k2][k3] = v2.loc[labels, :]
 
-        #print(flatten(self.data_pseudocenter_subsets, reducer='path'))
-
         return self.data_pseudocenter_subsets
 
 
@@ -796,42 +792,40 @@ class Shapes:
     Class used to store the encoded binding site representatives,
     which were defined by the Representatives class.
 
-    Parameters
-    ----------
-    points: Points.points (dict)
-        Dictionary with spatial properties (=coordinates) for each representative.
-        Has the same keys as Representatives.data.
-
-    Attributes
-    ----------
-    shapes_dict :
-        Encoding stored as dictionary with
-        - level 1 keys for representatives, e.g. 'ca',
-        - level 2 keys for encoding method, e.g. '3dim_usr',
-        - level 3 keys for reference point coordinates 'ref_points', distances 'dist', and moments 'moments'.
-    shapes_subsets_dict :
-        Encoding stored as dictionary
-        - level 1 keys for representatives, e.g. 'ca',
-        - level 2 keys for subsets, e.g. 'H',
-        - level 3 keys for encoding method, e.g. '3dim_usr',
-        - level 4 keys for reference point coordinates 'ref_points', distances 'dist', and moments 'moments'.
-
     # TODO Update docstring
     """
 
-    def __init__(self, points):
+    def __init__(self):
 
-        # Full datasets
-        self.shapes_dict = {}
-        for k, v in points.data.items():
-            self.shapes_dict[k] = self._get_shape(v)
+        self.data = {
+            'ca': {},
+            'pca': {},
+            'pc': {}
+        }
+        self.data_pseudocenter_subsets = {
+            'pc': {},
+            'pca': {}
+        }
 
-        # Subset datasets
-        self.shapes_subsets_dict = {}
-        for k, v in points.data_pseudocenter_subsets.items():
-            self.shapes_subsets_dict[k] = {}
-            for kk, vv in points.data_pseudocenter_subsets[k].items():
-                self.shapes_subsets_dict[k][kk] = self._get_shape(vv)
+    @property
+    def ca(self):
+        return self.data['ca']
+
+    @property
+    def pca(self):
+        return self.data['pca']
+
+    @property
+    def pc(self):
+        return self.data['pc']
+
+    @property
+    def pca_subsets(self):
+        return self.data_pseudocenter_subsets['pca']
+
+    @property
+    def pc_subsets(self):
+        return self.data_pseudocenter_subsets['pc']
 
     def __eq__(self, other):
         """
@@ -839,13 +833,13 @@ class Shapes:
         """
 
         obj1 = (
-            flatten(self.shapes_dict, reducer='path'),
-            flatten(self.shapes_subsets_dict, reducer='path')
+            flatten(self.data, reducer='path'),
+            flatten(self.data_pseudocenter_subsets, reducer='path')
         )
 
         obj2 = (
-            flatten(other.shapes_dict, reducer='path'),
-            flatten(other.shapes_subsets_dict, reducer='path')
+            flatten(other.data, reducer='path'),
+            flatten(other.data_pseudocenter_subsets, reducer='path')
         )
 
         try:
@@ -860,48 +854,99 @@ class Shapes:
 
         return all(rules)
 
-    def _get_shape(self, points):
+    def _get_shapes(self, points):
         """
-        Get binding site shape with different encoding methods, depending on number of representatives (points).
-        Check if
+        Get the encoding of a molecule for different types of representatives, physicochemical properties, and encoding
+        methods.
 
         Parameters
         ----------
-        points : pandas.DataFrame
-            Spatial and physicochemical properties of representatives (points).
+        points : ratar.encoding.Points
+            Points class instance
 
         Returns
         -------
-        dict of dict of dict of pandas.DataFrames
-            Encoded binding site information such as reference points, distances, and moments (lower level keys)
-            for different encoding methods (top level keys).
-
-        Notes
-        -----
-        Calculate shape if at least as many representatives are in binding site as needed references points, else return
-        dictionary with key 'na' and value None.
+        dict of dict of dict of dict of pandas.DataFrames
+            Dictionary (representatives types, e.g. 'pc') of dictionaries (physicochemical properties types, e.g. 'HBA')
+            of dictionaries (encoding method, e.g. '3D_usr') of dictionaries containing DataFrames for the encoding:
+            'ref_points' (the reference points), 'distances' (the distances from reference points to representatives),
+            and 'moments' (the first three moments for the distance distribution).
         """
 
-        n_points = points.shape[0]
-        n_dimensions = points.shape[1]
+        self.data = {}
+
+        # Flatten nested dictionary
+        points_flat = flatten(points.data, reducer='path')
+
+        for k, v in points_flat.items():
+            self.data[k] = self._get_shape_by_method(v)
+
+        # Unflatten dictionary back to nested dictionary
+        self.data = unflatten(self.data, splitter='path')
+
+        return self.data
+
+    def _get_shapes_pseudocenter_subsets(self, points):
+        """
+
+        Parameters
+        ----------
+        subsets : ratar.encoding.Subsets
+            Subsets class instance.
+
+        Returns
+        -------
+
+        """
+
+        self.data_pseudocenter_subsets = {}
+
+        # Flatten nested dictionary
+        points_flat = flatten(points.data_pseudocenter_subsets, reducer='path')
+
+        for k, v in points_flat.items():
+            self.data_pseudocenter_subsets[k] = self._get_shape_by_method(v)
+
+        # Change key order of (flattened) nested dictionary (reverse subset type and encoding type)
+        self.data_pseudocenter_subsets = self._reorder_subset_keys()
+
+        # Unflatten dictionary back to nested dictionary
+        self.data_pseudocenter_subsets = unflatten(self.data_pseudocenter_subsets, splitter='path')
+
+        return self.data_pseudocenter_subsets
+
+    def _get_shape_by_method(self, points_df):
+        """
+        Apply encoding method on points depending on points dimensions and return encoding.
+
+        Parameters
+        ----------
+        points_df : pandas.DataFrame
+            DataFrame containing points which can have different dimensions.
+
+        Returns
+        -------
+        dict of dict of pandas.DataFrames
+            Dictionary (encoding type) of dictionaries containing DataFrames for the encoding:
+            'ref_points' (the reference points), 'distances' (the distances from reference points to representatives),
+            and 'moments' (the first three moments for the distance distribution).
+        """
+
+        n_points = points_df.shape[0]
+        n_dimensions = points_df.shape[1]
 
         # Select method based on number of dimensions and points
-        if n_dimensions < 3:
-            return {'na': None}
         if n_dimensions == 3 and n_points > 3:
-            shape_3dim_dict = {'3dim_usr': self._get_shape_3dim_usr(points),
-                               '3dim_csr': self._get_shape_3dim_csr(points)}
-            return shape_3dim_dict
-        if n_dimensions == 4 and n_points > 4:
-            shape_4dim_dict = {'4_dim_electroshape': self._get_shape_4dim_electroshape(points)}
-            return shape_4dim_dict
-        if n_dimensions == 6 and n_points > 6:
-            shape_6dim_dict = {'6dim': self._get_shape_6dim(points)}
-            return shape_6dim_dict
+            return {'3D_usr': self._calc_shape_3dim_usr(points_df),
+                    '3D_csr': self._calc_shape_3dim_csr(points_df)}
+        elif n_dimensions == 4 and n_points > 4:
+            return {'4D_electroshape': self._calc_shape_4dim_electroshape(points_df)}
+        elif n_dimensions == 6 and n_points > 6:
+            return {'6D_ratar1': self._calc_shape_6dim(points_df)}
         else:
-            return {'na': None}
+            raise IOError(f'Unexpected points dimensions: {points_df.shape}')
 
-    def _get_shape_3dim_usr(self, points):
+    def _calc_shape_3dim_usr(self, points):
         """
         Encode binding site (3-dimensional points) based on the USR method.
 
@@ -938,27 +983,27 @@ class Shapes:
         c1 = points.mean(axis=0)
 
         # Get distances from c1 to all other points
-        dist_c1 = self._get_distances_to_point(points, c1)
+        dist_c1 = self._calc_distances_to_point(points, c1)
 
         # Get closest and farthest atom to centroid c1
         c2, c3 = points.loc[dist_c1.idxmin()], points.loc[dist_c1.idxmax()]
 
         # Get distances from c2 to all other points, get distances from c3 to all other points
-        dist_c2 = self._get_distances_to_point(points, c2)
-        dist_c3 = self._get_distances_to_point(points, c3)
+        dist_c2 = self._calc_distances_to_point(points, c2)
+        dist_c3 = self._calc_distances_to_point(points, c3)
 
         # Get farthest atom to farthest atom to centroid c3
         c4 = points.loc[dist_c3.idxmax()]
 
         # Get distances from c4 to all other points
-        dist_c4 = self._get_distances_to_point(points, c4)
+        dist_c4 = self._calc_distances_to_point(points, c4)
 
         c = [c1, c2, c3, c4]
         dist = [dist_c1, dist_c2, dist_c3, dist_c4]
 
         return self._get_shape_dict(c, dist)
 
-    def _get_shape_3dim_csr(self, points):
+    def _calc_shape_3dim_csr(self, points):
         """
         Encode binding site (3-dimensional points) based on the CSR method.
 
@@ -992,15 +1037,15 @@ class Shapes:
 
         # Get centroid of input coordinates, and distances from c1 to all other points
         c1 = points.mean(axis=0)
-        dist_c1 = self._get_distances_to_point(points, c1)
+        dist_c1 = self._calc_distances_to_point(points, c1)
 
         # Get farthest atom to centroid c1, and distances from c2 to all other points
         c2 = points.loc[dist_c1.idxmax()]
-        dist_c2 = self._get_distances_to_point(points, c2)
+        dist_c2 = self._calc_distances_to_point(points, c2)
 
         # Get farthest atom to farthest atom to centroid c2, and distances from c3 to all other points
         c3 = points.loc[dist_c2.idxmax()]
-        dist_c3 = self._get_distances_to_point(points, c3)
+        dist_c3 = self._calc_distances_to_point(points, c3)
 
         # Get forth reference point, including chirality information
         # Define two vectors spanning c1, c2, and c3 (from c1)
@@ -1015,14 +1060,14 @@ class Shapes:
         c4 = pd.Series(a_norm / 2 * cross_unit, index=['x', 'y', 'z'])
 
         # Get distances from c4 to all other points
-        dist_c4 = self._get_distances_to_point(points, c4)
+        dist_c4 = self._calc_distances_to_point(points, c4)
 
         c = [c1, c2, c3, c4]
         dist = [dist_c1, dist_c2, dist_c3, dist_c4]
 
         return self._get_shape_dict(c, dist)
 
-    def _get_shape_4dim_electroshape(self, points, scaling_factor=1):
+    def _calc_shape_4dim_electroshape(self, points, scaling_factor=1):
         """
         Encode binding site (4-dimensional points) based on the ElectroShape method.
 
@@ -1059,15 +1104,15 @@ class Shapes:
 
         # Get centroid of input coordinates (in 4 dimensions), and distances from c1 to all other points
         c1 = points.mean(axis=0)
-        dist_c1 = self._get_distances_to_point(points, c1)
+        dist_c1 = self._calc_distances_to_point(points, c1)
 
         # Get farthest atom to centroid c1 (in 4 dimensions), and distances from c2 to all other points
         c2 = points.loc[dist_c1.idxmax()]
-        dist_c2 = self._get_distances_to_point(points, c2)
+        dist_c2 = self._calc_distances_to_point(points, c2)
 
         # Get farthest atom to farthest atom to centroid c2 (in 4 dimensions), and distances from c3 to all other points
         c3 = points.loc[dist_c2.idxmax()]
-        dist_c3 = self._get_distances_to_point(points, c3)
+        dist_c3 = self._calc_distances_to_point(points, c3)
 
         # Get forth and fifth reference point:
         # 1. Define two vectors spanning c1, c2, and c3 (from c1)
@@ -1098,15 +1143,15 @@ class Shapes:
         c5 = c1_s + c + pd.Series([0, 0, 0, scaling_factor * min_value_4thdim], index=['x', 'y', 'z', name_4thdim])
 
         # Get distances from c4 and c5 to all other points
-        dist_c4 = self._get_distances_to_point(points, c4)
-        dist_c5 = self._get_distances_to_point(points, c5)
+        dist_c4 = self._calc_distances_to_point(points, c4)
+        dist_c5 = self._calc_distances_to_point(points, c5)
 
         c = [c1, c2, c3, c4, c5]
         dist = [dist_c1, dist_c2, dist_c3, dist_c4, dist_c5]
 
         return self._get_shape_dict(c, dist)
 
-    def _get_shape_6dim(self, points, scaling_factor=1):
+    def _calc_shape_6dim(self, points, scaling_factor=1):
         """
         Encode binding site in 6D.
 
@@ -1139,40 +1184,40 @@ class Shapes:
 
         # Get centroid of input coordinates (in 7 dimensions), and distances from c1 to all other points
         c1 = points.mean(axis=0)
-        dist_c1 = self._get_distances_to_point(points, c1)
+        dist_c1 = self._calc_distances_to_point(points, c1)
 
         # Get closest and farthest atom to centroid c1 (in 7 dimensions),
         # and distances from c2 and c3 to all other points
         c2, c3 = points.loc[dist_c1.idxmin()], points.loc[dist_c1.idxmax()]
-        dist_c2 = self._get_distances_to_point(points, c2)
-        dist_c3 = self._get_distances_to_point(points, c3)
+        dist_c2 = self._calc_distances_to_point(points, c2)
+        dist_c3 = self._calc_distances_to_point(points, c3)
 
         # Get farthest atom to farthest atom to centroid c2 (in 7 dimensions),
         # and distances from c3 to all other points
         c4 = points.loc[dist_c3.idxmax()]
-        dist_c4 = self._get_distances_to_point(points, c4)
+        dist_c4 = self._calc_distances_to_point(points, c4)
 
         # Get adjusted cross product
-        c5_3d = self._get_adjusted_3d_cross_product(c1, c2, c3)  # FIXME order of importance, right?
-        c6_3d = self._get_adjusted_3d_cross_product(c1, c3, c4)
-        c7_3d = self._get_adjusted_3d_cross_product(c1, c4, c2)
+        c5_3d = self._calc_adjusted_3d_cross_product(c1, c2, c3)  # FIXME order of importance, right?
+        c6_3d = self._calc_adjusted_3d_cross_product(c1, c3, c4)
+        c7_3d = self._calc_adjusted_3d_cross_product(c1, c4, c2)
 
         # Get remaining reference points as nearest atoms to adjusted cross products
-        c5 = self._get_nearest_point(c5_3d, points, scaling_factor)
-        c6 = self._get_nearest_point(c6_3d, points, scaling_factor)
-        c7 = self._get_nearest_point(c7_3d, points, scaling_factor)
+        c5 = self._calc_nearest_point(c5_3d, points, scaling_factor)
+        c6 = self._calc_nearest_point(c6_3d, points, scaling_factor)
+        c7 = self._calc_nearest_point(c7_3d, points, scaling_factor)
 
         # Get distances from c5, c6, and c7 to all other points
-        dist_c5 = self._get_distances_to_point(points, c5)
-        dist_c6 = self._get_distances_to_point(points, c6)
-        dist_c7 = self._get_distances_to_point(points, c7)
+        dist_c5 = self._calc_distances_to_point(points, c5)
+        dist_c6 = self._calc_distances_to_point(points, c6)
+        dist_c7 = self._calc_distances_to_point(points, c7)
 
         c = [c1, c2, c3, c4, c5, c6, c7]
         dist = [dist_c1, dist_c2, dist_c3, dist_c4, dist_c5, dist_c6, dist_c7]
 
         return self._get_shape_dict(c, dist)
 
-    def _get_adjusted_3d_cross_product(self, coord_origin, coord_point_a, coord_point_b):
+    def _calc_adjusted_3d_cross_product(self, coord_origin, coord_point_a, coord_point_b):
         """
         Calculates a translated and scaled 3D cross product vector based on three input vectors.
 
@@ -1238,7 +1283,7 @@ class Shapes:
 
         return c_3d
 
-    def _get_adjusted_6d_cross_product(self):
+    def _calc_adjusted_6d_cross_product(self):
         pass
 
     def _get_shape_dict(self, ref_points, dist):
@@ -1267,14 +1312,14 @@ class Shapes:
         dist.columns = ['dist_c' + str(i) for i in range(1, len(dist.columns) + 1)]
 
         # Get first, second, and third moment for each distance distribution
-        moments = self._get_moments(dist)
+        moments = self._calc_moments(dist)
 
         # Save shape as dictionary
         shape = {'ref_points': ref_points, 'dist': dist, 'moments': moments}
 
         return shape
 
-    def _get_distances_to_point(self, points: pd.DataFrame, ref_point: pd.Series) -> pd.Series:
+    def _calc_distances_to_point(self, points, ref_point):
         """
         Calculate distances from one point (reference point) to all other points.
 
@@ -1290,12 +1335,12 @@ class Shapes:
         pandas.Series
             Distances from reference point to representatives.
         """
-        # np.linalg.norm
+        # TODO use here np.linalg.norm?
         distances: pd.Series = np.sqrt(((points - ref_point) ** 2).sum(axis=1))
 
         return distances
 
-    def _get_nearest_point(self, point, points, scaling_factor):
+    def _calc_nearest_point(self, point, points, scaling_factor):
         """
         Get the point (N-dimensional) in a set of points that is nearest (in 3D) to an input point (3D).
 
@@ -1318,7 +1363,7 @@ class Shapes:
             sys.exit('Error: Input points are not of at least length 3.')
 
         # Get distances (in space, i.e. 3D) to all points
-        dist_c_3d = self._get_distances_to_point(points.iloc[:, 0:3], point)
+        dist_c_3d = self._calc_distances_to_point(points.iloc[:, 0:3], point)
 
         # Get nearest atom (in space, i.e. 3D) and save its 6D vector
         c_6d = points.loc[
@@ -1330,7 +1375,7 @@ class Shapes:
 
         return c_6d
 
-    def _get_moments(self, dist):
+    def _calc_moments(self, dist):
         """
         Calculate first, second, and third moment (mean, standard deviation, and skewness) for a distance distribution.
 
@@ -1360,6 +1405,30 @@ class Shapes:
         moments.columns = ['m1', 'm2', 'm3']
 
         return moments
+
+    def _reorder_subset_keys(self):
+        """
+        Change the key order of the nested dictionary data_pseudocenter_subsets (Shapes attribute).
+        Example: 'pc/z123/H/6D_ratar1/moments' is changed to 'pc/z123/6D_ratar1/H/moments'.
+
+        Returns
+        -------
+        dict of pandas.DataFrames
+            Dictionary of DataFrames.
+        """
+
+        self.data_pseudocenter_subsets = flatten(self.data_pseudocenter_subsets, reducer='path')
+
+        keys_old = self.data_pseudocenter_subsets.keys()
+        keys_new = [i.split('/') for i in keys_old]
+        key_order = [0, 1, 3, 2, 4]
+        keys_new = [[i[j] for j in key_order] for i in keys_new]
+        keys_new = ['/'.join(i) for i in keys_new]
+
+        for key_old, key_new in zip(keys_old, keys_new):
+            self.data_pseudocenter_subsets[key_new] = self.data_pseudocenter_subsets.pop(key_old)
+
+        return self.data_pseudocenter_subsets
 
 
 ########################################################################################
