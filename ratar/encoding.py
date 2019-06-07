@@ -88,7 +88,7 @@ class BindingSite:
 
     @staticmethod
     def get_physicochemicalproperties(representatives, output_log_path=None):
-        physicochemicalproperties = PCProperties(output_log_path)
+        physicochemicalproperties = PhysicoChemicalProperties(output_log_path)
         physicochemicalproperties.get_physicochemicalproperties(representatives)
         return physicochemicalproperties
 
@@ -399,7 +399,7 @@ class Coordinates:
         return self.data
 
 
-class PCProperties:
+class PhysicoChemicalProperties:
     """
     Class used to store the physicochemical properties of molecule representatives, which were defined by the
     Representatives class.
@@ -441,7 +441,7 @@ class PCProperties:
 
     def __eq__(self, other):
         """
-        Check if two PCProperties objects are equal.
+        Check if two PhysicoChemicalProperties objects are equal.
         """
 
         obj1 = flatten(self.data, reducer='path')
@@ -707,8 +707,8 @@ class Points:
         ----------
         coordinates : ratar.encoding.Coordinates
             Coordinates class instance.
-        physicochemicalproperties : ratar.PCProperties
-            PCProperties class instance.
+        physicochemicalproperties : ratar.PhysicoChemicalProperties
+            PhysicoChemicalProperties class instance.
 
         Returns
         -------
