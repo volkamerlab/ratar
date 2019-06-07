@@ -49,12 +49,12 @@ class BindingSite:
         Encoded binding site (reference points, distance distribution and distribution moments).
     """
 
-    def __init__(self, pmol):
+    def __init__(self, pmol, logger=None):
 
         self.pdb_id = pmol.code
         self.molecule = pmol.df
         self.representatives = self.get_representatives()
-        self.shapes = self.run()
+        self.shapes = self.run(logger)
 
     def __eq__(self, other):
         """
@@ -81,9 +81,9 @@ class BindingSite:
         return coordinates
 
     @staticmethod
-    def get_physicochemicalproperties(representatives, output_log_path=None):
-        physicochemicalproperties = PhysicoChemicalProperties(output_log_path)
-        physicochemicalproperties.get_physicochemicalproperties(representatives)
+    def get_physicochemicalproperties(representatives, logger=None):
+        physicochemicalproperties = PhysicoChemicalProperties()
+        physicochemicalproperties.get_physicochemicalproperties(representatives, logger)
         return physicochemicalproperties
 
     @staticmethod
@@ -106,10 +106,10 @@ class BindingSite:
         shapes.get_shapes_pseudocenter_subsets(points)
         return shapes
 
-    def run(self):
+    def run(self, logger):
         representatives = self.get_representatives()
         coordinates = self.get_coordinates(representatives)
-        physicochemicalproperties = self.get_physicochemicalproperties(representatives)
+        physicochemicalproperties = self.get_physicochemicalproperties(representatives, logger)
         subsets = self.get_subsets(representatives)
         points = self.get_points(coordinates, physicochemicalproperties, subsets)
         shapes = self.get_shapes(points)
@@ -401,28 +401,20 @@ class PhysicoChemicalProperties:
     Class used to store the physicochemical properties of molecule representatives, which were defined by the
     Representatives class.
 
-    Parameters
-    ----------
-    output_log_path : str
-        Path to output log file.
-
     Attributes
     ----------
     data : dict of dict of pandas.DataFrame
         Dictionary (representatives types, e.g. 'pc') of dictionaries (physicochemical properties types, e.g. 'z123') of
         DataFrames containing physicochemical properties.
-    output_log_path : str or pathlib.Posix
-        Path to output log file.
     """
 
-    def __init__(self, output_log_path=None):
+    def __init__(self):
 
         self.data = {
             'ca': {},
             'pca': {},
             'pc': {},
         }
-        self.output_log_path = output_log_path
 
     @property
     def ca(self):
@@ -454,7 +446,7 @@ class PhysicoChemicalProperties:
 
         return all(rules)
 
-    def get_physicochemicalproperties(self, representatives):
+    def get_physicochemicalproperties(self, representatives, logger=None):
         """
         Extract physicochemical properties (main function).
 
@@ -462,6 +454,8 @@ class PhysicoChemicalProperties:
         ----------
         representatives : pandas.DataFrame
             Representatives' data for a certain representatives type.
+        logger : xxx  # TODO
+            xxx
 
         Returns
         -------
@@ -478,16 +472,17 @@ class PhysicoChemicalProperties:
 
             for k2 in physicochemicalproperties_keys:
                 if k2 == 'z1':
-                    self.data[k1][k2] = self._get_zscales(v1, 1)
+                    self.data[k1][k2] = self._get_zscales(v1, 1, logger)
                 elif k2 == 'z123':
-                    self.data[k1][k2] = self._get_zscales(v1, 3)
+                    self.data[k1][k2] = self._get_zscales(v1, 3, logger)
                 else:
                     raise KeyError(f'Unknown representatives key: {k2}. '
                                    f'Select: {", ".join(physicochemicalproperties_keys)}')
 
         return self.data
 
-    def _get_zscales(self, representatives_df, z_number):
+    @staticmethod
+    def _get_zscales(representatives_df, z_number, logger=None):
         """
         Extract Z-scales from binding site representatives.
 
@@ -519,13 +514,8 @@ class PhysicoChemicalProperties:
                 representatives_zscales.append(pd.Series([None]*zscales.shape[1], index=zscales.columns))
 
                 # Log missing Z-scales
-                if self.output_log_path is not None:
-                    with open(self.output_log_path, 'a+') as f:
-                        lines = [
-                            f'The following atom (residue) has no Z-scales assigned:',
-                            row
-                        ]
-                        f.write('\n'.join(lines))
+                if logger is not None:
+                    logger.info(f'The following atom (residue) has no Z-scales assigned: {row["subst_name"]}')
 
         # Cast into DataFrame
         representatives_zscales_df = pd.DataFrame(
@@ -1446,35 +1436,7 @@ class Shapes:
 # Encode binding site(s)
 ########################################################################################
 
-def encode_binding_site(pmol, output_log_path=None):
-    """
-    Encode the binding site stored in a pmol object, and optionally save progress to a log file.
-
-    Parameters
-    ----------
-    pmol : biopandas.mol2.pandas_mol2.PandasMol2
-        Coordinates and PDB ID for one binding site.
-    output_log_path : str
-        Path to log file.
-
-    Returns
-    -------
-    encoding.BindingSite
-        Encoded binding site.
-    """
-
-    if output_log_path is not None:
-        with open(output_log_path, 'w') as f:
-            f.write(f'{pmol.code}\n\n')
-            f.write('Encode binding site.\n\n')
-
-    # Encode binding site
-    binding_site = BindingSite(pmol)
-
-    return binding_site
-
-
-def process_encoding(input_mol_path, output_dir):
+def process_encoding(input_mol_path, output_dir, logger):
     """
     Process a list of molecule structure files (retrieved by an input path to one or multiple files) and
     save per binding site multiple output files to an output directory.
@@ -1503,6 +1465,8 @@ def process_encoding(input_mol_path, output_dir):
         Path to molecule structure file(s), can include a wildcard to match multiple files.
     output_dir : str
         Output directory.
+    logger : xxx  # TODO
+        xxx
     """
 
     # Get all molecule structure files
@@ -1526,15 +1490,7 @@ def process_encoding(input_mol_path, output_dir):
         for pmol_counter, pmol in enumerate(pmols, 1):
 
             # Get iteration progress
-            progress_string = f'{mol_counter}/{mol_sum} molecule structure files' + \
-                              f'{pmol_counter}/{pmol_sum} pmol objects: {pmol.code}'
-
-            # Print iteration process
-            print(progress_string)
-
-            # Log iteration process
-            with open(Path(output_dir) / 'ratar.log', 'a+') as f:
-                f.write(f'{progress_string}\n')
+            logger.info(f'{mol_counter}/{mol_sum} molecule structure files - {pmol_counter}/{pmol_sum} pmol objects: {pmol.code}')
 
             # Process single binding site:
 
@@ -1548,13 +1504,13 @@ def process_encoding(input_mol_path, output_dir):
             output_cgo_path = pdb_id_encoding / 'ref_points_cgo.py'
 
             # Encode binding site
-            binding_site = encode_binding_site(pmol, str(output_log_path))
+            binding_site = BindingSite(pmol, logger)
 
             # Save binding site
             save_binding_site(binding_site, str(output_enc_path))
 
             # Save binding site reference points as cgo file
-            save_cgo_file(binding_site, str(output_cgo_path))
+            #save_cgo_file(binding_site, str(output_cgo_path))
 
 
 ########################################################################################
@@ -1607,6 +1563,8 @@ def save_cgo_file(binding_site, output_path):
     ]
     # Collect all PyMol objects here (in order to group them after loading them to PyMol)
     obj_names = []
+
+    print(flatten(binding_site.shapes.data.keys(), reducer='path'))
 
     for repres in binding_site.shapes.data.keys():
         for method in binding_site.shapes.data[repres].keys():

@@ -9,6 +9,8 @@ Handles the CLI functions for processing the encoding of multiple binding sites.
 
 import argparse
 import datetime
+import logging
+import logging.config
 from pathlib import Path
 
 from .auxiliary import create_directory
@@ -35,9 +37,6 @@ def parse_arguments():
     input_mol_path = args.input_mol_path
     output_dir = args.output_dir
 
-    print(f'Input: {input_mol_path}')
-    print(f'Output: {output_dir}')
-
     return input_mol_path, output_dir
 
 
@@ -55,42 +54,32 @@ def main():
     # Create output folder
     create_directory(output_dir)
 
-    # Log IO and encdoding step processing
-    lines = [
-        f'------------------------------------------------------------',
-        f'IO',
-        f'------------------------------------------------------------',
-        f'',
-        f'Input: {input_mol_path}',
-        f'Output: {output_dir}',
-        f'',
-        f'------------------------------------------------------------',
-        f'PROCESS ENCODING',
-        f'------------------------------------------------------------',
-        f''
-    ]
+    # Create custom logger
+    logging.config.fileConfig('logging.conf')
+    logger = logging.getLogger(__name__)
+
+    # Create handlers
+    f_handler = logging.FileHandler(Path(output_dir) / 'ratar.log', mode='w')
+
+    # Add handler to logger
+    logger.addHandler(f_handler)
+
+    # Log IO
+    logger.info('IO...')
+    logger.info(f'Input: {input_mol_path}')
+    logger.info(f'Output: {output_dir}')
 
     # Process encoding
-    process_encoding(input_mol_path, output_dir)
+    logger.info(f'PROCESS ENCODING...')
+    process_encoding(input_mol_path, output_dir, logger)
 
     # Get end time of encoding step and runtime
     encoding_end = datetime.datetime.now()
     encoding_runtime = encoding_end - encoding_start
 
     # Log runtime
-    lines.extend(
-        [
-            f'------------------------------------------------------------',
-            f'RUNTIME',
-            f'------------------------------------------------------------',
-            f'',
-            f'Encoding step: {encoding_runtime}'
-        ]
-    )
-
-    # Write logs to file
-    with open(Path(output_dir) / 'ratar.log', 'w') as f:
-        f.write('\n'.join(lines))
+    logger.info(f'RUNTIME')
+    logger.info(f'Encoding step: {encoding_runtime}')
 
 
 if __name__ == '__main__':
