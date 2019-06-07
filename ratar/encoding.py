@@ -77,34 +77,39 @@ class BindingSite:
 
     def get_representatives(self):
         representatives = Representatives()
-        representatives._get_representatives(self.molecule)
+        representatives.get_representatives(self.molecule)
         return representatives
 
-    def get_coordinates(self, representatives):
+    @staticmethod
+    def get_coordinates(representatives):
         coordinates = Coordinates()
-        coordinates._get_coordinates(representatives)
+        coordinates.get_coordinates(representatives)
         return coordinates
 
-    def get_physicochemicalproperties(self, representatives, output_log_path=None):
+    @staticmethod
+    def get_physicochemicalproperties(representatives, output_log_path=None):
         physicochemicalproperties = PCProperties(output_log_path)
-        physicochemicalproperties._get_physicochemicalproperties(representatives)
+        physicochemicalproperties.get_physicochemicalproperties(representatives)
         return physicochemicalproperties
 
-    def get_subsets(self, representatives):
+    @staticmethod
+    def get_subsets(representatives):
         subsets = Subsets()
-        subsets._get_pseudocenter_subsets_indices(representatives)
+        subsets.get_pseudocenter_subsets_indices(representatives)
         return subsets
 
-    def get_points(self, coordinates, physicochemicalproperties, subsets):
+    @staticmethod
+    def get_points(coordinates, physicochemicalproperties, subsets):
         points = Points()
-        points._get_points(coordinates, physicochemicalproperties)
-        points._get_points_pseudocenter_subsets(subsets)
+        points.get_points(coordinates, physicochemicalproperties)
+        points.get_points_pseudocenter_subsets(subsets)
         return points
 
-    def get_shapes(self, points):
+    @staticmethod
+    def get_shapes(points):
         shapes = Shapes()
-        shapes._get_shapes(points)
-        shapes._get_shapes_pseudocenter_subsets(points)
+        shapes.get_shapes(points)
+        shapes.get_shapes_pseudocenter_subsets(points)
         return shapes
 
     def run(self):
@@ -130,9 +135,9 @@ class Representatives:
 
     def __init__(self):
         self.data = {
-            'ca':  None,
-            'pca':  None,
-            'pc':  None,
+            'ca':  pd.DataFrame(),
+            'pca':  pd.DataFrame(),
+            'pc':  pd.DataFrame(),
         }
 
     @property
@@ -166,7 +171,7 @@ class Representatives:
 
         return all(rules)
 
-    def _get_representatives(self, molecule):
+    def get_representatives(self, molecule):
         """
         Extract binding site representatives.
 
@@ -193,7 +198,8 @@ class Representatives:
 
         return self.data
 
-    def _get_ca(self, mol):
+    @staticmethod
+    def _get_ca(mol):
         """
         Extract Calpha atoms from binding site.
 
@@ -212,7 +218,8 @@ class Representatives:
 
         return bs_ca
 
-    def _get_pca(self, mol):
+    @staticmethod
+    def _get_pca(mol):
         """
         Extract pseudocenter atoms from binding site.
 
@@ -364,7 +371,7 @@ class Coordinates:
 
         return all(rules)
 
-    def _get_coordinates(self, representatives):
+    def get_coordinates(self, representatives):
         """
         Get coordinates (x, y, z) for molecule reprentatives.
 
@@ -450,7 +457,7 @@ class PCProperties:
 
         return all(rules)
 
-    def _get_physicochemicalproperties(self, representatives):
+    def get_physicochemicalproperties(self, representatives):
         """
         Extract physicochemical properties (main function).
 
@@ -577,7 +584,7 @@ class Subsets:
 
         return all(rules)
 
-    def _get_pseudocenter_subsets_indices(self, representatives):
+    def get_pseudocenter_subsets_indices(self, representatives):
         """
         Extract feature subsets from pseudocenters (pseudocenter atoms).
 
@@ -691,7 +698,7 @@ class Points:
 
         return all(rules)
 
-    def _get_points(self, coordinates, physicochemicalproperties):
+    def get_points(self, coordinates, physicochemicalproperties):
         """
         Concatenate spatial (3-dimensional) and physicochemical (N-dimensional) properties
         to an 3+N-dimensional vector for each point in dataset (i.e. representative atoms in a binding site).
@@ -736,7 +743,7 @@ class Points:
 
         return self.data
 
-    def _get_points_pseudocenter_subsets(self, subsets):
+    def get_points_pseudocenter_subsets(self, subsets):
         """
         Get
 
@@ -849,7 +856,7 @@ class Shapes:
 
         return all(rules)
 
-    def _get_shapes(self, points):
+    def get_shapes(self, points):
         """
         Get the encoding of a molecule for different types of representatives, physicochemical properties, and encoding
         methods.
@@ -881,13 +888,13 @@ class Shapes:
 
         return self.data
 
-    def _get_shapes_pseudocenter_subsets(self, points):
+    def get_shapes_pseudocenter_subsets(self, points):
         """
 
         Parameters
         ----------
-        subsets : ratar.encoding.Subsets
-            Subsets class instance.
+        points : ratar.encoding.Points
+            Points class instance.
 
         Returns
         -------
@@ -1089,7 +1096,7 @@ class Shapes:
            - c1, centroid
            - c2, farthest atom to c1
            - c3, farthest atom to c2
-           - c4 and c5, cross product of two vectors spanning c1, c2, and c3 with positive/negative sign in forth dimension
+           - c4 and c5, cross product of 2 vectors spanning c1, c2, and c3 with positive/negative sign in 4th dimension
         2. Calculate distances (distance distribution) from reference points to all other points.
         3. Calculate first, second, and third moment for each distance distribution.
 
@@ -1217,7 +1224,8 @@ class Shapes:
 
         return self._get_shape_dict(c, dist)
 
-    def _calc_adjusted_3d_cross_product(self, coord_origin, coord_point_a, coord_point_b):
+    @staticmethod
+    def _calc_adjusted_3d_cross_product(coord_origin, coord_point_a, coord_point_b):
         """
         Calculates a translated and scaled 3D cross product vector based on three input vectors.
 
@@ -1460,7 +1468,7 @@ def encode_binding_site(pmol, output_log_path=None):
             f.write('Encode binding site.\n\n')
 
     # Encode binding site
-    binding_site = BindingSite(pmol, output_log_path)
+    binding_site = BindingSite(pmol)
 
     return binding_site
 
@@ -1517,7 +1525,8 @@ def process_encoding(input_mol_path, output_dir):
         for pmol_counter, pmol in enumerate(pmols, 1):
 
             # Get iteration progress
-            progress_string = f'{mol_counter}/{mol_sum} molecule structure files - {pmol_counter}/{pmol_sum} pmol objects: {pmol.code}'
+            progress_string = f'{mol_counter}/{mol_sum} molecule structure files' + \
+                              f'{pmol_counter}/{pmol_sum} pmol objects: {pmol.code}'
 
             # Print iteration process
             print(progress_string)
@@ -1598,12 +1607,12 @@ def save_cgo_file(binding_site, output_path):
     # Collect all PyMol objects here (in order to group them after loading them to PyMol)
     obj_names = []
 
-    for repres in binding_site.shapes.shapes_dict.keys():
-        for method in binding_site.shapes.shapes_dict[repres].keys():
+    for repres in binding_site.shapes.data.keys():
+        for method in binding_site.shapes.data[repres].keys():
             if method != 'na':
 
                 # Get reference points (coordinates)
-                ref_points = binding_site.shapes.shapes_dict[repres][method]['ref_points']
+                ref_points = binding_site.shapes.data[repres][method]['ref_points']
 
                 # Set descriptive name for reference points (PDB ID, representatives, dimensions, encoding method)
                 obj_name = f'{binding_site.pdb_id[:4]}_{repres}_{method}'
