@@ -25,11 +25,6 @@ import warnings
 
 from ratar.auxiliary import *
 
-
-# Global variables
-
-AMINOACID_DESCRIPTORS = AminoAcidDescriptors()  # Amino acid descriptors definition, e.g. Z-scales
-
 warnings.simplefilter('error', FutureWarning)
 
 
@@ -509,8 +504,9 @@ class PhysicoChemicalProperties:
             DataFrame containing Z-scales.
         """
 
-        # Get amino acid to Z-scales transformation matrix
-        zscales = AMINOACID_DESCRIPTORS.zscales
+        # Load amino acid to Z-scales transformation matrix
+        aminoacid_descriptors = AminoAcidDescriptors()
+        zscales = aminoacid_descriptors.zscales
 
         # Get Z-scales for representatives' amino acids
         representatives_zscales = []
