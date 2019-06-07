@@ -36,7 +36,7 @@ warnings.simplefilter('error', FutureWarning)
 
 class BindingSite:
     """
-    Class used to represent a binding site and its encoding.
+    Class used to represent a molecule and its encoding.
 
     Parameters
     ----------
@@ -119,14 +119,13 @@ class BindingSite:
 
 class Representatives:
     """
-    Class used to store binding site representatives. Representatives are selected atoms in a binding site,
-    for instances all Calpha atoms of a binding site could serve as its representatives.
+    Class used to store molecule representatives. Representatives are selected atoms in a binding site,
+    e.g. all Calpha atoms of a binding site could serve as its representatives.
 
     Attributes
     ----------
-    data : dict
-        Representatives stored as dictionary with several representation methods serving as key.
-        Example: {'ca': ..., 'pca': ..., 'pc': ...}
+    data : dict of pandas.DataFrames
+        Dictionary (representatives types, e.g. 'pc') of DataFrames containing molecule structural data.
     """
 
     def __init__(self):
@@ -320,19 +319,12 @@ class Representatives:
 
 class Coordinates:
     """
-    Class used to store the coordinates of the binding site representatives,
-    which were defined by the Representatives class.
-
-    Parameters
-    ----------
-    representatives : ratar.encoding.Representatives
-        Dictionary with several representation methods serving as key.
+    Class used to store the coordinates of molecule representatives, which were defined by the Representatives class.
 
     Attributes
     ----------
     data : dict of pandas.DataFrames
         Dictionary (representatives types, e.g. 'pc') of DataFrames containing coordinates.
-        Example: {'ca': ..., 'pca': ..., 'pc': ...}
     """
 
     def __init__(self):
@@ -402,8 +394,8 @@ class Coordinates:
 
 class PCProperties:
     """
-    Class used to store the physicochemical properties of binding site representatives,
-    which were defined by the Representatives class.
+    Class used to store the physicochemical properties of molecule representatives, which were defined by the
+    Representatives class.
 
     Parameters
     ----------
@@ -542,16 +534,14 @@ class PCProperties:
 
 class Subsets:
     """
-    Class used to store subset indices (DataFrame indices) of binding site representatives,
-    which were defined by the Representatives class.
+    Class used to store subset indices (DataFrame indices) of molecule representatives, which were defined by the
+    Representatives class.
 
     Attributes
     ----------
-    data_pseudocenter_subsets : dict of dict of pandas.DataFrames
+    data_pseudocenter_subsets : dict of dict of list
         Dictionary (representatives types, e.g. 'pc') of dictionaries (pseudocenter subset types, e.g. 'HBA') of
-        DataFrames containing subset indices.
-        Example: {'pca': {'H': ..., 'HBD': ..., ...},
-                  'pc': {'H': ..., 'HBD': ..., ...}}
+        lists containing subset indices.
     """
 
     def __init__(self):
@@ -625,27 +615,21 @@ class Subsets:
 
 class Points:
     """
-    Class used to store the vectors for the binding site representatives,
-    which were defined by the Representatives class.
+    Class used to store the coordinates and (optionally) physicochemical properties of molecule representatives, which
+    were defined by the Representatives class.
 
-    Binding site representatives (i.e. atoms) can have different dimensionalities, for instance
-    an atom can have
+    Binding site representatives (i.e. atoms) can have different dimensions, for instance an atom can have
     - 3 dimensions (spatial properties x, y, z) or
     - more dimensions (spatial and some additional properties).
 
     Attributes
     ----------
-    data :
-        3- to n-dimensional vectors for binding site representatives
-        Example: {'ca': ..., 'ca_z1': ..., 'ca_z123': ..., ..., 'pca': ..., ...}
-    data_pseudocenter_subsets :
-        3- to n-dimensional vectors for binding site representatives, grouped by subsets.
-        Example: {'pc_z1': {'H': ..., 'HBD': ..., ...},
-                  'pc_z12': {'H': ..., 'HBD': ..., ...},
-                  ...,
-                  'pca_z12': {'H': ..., 'HBD': ..., ...},
-                  ...}
-    # TODO Update docstring
+    data : dict of dict of pandas.DataFrames
+         Dictionary (representatives types, e.g. 'pc') of dictionaries (physicochemical properties types, e.g. 'z1')
+         of DataFrames containing coordinates and physicochemical properties.
+    data_pseudocenter_subsets : dict of dict of dict of pandas.DataFrames
+        Dictionary (representatives types, e.g. 'pc') of dictionaries (physicochemical properties, e.g. 'pc_z123')
+        of dictionaries (subset types, e.g. 'HBA') containing each a DataFrame describing the subsetted atoms.
     """
 
     def __init__(self):
@@ -722,7 +706,8 @@ class Points:
         Returns
         -------
         dict of dict of pandas.DataFrames
-             Spatial and physicochemical properties for each representative.
+             Dictionary (representatives types, e.g. 'pc') of dictionaries (physicochemical properties types, e.g. 'z1')
+             of DataFrames containing coordinates and physicochemical properties.
         """
 
         self.data = {}
@@ -762,9 +747,9 @@ class Points:
 
         Returns
         -------
-        dict of dict of pandas.DataFrames
-            Dictionary (representatives and physicochemical properties, e.g. 'pc_z123') of dictionaries (subset types,
-            e.g. 'HBA') containing each a DataFrame describing the subsetted atoms.
+        dict of dict of dict of pandas.DataFrames
+            Dictionary (representatives types, e.g. 'pc') of dictionaries (physicochemical properties, e.g. 'pc_z123')
+            of dictionaries (subset types, e.g. 'HBA') containing each a DataFrame describing the subsetted atoms.
         """
 
         self.data_pseudocenter_subsets = {}
@@ -789,10 +774,20 @@ class Points:
 
 class Shapes:
     """
-    Class used to store the encoded binding site representatives,
-    which were defined by the Representatives class.
+    Class used to store the encoded molecule representatives, which were defined by the Representatives class.
 
-    # TODO Update docstring
+    Attributes
+    ----------
+    data : dict of dict of dict of dict of pandas.DataFrames
+        Dictionary (representatives types, e.g. 'pc') of dictionaries (physicochemical properties types, e.g. 'z1')
+        of dictionaries (encoding method, e.g. '3D_usr') of dictionaries containing DataFrames for the encoding:
+        'ref_points' (the reference points), 'distances' (the distances from reference points to representatives),
+        and 'moments' (the first three moments for the distance distribution).
+    data_pseudocenter_subsets : dict of dict of dict of dict of pandas.DataFrames
+        Dictionary (representatives types, e.g. 'pc') of dictionaries (physicochemical properties types, e.g. 'z1')
+        of dictionaries (encoding method, e.g. '3D_usr') of dictionaries (subsets types, e.g. 'HBA') of dictionaries
+        containing DataFrames for the encoding: 'ref_points' (the reference points), 'distances' (the distances from
+        reference points to representatives), and 'moments' (the first three moments for the distance distribution).
     """
 
     def __init__(self):
@@ -867,7 +862,7 @@ class Shapes:
         Returns
         -------
         dict of dict of dict of dict of pandas.DataFrames
-            Dictionary (representatives types, e.g. 'pc') of dictionaries (physicochemical properties types, e.g. 'HBA')
+            Dictionary (representatives types, e.g. 'pc') of dictionaries (physicochemical properties types, e.g. 'z1')
             of dictionaries (encoding method, e.g. '3D_usr') of dictionaries containing DataFrames for the encoding:
             'ref_points' (the reference points), 'distances' (the distances from reference points to representatives),
             and 'moments' (the first three moments for the distance distribution).
@@ -896,6 +891,11 @@ class Shapes:
 
         Returns
         -------
+        dict of dict of dict of dict of pandas.DataFrames
+            Dictionary (representatives types, e.g. 'pc') of dictionaries (physicochemical properties types, e.g. 'z1')
+            of dictionaries (encoding method, e.g. '3D_usr') of dictionaries (subsets types, e.g. 'HBA') of dictionaries
+            containing DataFrames for the encoding: 'ref_points' (the reference points), 'distances' (the distances from
+            reference points to representatives), and 'moments' (the first three moments for the distance distribution).
 
         """
 
@@ -1319,7 +1319,8 @@ class Shapes:
 
         return shape
 
-    def _calc_distances_to_point(self, points, ref_point):
+    @staticmethod
+    def _calc_distances_to_point(points, ref_point):
         """
         Calculate distances from one point (reference point) to all other points.
 
@@ -1375,7 +1376,8 @@ class Shapes:
 
         return c_6d
 
-    def _calc_moments(self, dist):
+    @staticmethod
+    def _calc_moments(dist):
         """
         Calculate first, second, and third moment (mean, standard deviation, and skewness) for a distance distribution.
 
