@@ -28,7 +28,6 @@ from ratar.auxiliary import *
 
 # Global variables
 
-PSEUDOCENTER_ATOMS = load_pseudocenters()  # Pseudocenters definition
 AMINOACID_DESCRIPTORS = AminoAcidDescriptors()  # Amino acid descriptors definition, e.g. Z-scales
 
 warnings.simplefilter('error', FutureWarning)
@@ -234,6 +233,9 @@ class Representatives:
             DataFrame containing atom lines from input file described by Z-scales.
         """
 
+        # Load pseudocenter atoms
+        pseudocenter_atoms = load_pseudocenters()
+
         # Add column containing amino acid names
         mol['amino_acid'] = [i.split('_')[0][:3] for i in mol['subst_name']]
 
@@ -267,13 +269,13 @@ class Representatives:
             # Get other defined atoms
             else:
                 query = (line['amino_acid'] + '_' + line['atom_name'])
-                matches.append(query in list(PSEUDOCENTER_ATOMS['pattern']))
-                if query in list(PSEUDOCENTER_ATOMS['pattern']):
-                    ix = PSEUDOCENTER_ATOMS.index[PSEUDOCENTER_ATOMS['pattern'] == query].tolist()[
+                matches.append(query in list(pseudocenter_atoms['pattern']))
+                if query in list(pseudocenter_atoms['pattern']):
+                    ix = pseudocenter_atoms.index[pseudocenter_atoms['pattern'] == query].tolist()[
                         0]  # FIXME tolist needed and why [0]?
-                    pc_types.append(PSEUDOCENTER_ATOMS.iloc[ix]['type'])
-                    pc_ids.append(PSEUDOCENTER_ATOMS.iloc[ix]['pc_id'])
-                    pc_atom_ids.append(PSEUDOCENTER_ATOMS.iloc[ix]['pc_atom_id'])
+                    pc_types.append(pseudocenter_atoms.iloc[ix]['type'])
+                    pc_ids.append(pseudocenter_atoms.iloc[ix]['pc_id'])
+                    pc_atom_ids.append(pseudocenter_atoms.iloc[ix]['pc_atom_id'])
 
         bs_pc_atoms = mol[matches].copy()
         bs_pc_atoms['pc_types'] = pd.Series(pc_types, index=bs_pc_atoms.index)
@@ -600,6 +602,9 @@ class Subsets:
             subset types, e.g. 'HBA').
         """
 
+        # Load pseudocenter atoms
+        pseudocenter_atoms = load_pseudocenters()
+
         self.data_pseudocenter_subsets = {}
 
         for k1 in ['pc', 'pca']:
@@ -609,7 +614,7 @@ class Subsets:
             repres = representatives.data[k1]
 
             # Loop over all pseudocenter subset types
-            for k2 in list(set(PSEUDOCENTER_ATOMS['type'])):
+            for k2 in list(set(pseudocenter_atoms['type'])):
 
                 # If pseudocenter type exists in dataset, save corresponding subset, else save None
                 if k2 in set(repres['pc_types']):
