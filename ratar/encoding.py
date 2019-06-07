@@ -83,22 +83,26 @@ class BindingSite:
     def get_coordinates(self, representatives):
         coordinates = Coordinates()
         coordinates._get_coordinates(representatives)
+        #print(coordinates.ca)
         return coordinates
 
     def get_physicochemicalproperties(self, representatives, output_log_path=None):
         physicochemicalproperties = PCProperties(output_log_path)
         physicochemicalproperties._get_physicochemicalproperties(representatives)
+        #print(physicochemicalproperties.ca)
         return physicochemicalproperties
 
     def get_subsets(self, representatives):
         subsets = Subsets()
         subsets._get_pseudocenter_subsets_indices(representatives)
+        #print(subsets)
         return subsets
 
-    def get_points(self, representatives, coordinates, physicochemicalproperties, subsets):
+    def get_points(self, coordinates, physicochemicalproperties, subsets):
         points = Points()
-        points._get_points(representatives, coordinates, physicochemicalproperties)
+        points._get_points(coordinates, physicochemicalproperties)
         points._get_points_pseudocenter_subsets(subsets)
+        #print(points)
         return points
 
     def get_shapes(self, points):
@@ -108,9 +112,9 @@ class BindingSite:
     def run(self):
         representatives = self.get_representatives()
         coordinates = self.get_coordinates(representatives)
-        physicochemicalproperties = self.get_physicochemicalproperties(representatives, output_log_path=None)
+        physicochemicalproperties = self.get_physicochemicalproperties(representatives)
         subsets = self.get_subsets(representatives)
-        points = self.get_points(representatives, coordinates, physicochemicalproperties, subsets)
+        points = self.get_points(coordinates, physicochemicalproperties, subsets)
         shapes = self.get_shapes(points)
         return shapes
 
@@ -471,20 +475,23 @@ class PCProperties:
             DataFrame containing physicochemical properties.
         """
 
+        self.data = {}
+
         physicochemicalproperties_keys = ['z1', 'z123']
 
         for k1, v1 in representatives.data.items():
             self.data[k1] = {}
 
             for k2 in physicochemicalproperties_keys:
-
                 if k2 == 'z1':
-                    return self._get_zscales(v1, 1)
-                if k2 == 'z123':
-                    return self._get_zscales(v1, 3)
+                    self.data[k1][k2] = self._get_zscales(v1, 1)
+                elif k2 == 'z123':
+                    self.data[k1][k2] = self._get_zscales(v1, 3)
                 else:
                     raise KeyError(f'Unknown representatives key: {k2}. '
                                    f'Select: {", ".join(physicochemicalproperties_keys)}')
+
+        return self.data
 
     def _get_zscales(self, representatives_df, z_number):
         """
@@ -702,15 +709,13 @@ class Points:
 
         return all(rules)
 
-    def _get_points(self, representatives, coordinates, physicochemicalproperties):
+    def _get_points(self, coordinates, physicochemicalproperties):
         """
         Concatenate spatial (3-dimensional) and physicochemical (N-dimensional) properties
         to an 3+N-dimensional vector for each point in dataset (i.e. representative atoms in a binding site).
 
         Parameters
         ----------
-        representatives : ratar.encoding.Representatives
-            Representatives class instance.
         coordinates : ratar.encoding.Coordinates
             Coordinates class instance.
         physicochemicalproperties : ratar.PCProperties
@@ -726,8 +731,9 @@ class Points:
 
         # Get physicochemical properties
         physicochemicalproperties_keys = physicochemicalproperties.data['ca'].keys()
+        #print(physicochemicalproperties_keys)
 
-        for k1 in representatives.data.keys():
+        for k1 in coordinates.data.keys():
             self.data[k1] = {}
             self.data[k1]['None'] = coordinates.data[k1].copy()
 
@@ -763,26 +769,26 @@ class Points:
             e.g. 'HBA') containing each a DataFrame describing the subsetted atoms.
         """
 
-        data_pseudocenter_subsets = {}
+        self.data_pseudocenter_subsets = {}
 
         for k1, v1 in self.data.items():  # Representatives
 
             # Select points keys that we want to subset, e.g. we want to subset pseudocenters but not Calpha atoms
             if k1 in subsets.data_pseudocenter_subsets.keys():
-                data_pseudocenter_subsets[k1] = {}
+                self.data_pseudocenter_subsets[k1] = {}
 
                 for k2, v2 in v1.items():  # Physicochemical properties
-                    data_pseudocenter_subsets[k1][k2] = {}
+                    self.data_pseudocenter_subsets[k1][k2] = {}
 
                     for k3, v3 in subsets.data_pseudocenter_subsets[k1].items():
                         # Select only subsets indices that are in points
                         # In points, e.g.amino acid atoms with missing Z-scales are discarded
                         labels = v2.index.intersection(v3)
-                        data_pseudocenter_subsets[k1][k2][k3] = v2.loc[labels, :]
+                        self.data_pseudocenter_subsets[k1][k2][k3] = v2.loc[labels, :]
 
-        print(flatten(data_pseudocenter_subsets, reducer='path'))
+        #print(flatten(self.data_pseudocenter_subsets, reducer='path'))
 
-        return data_pseudocenter_subsets
+        return self.data_pseudocenter_subsets
 
 
 class Shapes:
