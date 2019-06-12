@@ -55,31 +55,35 @@ def main():
     create_directory(output_dir)
 
     # Create custom logger
-    logging.config.fileConfig('logging.conf')
-    logger = logging.getLogger(__name__)
+    logging.config.fileConfig('logging.conf', defaults={'logfilename': str(Path(output_dir) / 'ratar.log')})
 
     # Create handlers
-    f_handler = logging.FileHandler(Path(output_dir) / 'ratar.log', mode='w')
+    c_handler = logging.StreamHandler()
+    f_handler = logging.FileHandler(filename=Path(output_dir) / 'ratar.log')
+
+    # Get handler
+    logger = logging.getLogger(__name__)
 
     # Add handler to logger
+    logger.addHandler(c_handler)
     logger.addHandler(f_handler)
 
     # Log IO
-    logger.info('IO...')
-    logger.info(f'Input: {input_mol_path}')
-    logger.info(f'Output: {output_dir}')
+    logger.info('IO', extra={'molecule_id': 'all'})
+    logger.info(f'Input: {input_mol_path}', extra={'molecule_id': 'all'})
+    logger.info(f'Output: {output_dir}', extra={'molecule_id': 'all'})
 
     # Process encoding
-    logger.info(f'PROCESS ENCODING...')
-    process_encoding(input_mol_path, output_dir, logger)
+    logger.info(f'PROCESS ENCODING...', extra={'molecule_id': 'all'})
+    process_encoding(input_mol_path, output_dir)
 
     # Get end time of encoding step and runtime
     encoding_end = datetime.datetime.now()
     encoding_runtime = encoding_end - encoding_start
 
     # Log runtime
-    logger.info(f'RUNTIME')
-    logger.info(f'Encoding step: {encoding_runtime}')
+    logger.info(f'RUNTIME', extra={'molecule_id': 'all'})
+    logger.info(f'Encoding step: {encoding_runtime}', extra={'molecule_id': 'all'})
 
 
 if __name__ == '__main__':
