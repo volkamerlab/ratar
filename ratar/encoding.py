@@ -211,7 +211,8 @@ class Representatives:
             DataFrame containing atom lines from input file described by Z-scales.
         """
 
-        bs_ca = mol[mol['atom_name'] == 'CA']
+        # Filter for atom name 'CA' (first condition) but exclude calcium (second condition)
+        bs_ca = mol[(mol['atom_name'] == 'CA') & (mol['res_name'] != 'CA')]
 
         return bs_ca
 
@@ -957,8 +958,27 @@ class Shapes:
             return {'4D_electroshape': self._calc_shape_4dim_electroshape(points_df)}
         elif n_dimensions == 6 and n_points > 6:
             return {'6D_ratar1': self._calc_shape_6dim(points_df)}
-        else:
-            raise IOError(f'Unexpected points dimensions: {points_df.shape}')
+        elif n_dimensions < 3:
+            logger.error(f'Unexpected points dimension: {points_df.shape[1]}. Not implemented.',
+                         extra={'molecule_id': self.molecule_id})
+            return None
+        elif n_dimensions == 3 and n_points <= 3:
+            logger.error(f'Number of points in 3D must be at least 4. Number of input points: {points_df.shape[0]}.',
+                         extra={'molecule_id': self.molecule_id})
+            return {'3D_usr': {'ref_points': None, 'dist': None, 'moments': None},
+                    '3D_csr': {'ref_points': None, 'dist': None, 'moments': None}}
+        elif n_dimensions == 4 and n_points <= 4:
+            logger.error(f'Number of points in 4D must be at least 5. Number of input points: {points_df.shape[0]}.',
+                         extra={'molecule_id': self.molecule_id})
+            return {'4D_electroshape': {'ref_points': None, 'dist': None, 'moments': None}}
+        elif n_dimensions == 6 and n_points <= 6:
+            logger.error(f'Number of points in 6D must be at least 7. Number of input points: {points_df.shape[0]}.',
+                         extra={'molecule_id': self.molecule_id})
+            return {'6D_ratar1': {'ref_points': None, 'dist': None, 'moments': None}}
+        elif n_dimensions > 7:
+            logger.error(f'Unexpected points dimension: {points_df.shape[1]}. Not implemented.',
+                         extra={'molecule_id': self.molecule_id})
+            return None
 
     def _calc_shape_3dim_usr(self, points):
         """
@@ -1491,7 +1511,7 @@ def process_encoding(input_mol_path, output_dir):
 
         # Load binding site from molecule structure file
         bs_loader = MoleculeLoader(mol)
-        bs_loader.load_molecule(remove_solvent=False)
+        bs_loader.load_molecule(remove_solvent=True)
         pmols = bs_loader.pmols
 
         # Get number of pmol objects and set pmol counter
