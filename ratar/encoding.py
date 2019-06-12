@@ -10,20 +10,21 @@ Handles the primary functions for encoding a single binding site.
 # Import packages
 
 import glob
-# from pathlib import Path
+from pathlib import Path
 import _pickle as pickle
 import re
-# import sys
+import sys
 
 from flatten_dict import flatten, unflatten
 import numpy as np
-# import pandas as pd
+import pandas as pd
 import seaborn as sns
 from scipy.special import cbrt
 from scipy.stats.stats import skew
 import warnings
 
-from ratar.auxiliary import *
+from ratar.auxiliary import MoleculeLoader, AminoAcidDescriptors
+from ratar.auxiliary import create_directory, load_pseudocenters
 
 warnings.simplefilter('error', FutureWarning)
 
