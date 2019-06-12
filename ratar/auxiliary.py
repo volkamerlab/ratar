@@ -8,12 +8,7 @@ Handles the helper functions.
 
 """
 
-
-########################################################################################
-# Import modules
-########################################################################################
-
-import sys
+import logging
 
 from pathlib import Path
 from biopandas.mol2 import PandasMol2, split_multimol2
@@ -23,17 +18,12 @@ import pickle
 
 import ratar
 
-########################################################################################
-# Global variables
-########################################################################################
+logger = logging.getLogger(__name__)
+
 
 # Project location
 ratar_path = Path(ratar.__file__).parent
 
-
-########################################################################################
-# Load auxiliary data
-########################################################################################
 
 class AminoAcidDescriptors:
     """
@@ -111,10 +101,6 @@ def load_pseudocenters():
     return pc_atoms
 
 
-########################################################################################
-# IO functions
-########################################################################################
-
 class MoleculeLoader:
     """
     Class used to load molecule data from mol2 and pdb files in the form of unified BioPandas objects.
@@ -137,18 +123,21 @@ class MoleculeLoader:
         self.input_path = Path(input_path)
         self.pmols = None
 
+    def load_molecule(self, remove_solvent=False):
+
         try:
-            open(Path(input_path), 'r')
+            open(self.input_path, 'r')
         except FileNotFoundError:
-            print('File does not exist.')
-            sys.exit(1)
+            raise FileNotFoundError(f'File does not exist: {self.input_path}')
 
         if self.input_path.suffix == '.pdb':
-            self.pmols = self._load_pdb()
+            self.pmols = self._load_pdb(remove_solvent)
         elif self.input_path.suffix == '.mol2':
-            self.pmols = self._load_mol2()
+            self.pmols = self._load_mol2(remove_solvent)
 
-    def _load_mol2(self):
+        return self.pmols
+
+    def _load_mol2(self, remove_solvent=False):
         """
         Load molecule data from a mol2 file, which can contain multiple entries.
 
@@ -207,15 +196,20 @@ class MoleculeLoader:
                                        'z',
                                        'charge']]
 
-            # Insert additional columns (split ASN22 to ASN and 22)
+            # Insert additional columns (split ASN22 to ASN and 22) TODO adapt to ions, e.g. CA122 (CA, 122)
             pmol.df.insert(loc=2, column='res_id', value=[i[3:] for i in pmol.df['subst_name']])
             pmol.df.insert(loc=3, column='res_name', value=[i[:3] for i in pmol.df['subst_name']])
+
+            # Remove solvent if parameter remove_solvent=True
+            if remove_solvent:
+                ix = pmol.df.index[pmol.df['res_name'] == 'HOH']
+                pmol.df.drop(index=ix, inplace=True)
 
             pmols.append(pmol)
 
         return pmols
 
-    def _load_pdb(self):
+    def _load_pdb(self, remove_solvent=False):
         """
         Load molecule data from a pdb file, which can contain multiple entries.
 
@@ -262,6 +256,11 @@ class MoleculeLoader:
                                                          'y_coord': 'y',
                                                          'z_coord': 'z'})
 
+        # Remove solvent if parameter remove_solvent=True
+        if remove_solvent:
+            ix = pmol.df.index[pmol.df['res_name'] == 'HOH']
+            pmol.df.drop(index=ix, inplace=True)
+
         # Cast to list only for homogeneity with reading mol2 files that can have multiple entries
         pmols = [pmol]
 
@@ -285,4 +284,4 @@ def create_directory(directory):
         if not directory.exists():
             directory.mkdir(parents=True)
     except OSError:
-        print(f'OSError: Creating directory {directory} failed.')
+        raise OSError(f'Creating directory failed: {directory}')
