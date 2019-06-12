@@ -43,8 +43,8 @@ class BindingSite:
 
     Attributes
     ----------
-    pdb_id : str
-        PDB ID (or structure ID)
+    molecule_id : str
+        Molecule ID (e.g. PDB ID).
     molecule : DataFrame
         Data extracted from e.g. mol2 or pdb file.
     representatives : ratar.encoding.Representatives
@@ -55,7 +55,7 @@ class BindingSite:
 
     def __init__(self, pmol):
 
-        self.pdb_id = pmol.code
+        self.molecule_id = pmol.code
         self.molecule = pmol.df
         self.representatives = self.get_representatives()
         self.shapes = self.run()
@@ -66,7 +66,7 @@ class BindingSite:
         """
 
         rules = [
-            self.pdb_id == other.pdb_id,
+            self.molecule_id == other.molecule_id,
             self.molecule.equals(other.molecule),
             self.representatives == other.representatives,
             self.shapes == other.shapes
@@ -74,38 +74,33 @@ class BindingSite:
         return all(rules)
 
     def get_representatives(self):
-        representatives = Representatives()
+        representatives = Representatives(self.molecule_id)
         representatives.get_representatives(self.molecule)
         return representatives
 
-    @staticmethod
-    def get_coordinates(representatives):
-        coordinates = Coordinates()
+    def get_coordinates(self, representatives):
+        coordinates = Coordinates(self.molecule_id)
         coordinates.get_coordinates(representatives)
         return coordinates
 
-    @staticmethod
-    def get_physicochemicalproperties(representatives):
-        physicochemicalproperties = PhysicoChemicalProperties()
+    def get_physicochemicalproperties(self, representatives):
+        physicochemicalproperties = PhysicoChemicalProperties(self.molecule_id)
         physicochemicalproperties.get_physicochemicalproperties(representatives)
         return physicochemicalproperties
 
-    @staticmethod
-    def get_subsets(representatives):
-        subsets = Subsets()
+    def get_subsets(self, representatives):
+        subsets = Subsets(self.molecule_id)
         subsets.get_pseudocenter_subsets_indices(representatives)
         return subsets
 
-    @staticmethod
-    def get_points(coordinates, physicochemicalproperties, subsets):
-        points = Points()
+    def get_points(self, coordinates, physicochemicalproperties, subsets):
+        points = Points(self.molecule_id)
         points.get_points(coordinates, physicochemicalproperties)
         points.get_points_pseudocenter_subsets(subsets)
         return points
 
-    @staticmethod
-    def get_shapes(points):
-        shapes = Shapes()
+    def get_shapes(self, points):
+        shapes = Shapes(self.molecule_id)
         shapes.get_shapes(points)
         shapes.get_shapes_pseudocenter_subsets(points)
         return shapes
@@ -127,11 +122,15 @@ class Representatives:
 
     Attributes
     ----------
+    molecule_id : str
+        Molecule ID (e.g. PDB ID).
     data : dict of pandas.DataFrames
         Dictionary (representatives types, e.g. 'pc') of DataFrames containing molecule structural data.
     """
 
-    def __init__(self):
+    def __init__(self, molecule_id):
+
+        self.molecule_id = molecule_id
         self.data = {
             'ca':  pd.DataFrame(),
             'pca':  pd.DataFrame(),
@@ -331,11 +330,15 @@ class Coordinates:
 
     Attributes
     ----------
+    molecule_id : str
+        Molecule ID (e.g. PDB ID).
     data : dict of pandas.DataFrames
         Dictionary (representatives types, e.g. 'pc') of DataFrames containing coordinates.
     """
 
-    def __init__(self):
+    def __init__(self, molecule_id):
+
+        self.molecule_id = molecule_id
         self.data = {
             'ca': None,
             'pca': None,
@@ -407,13 +410,16 @@ class PhysicoChemicalProperties:
 
     Attributes
     ----------
+    molecule_id : str
+        Molecule ID (e.g. PDB ID).
     data : dict of dict of pandas.DataFrame
         Dictionary (representatives types, e.g. 'pc') of dictionaries (physicochemical properties types, e.g. 'z123') of
         DataFrames containing physicochemical properties.
     """
 
-    def __init__(self):
+    def __init__(self, molecule_id):
 
+        self.molecule_id = molecule_id
         self.data = {
             'ca': {},
             'pca': {},
@@ -483,8 +489,7 @@ class PhysicoChemicalProperties:
 
         return self.data
 
-    @staticmethod
-    def _get_zscales(representatives_df, z_number):
+    def _get_zscales(self, representatives_df, z_number):
         """
         Extract Z-scales from binding site representatives.
 
@@ -517,7 +522,7 @@ class PhysicoChemicalProperties:
 
                 # Log missing Z-scales
                 logger.info(f'The following atom (residue) has no Z-scales assigned: {row["subst_name"]}',
-                            extra={'molecule_id': 'x'})
+                            extra={'molecule_id': self.molecule_id})
 
         # Cast into DataFrame
         representatives_zscales_df = pd.DataFrame(
@@ -536,13 +541,16 @@ class Subsets:
 
     Attributes
     ----------
+    molecule_id : str
+        Molecule ID (e.g. PDB ID).
     data_pseudocenter_subsets : dict of dict of list
         Dictionary (representatives types, e.g. 'pc') of dictionaries (pseudocenter subset types, e.g. 'HBA') of
         lists containing subset indices.
     """
 
-    def __init__(self):
+    def __init__(self, molecule_id):
 
+        self.molecule_id = molecule_id
         self.data_pseudocenter_subsets = {
             'pca': {},
             'pc': {}
@@ -624,6 +632,8 @@ class Points:
 
     Attributes
     ----------
+    molecule_id : str
+        Molecule ID (e.g. PDB ID).
     data : dict of dict of pandas.DataFrames
          Dictionary (representatives types, e.g. 'pc') of dictionaries (physicochemical properties types, e.g. 'z1')
          of DataFrames containing coordinates and physicochemical properties.
@@ -632,8 +642,9 @@ class Points:
         of dictionaries (subset types, e.g. 'HBA') containing each a DataFrame describing the subsetted atoms.
     """
 
-    def __init__(self):
+    def __init__(self, molecule_id):
 
+        self.molecule_id = molecule_id
         self.data = {
             'ca': {},
             'pca': {},
@@ -778,6 +789,8 @@ class Shapes:
 
     Attributes
     ----------
+    molecule_id : str
+        Molecule ID (e.g. PDB ID).
     data : dict of dict of dict of dict of pandas.DataFrames
         Dictionary (representatives types, e.g. 'pc') of dictionaries (physicochemical properties types, e.g. 'z1')
         of dictionaries (encoding method, e.g. '3D_usr') of dictionaries containing DataFrames for the encoding:
@@ -790,8 +803,9 @@ class Shapes:
         reference points to representatives), and 'moments' (the first three moments for the distance distribution).
     """
 
-    def __init__(self):
+    def __init__(self, molecule_id):
 
+        self.molecule_id = molecule_id
         self.data = {
             'ca': {},
             'pca': {},
@@ -1449,11 +1463,11 @@ def process_encoding(input_mol_path, output_dir):
 
     output_dir/
       encoding/
-        pdb_id_1/
+        molecule_id_1/
           ratar_encoding.p
           ratar_encoding.log
           ref_points_cgo.py
-        pdb_id_2/
+        molecule_id_2/
           ...
       ratar.log
 
@@ -1493,13 +1507,13 @@ def process_encoding(input_mol_path, output_dir):
             # Process single binding site:
 
             # Create output folder
-            pdb_id_encoding = Path(output_dir) / 'encoding' / pmol.code
-            create_directory(pdb_id_encoding)
+            molecule_id_encoding = Path(output_dir) / 'encoding' / pmol.code
+            create_directory(molecule_id_encoding)
 
             # Get output file paths
-            output_log_path = pdb_id_encoding / 'ratar_encoding.log'
-            output_enc_path = pdb_id_encoding / 'ratar_encoding.p'
-            output_cgo_path = pdb_id_encoding / 'ref_points_cgo.py'
+            output_log_path = molecule_id_encoding / 'ratar_encoding.log'
+            output_enc_path = molecule_id_encoding / 'ratar_encoding.p'
+            output_cgo_path = molecule_id_encoding / 'ref_points_cgo.py'
 
             # Encode binding site
             binding_site = BindingSite(pmol)
@@ -1566,7 +1580,7 @@ def save_cgo_file(binding_site, output_path):
                 ref_points = binding_site.shapes.data[repres][method]['ref_points']
 
                 # Set descriptive name for reference points (PDB ID, representatives, dimensions, encoding method)
-                obj_name = f'{binding_site.pdb_id[:4]}_{repres}_{method}'
+                obj_name = f'{binding_site.molecule_id[:4]}_{repres}_{method}'
                 obj_names.append(obj_name)
 
                 # Set size for PyMol spheres
@@ -1602,7 +1616,7 @@ def save_cgo_file(binding_site, output_path):
                 )
 
     # Group all objects to one group
-    lines.append(f'cmd.group("{binding_site.pdb_id[:4]}_ref_points", "{" ".join(obj_names)}")')
+    lines.append(f'cmd.group("{binding_site.molecule_id[:4]}_ref_points", "{" ".join(obj_names)}")')
 
     with open(output_path, 'w') as f:
         f.write('\n'.join(lines))
