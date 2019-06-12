@@ -10,8 +10,9 @@ Handles the primary functions for encoding a single binding site.
 # Import packages
 
 import glob
+import logging
 from pathlib import Path
-import _pickle as pickle
+import pickle
 import re
 import sys
 
@@ -27,6 +28,8 @@ from ratar.auxiliary import MoleculeLoader, AminoAcidDescriptors
 from ratar.auxiliary import create_directory, load_pseudocenters
 
 warnings.simplefilter('error', FutureWarning)
+
+logger = logging.getLogger(__name__)
 
 
 class BindingSite:
@@ -50,12 +53,12 @@ class BindingSite:
         Encoded binding site (reference points, distance distribution and distribution moments).
     """
 
-    def __init__(self, pmol, logger=None):
+    def __init__(self, pmol):
 
         self.pdb_id = pmol.code
         self.molecule = pmol.df
         self.representatives = self.get_representatives()
-        self.shapes = self.run(logger)
+        self.shapes = self.run()
 
     def __eq__(self, other):
         """
@@ -82,9 +85,9 @@ class BindingSite:
         return coordinates
 
     @staticmethod
-    def get_physicochemicalproperties(representatives, logger=None):
+    def get_physicochemicalproperties(representatives):
         physicochemicalproperties = PhysicoChemicalProperties()
-        physicochemicalproperties.get_physicochemicalproperties(representatives, logger)
+        physicochemicalproperties.get_physicochemicalproperties(representatives)
         return physicochemicalproperties
 
     @staticmethod
@@ -107,10 +110,10 @@ class BindingSite:
         shapes.get_shapes_pseudocenter_subsets(points)
         return shapes
 
-    def run(self, logger):
+    def run(self):
         representatives = self.get_representatives()
         coordinates = self.get_coordinates(representatives)
-        physicochemicalproperties = self.get_physicochemicalproperties(representatives, logger)
+        physicochemicalproperties = self.get_physicochemicalproperties(representatives)
         subsets = self.get_subsets(representatives)
         points = self.get_points(coordinates, physicochemicalproperties, subsets)
         shapes = self.get_shapes(points)
@@ -447,7 +450,7 @@ class PhysicoChemicalProperties:
 
         return all(rules)
 
-    def get_physicochemicalproperties(self, representatives, logger=None):
+    def get_physicochemicalproperties(self, representatives):
         """
         Extract physicochemical properties (main function).
 
@@ -455,8 +458,6 @@ class PhysicoChemicalProperties:
         ----------
         representatives : pandas.DataFrame
             Representatives' data for a certain representatives type.
-        logger : xxx  # TODO
-            xxx
 
         Returns
         -------
@@ -473,9 +474,9 @@ class PhysicoChemicalProperties:
 
             for k2 in physicochemicalproperties_keys:
                 if k2 == 'z1':
-                    self.data[k1][k2] = self._get_zscales(v1, 1, logger)
+                    self.data[k1][k2] = self._get_zscales(v1, 1)
                 elif k2 == 'z123':
-                    self.data[k1][k2] = self._get_zscales(v1, 3, logger)
+                    self.data[k1][k2] = self._get_zscales(v1, 3)
                 else:
                     raise KeyError(f'Unknown representatives key: {k2}. '
                                    f'Select: {", ".join(physicochemicalproperties_keys)}')
@@ -483,7 +484,7 @@ class PhysicoChemicalProperties:
         return self.data
 
     @staticmethod
-    def _get_zscales(representatives_df, z_number, logger=None):
+    def _get_zscales(representatives_df, z_number):
         """
         Extract Z-scales from binding site representatives.
 
@@ -515,8 +516,8 @@ class PhysicoChemicalProperties:
                 representatives_zscales.append(pd.Series([None]*zscales.shape[1], index=zscales.columns))
 
                 # Log missing Z-scales
-                if logger is not None:
-                    logger.info(f'The following atom (residue) has no Z-scales assigned: {row["subst_name"]}')
+                logger.info(f'The following atom (residue) has no Z-scales assigned: {row["subst_name"]}',
+                            extra={'molecule_id': 'x'})
 
         # Cast into DataFrame
         representatives_zscales_df = pd.DataFrame(
@@ -1433,11 +1434,7 @@ class Shapes:
         return self.data_pseudocenter_subsets
 
 
-########################################################################################
-# Encode binding site(s)
-########################################################################################
-
-def process_encoding(input_mol_path, output_dir, logger):
+def process_encoding(input_mol_path, output_dir):
     """
     Process a list of molecule structure files (retrieved by an input path to one or multiple files) and
     save per binding site multiple output files to an output directory.
@@ -1466,8 +1463,6 @@ def process_encoding(input_mol_path, output_dir, logger):
         Path to molecule structure file(s), can include a wildcard to match multiple files.
     output_dir : str
         Output directory.
-    logger : xxx  # TODO
-        xxx
     """
 
     # Get all molecule structure files
@@ -1482,6 +1477,7 @@ def process_encoding(input_mol_path, output_dir, logger):
 
         # Load binding site from molecule structure file
         bs_loader = MoleculeLoader(mol)
+        bs_loader.load_molecule(remove_solvent=False)
         pmols = bs_loader.pmols
 
         # Get number of pmol objects and set pmol counter
@@ -1491,7 +1487,8 @@ def process_encoding(input_mol_path, output_dir, logger):
         for pmol_counter, pmol in enumerate(pmols, 1):
 
             # Get iteration progress
-            logger.info(f'{mol_counter}/{mol_sum} molecule structure files - {pmol_counter}/{pmol_sum} pmol objects: {pmol.code}')
+            logger.info(f'{mol_counter}/{mol_sum} molecule structure files - {pmol_counter}/{pmol_sum} pmol objects',
+                        extra={'molecule_id': pmol.code})
 
             # Process single binding site:
 
@@ -1505,7 +1502,7 @@ def process_encoding(input_mol_path, output_dir, logger):
             output_cgo_path = pdb_id_encoding / 'ref_points_cgo.py'
 
             # Encode binding site
-            binding_site = BindingSite(pmol, logger)
+            binding_site = BindingSite(pmol)
 
             # Save binding site
             save_binding_site(binding_site, str(output_enc_path))
@@ -1513,10 +1510,6 @@ def process_encoding(input_mol_path, output_dir, logger):
             # Save binding site reference points as cgo file
             #save_cgo_file(binding_site, str(output_cgo_path))
 
-
-########################################################################################
-# Save encoding related files
-########################################################################################
 
 def save_binding_site(binding_site, output_path):
     """
@@ -1564,8 +1557,6 @@ def save_cgo_file(binding_site, output_path):
     ]
     # Collect all PyMol objects here (in order to group them after loading them to PyMol)
     obj_names = []
-
-    print(flatten(binding_site.shapes.data.keys(), reducer='path'))
 
     for repres in binding_site.shapes.data.keys():
         for method in binding_site.shapes.data[repres].keys():
@@ -1617,10 +1608,6 @@ def save_cgo_file(binding_site, output_path):
         f.write('\n'.join(lines))
 
 
-########################################################################################
-# Load encoding related files
-########################################################################################
-
 def get_encoded_binding_site_path(code, output_path):
     """
     Get a binding site pickle path based on a path wildcard constructed from
@@ -1655,8 +1642,7 @@ def get_encoded_binding_site_path(code, output_path):
             'Your input wildcard was the following: ',
             bs_wildcard
         ]
-        print('\n'.join(lines))
-        return None
+        raise FileNotFoundError('\n'.join(lines))
 
     # If wildcard matches multiple files, retry.
     elif len(bs_path) > 1:
@@ -1666,8 +1652,7 @@ def get_encoded_binding_site_path(code, output_path):
             'Your input wildcard was the following: ',
             bs_wildcard
         ]
-        print('\n'.join(lines))
-        return None
+        raise FileNotFoundError('\n'.join(lines))
 
     # If wildcard matches one file, return file path.
     else:
@@ -1700,8 +1685,7 @@ def load_binding_site(output_path):
             'Your input path was the following: ',
             bs_path
         ]
-        print('\n'.join(lines))
-        return None
+        raise FileNotFoundError('\n'.join(lines))
 
     # If input path matches multiple files, retry.
     elif len(bs_path) > 1:
@@ -1711,17 +1695,11 @@ def load_binding_site(output_path):
             '\nYour input path was the following: ',
             output_path
         ]
-        print('\n'.join(lines))
-        return None
+        raise FileNotFoundError('\n'.join(lines))
 
     # If input path matches one file, load file.
     else:
         bs_path = bs_path[0]
         with open(bs_path, 'rb') as f:
             binding_site = pickle.load(f)
-        lines = [
-            'The following file was loaded: ',
-            bs_path
-        ]
-        print('\n'.join(lines))
         return binding_site
