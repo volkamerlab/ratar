@@ -81,26 +81,6 @@ class AminoAcidDescriptors:
         return mol_zscales_aa
 
 
-def load_pseudocenters():
-    """
-    Load pseudocenters from file.
-    Remove HBDA features, since they contain too few data points for encoding.
-
-    Returns
-    -------
-    pandas.DataFrame
-        DataFrame containing pseudocenter information.
-    """
-    with open(ratar_path / 'data' / 'pseudocenter_atoms.p', 'rb') as f:
-        pc_atoms = pickle.load(f)
-
-    # Remove HBDA features information (too few data points)
-    pc_atoms = pc_atoms[pc_atoms['type'] != 'HBDA']
-    pc_atoms.reset_index(drop=True, inplace=True)
-
-    return pc_atoms
-
-
 class MoleculeLoader:
     """
     Class used to load molecule data from mol2 and pdb files in the form of unified BioPandas objects.
@@ -187,23 +167,40 @@ class MoleculeLoader:
             # Remove all '/' from code (code used as folder name, '/' would cause subdirectory creation)
             pmol.code = pmol.code.replace('/', '_')
 
+            # Insert additional columns (split ASN22 to ASN and 22) TODO adapt to ions, e.g. CA122 (CA, 122)
+            res_id_list = []
+            res_name_list = []
+
+            for i, j in zip(pmol.df['subst_name'], pmol.df['atom_type']):
+                if i[:2] == j.upper():
+                    # These are ions such as CA or MG
+                    res_id_list.append(i[2:])
+                    res_name_list.append(i[:2])
+                else:
+                    # These are amino acid, linkers, compounds, ...
+                    res_id_list.append(i[3:])
+                    res_name_list.append(i[:3])
+
+            pmol.df.insert(loc=2, column='res_id', value=res_id_list)
+            pmol.df.insert(loc=2, column='res_name', value=res_name_list)
+
             # Select columns of interest
             pmol._df = pmol.df.loc[:, ['atom_id',
                                        'atom_name',
+                                       'res_id',
+                                       'res_name',
                                        'subst_name',
                                        'x',
                                        'y',
                                        'z',
                                        'charge']]
 
-            # Insert additional columns (split ASN22 to ASN and 22) TODO adapt to ions, e.g. CA122 (CA, 122)
-            pmol.df.insert(loc=2, column='res_id', value=[i[3:] for i in pmol.df['subst_name']])
-            pmol.df.insert(loc=3, column='res_name', value=[i[:3] for i in pmol.df['subst_name']])
-
             # Remove solvent if parameter remove_solvent=True
             if remove_solvent:
                 ix = pmol.df.index[pmol.df['res_name'] == 'HOH']
                 pmol.df.drop(index=ix, inplace=True)
+
+            logger.debug(pmol.df, extra={'molecule_id': 'x'})
 
             pmols.append(pmol)
 
@@ -265,6 +262,26 @@ class MoleculeLoader:
         pmols = [pmol]
 
         return pmols
+
+
+def load_pseudocenters():
+    """
+    Load pseudocenters from file.
+    Remove HBDA features, since they contain too few data points for encoding.
+
+    Returns
+    -------
+    pandas.DataFrame
+        DataFrame containing pseudocenter information.
+    """
+    with open(ratar_path / 'data' / 'pseudocenter_atoms.p', 'rb') as f:
+        pc_atoms = pickle.load(f)
+
+    # Remove HBDA features information (too few data points)
+    pc_atoms = pc_atoms[pc_atoms['type'] != 'HBDA']
+    pc_atoms.reset_index(drop=True, inplace=True)
+
+    return pc_atoms
 
 
 def create_directory(directory):
