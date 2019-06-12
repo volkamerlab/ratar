@@ -167,7 +167,7 @@ class MoleculeLoader:
             # Remove all '/' from code (code used as folder name, '/' would cause subdirectory creation)
             pmol.code = pmol.code.replace('/', '_')
 
-            # Insert additional columns (split ASN22 to ASN and 22) TODO adapt to ions, e.g. CA122 (CA, 122)
+            # Insert additional columns (split ASN22 to ASN and 22)
             res_id_list = []
             res_name_list = []
 
