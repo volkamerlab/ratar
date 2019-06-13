@@ -105,15 +105,18 @@ class MoleculeLoader:
 
     def load_molecule(self, remove_solvent=False):
 
-        try:
-            open(self.input_path, 'r')
-        except FileNotFoundError:
-            raise FileNotFoundError(f'File does not exist: {self.input_path}')
+        if self.input_path.exists():
+            logger.info(f'File to be loaded: {self.input_path}', extra={'molecule_id': 'all'})
+        else:
+            logger.error(f'File not found: {self.input_path}', extra={'molecule_id': 'all'})
+            raise FileNotFoundError(f'File not found: {self.input_path}')
 
         if self.input_path.suffix == '.pdb':
             self.pmols = self._load_pdb(remove_solvent)
         elif self.input_path.suffix == '.mol2':
             self.pmols = self._load_mol2(remove_solvent)
+
+        logger.info('File loaded.', extra={'molecule_id': 'all'})
 
         return self.pmols
 
@@ -199,8 +202,6 @@ class MoleculeLoader:
             if remove_solvent:
                 ix = pmol.df.index[pmol.df['res_name'] == 'HOH']
                 pmol.df.drop(index=ix, inplace=True)
-
-            logger.debug(pmol.df, extra={'molecule_id': 'x'})
 
             pmols.append(pmol)
 
