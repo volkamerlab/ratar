@@ -1479,7 +1479,7 @@ def process_encoding(input_mol_path, output_dir):
     Each binding site is processed as follows:
       * Create all necessary output directories and sets all necessary file paths.
       * Encode the binding site.
-      * Save the encoded binding sites as pickle file (alongside a log file).
+      * Save the encoded binding sites as pickle file.
       * Save the reference points as PyMol cgo file.
 
     The output file systems is constructed as follows:
@@ -1488,7 +1488,6 @@ def process_encoding(input_mol_path, output_dir):
       encoding/
         molecule_id_1/
           ratar_encoding.p
-          ratar_encoding.log
           ref_points_cgo.py
         molecule_id_2/
           ...
@@ -1617,7 +1616,7 @@ def save_cgo_file(binding_site, output_path):
             ref_points = bs_flat[key]
 
             # Set descriptive name for reference points (PDB ID, representatives, dimensions, encoding method)
-            obj_name = f'{binding_site.molecule_id[:4]}_{key.replace("/", "_").replace("_ref_points", "")}'
+            obj_name = f'{key.replace("/", "_").replace("_ref_points", "")}__{binding_site.molecule_id}'
             obj_names.append(obj_name)
 
             # Set size for PyMol spheres
