@@ -393,13 +393,13 @@ class Coordinates:
 
         self.data = {}
 
-        for k, v in representatives.data.items():
-            if isinstance(v, pd.DataFrame):
-                self.data[k] = v[['x', 'y', 'z']]
-            elif isinstance(v, dict):
-                self.data[k] = {kk: vv[['x', 'y', 'z']] for (kk, vv) in v.items()}
+        for k1, v1 in representatives.data.items():
+            if isinstance(v1, pd.DataFrame):
+                self.data[k1] = v1[['x', 'y', 'z']]
+            elif isinstance(v1, dict):
+                self.data[k1] = {k2: v2[['x', 'y', 'z']] for (k2, v2) in v1.items()}
             else:
-                raise TypeError(f'Expected dict or pandas.DataFrame but got {type(v)}')
+                raise TypeError(f'Expected dict or pandas.DataFrame but got {type(v1)}')
 
         return self.data
 
