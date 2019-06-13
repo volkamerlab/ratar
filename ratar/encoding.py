@@ -728,11 +728,14 @@ class Points:
         physicochemicalproperties_keys = physicochemicalproperties.data['ca'].keys()
 
         for k1 in coordinates.data.keys():
+
             self.data[k1] = {}
-            self.data[k1]['None'] = coordinates.data[k1].copy()
+
+            # Add points without physicochemical properties
+            self.data[k1]['no'] = coordinates.data[k1].copy()
 
             # Drop rows (atoms) with empty entries (e.g. atoms without Z-scales assignment)
-            self.data[k1]['None'].dropna(inplace=True)
+            self.data[k1]['no'].dropna(inplace=True)
 
             for k2 in physicochemicalproperties_keys:
                 self.data[k1][k2] = pd.concat(
@@ -794,12 +797,12 @@ class Shapes:
         Molecule ID (e.g. PDB ID).
     data : dict of dict of dict of dict of pandas.DataFrames
         Dictionary (representatives types, e.g. 'pc') of dictionaries (physicochemical properties types, e.g. 'z1')
-        of dictionaries (encoding method, e.g. '3D_usr') of dictionaries containing DataFrames for the encoding:
+        of dictionaries (encoding method, e.g. '3Dusr') of dictionaries containing DataFrames for the encoding:
         'ref_points' (the reference points), 'distances' (the distances from reference points to representatives),
         and 'moments' (the first three moments for the distance distribution).
     data_pseudocenter_subsets : dict of dict of dict of dict of pandas.DataFrames
         Dictionary (representatives types, e.g. 'pc') of dictionaries (physicochemical properties types, e.g. 'z1')
-        of dictionaries (encoding method, e.g. '3D_usr') of dictionaries (subsets types, e.g. 'HBA') of dictionaries
+        of dictionaries (encoding method, e.g. '3Dusr') of dictionaries (subsets types, e.g. 'HBA') of dictionaries
         containing DataFrames for the encoding: 'ref_points' (the reference points), 'distances' (the distances from
         reference points to representatives), and 'moments' (the first three moments for the distance distribution).
     """
@@ -878,7 +881,7 @@ class Shapes:
         -------
         dict of dict of dict of dict of pandas.DataFrames
             Dictionary (representatives types, e.g. 'pc') of dictionaries (physicochemical properties types, e.g. 'z1')
-            of dictionaries (encoding method, e.g. '3D_usr') of dictionaries containing DataFrames for the encoding:
+            of dictionaries (encoding method, e.g. '3Dusr') of dictionaries containing DataFrames for the encoding:
             'ref_points' (the reference points), 'distances' (the distances from reference points to representatives),
             and 'moments' (the first three moments for the distance distribution).
         """
@@ -908,7 +911,7 @@ class Shapes:
         -------
         dict of dict of dict of dict of pandas.DataFrames
             Dictionary (representatives types, e.g. 'pc') of dictionaries (physicochemical properties types, e.g. 'z1')
-            of dictionaries (encoding method, e.g. '3D_usr') of dictionaries (subsets types, e.g. 'HBA') of dictionaries
+            of dictionaries (encoding method, e.g. '3Dusr') of dictionaries (subsets types, e.g. 'HBA') of dictionaries
             containing DataFrames for the encoding: 'ref_points' (the reference points), 'distances' (the distances from
             reference points to representatives), and 'moments' (the first three moments for the distance distribution).
 
@@ -952,12 +955,12 @@ class Shapes:
 
         # Select method based on number of dimensions and points
         if n_dimensions == 3 and n_points > 3:
-            return {'3D_usr': self._calc_shape_3dim_usr(points_df),
-                    '3D_csr': self._calc_shape_3dim_csr(points_df)}
+            return {'3Dusr': self._calc_shape_3dim_usr(points_df),
+                    '3Dcsr': self._calc_shape_3dim_csr(points_df)}
         elif n_dimensions == 4 and n_points > 4:
-            return {'4D_electroshape': self._calc_shape_4dim_electroshape(points_df)}
+            return {'4Delectroshape': self._calc_shape_4dim_electroshape(points_df)}
         elif n_dimensions == 6 and n_points > 6:
-            return {'6D_ratar1': self._calc_shape_6dim(points_df)}
+            return {'6Dratar1': self._calc_shape_6dim(points_df)}
         elif n_dimensions < 3:
             logger.error(f'Unexpected points dimension: {points_df.shape[1]}. Not implemented.',
                          extra={'molecule_id': self.molecule_id})
@@ -965,16 +968,16 @@ class Shapes:
         elif n_dimensions == 3 and n_points <= 3:
             logger.error(f'Number of points in 3D must be at least 4. Number of input points: {points_df.shape[0]}.',
                          extra={'molecule_id': self.molecule_id})
-            return {'3D_usr': {'ref_points': None, 'dist': None, 'moments': None},
-                    '3D_csr': {'ref_points': None, 'dist': None, 'moments': None}}
+            return {'3Dusr': {'ref_points': None, 'dist': None, 'moments': None},
+                    '3Dcsr': {'ref_points': None, 'dist': None, 'moments': None}}
         elif n_dimensions == 4 and n_points <= 4:
             logger.error(f'Number of points in 4D must be at least 5. Number of input points: {points_df.shape[0]}.',
                          extra={'molecule_id': self.molecule_id})
-            return {'4D_electroshape': {'ref_points': None, 'dist': None, 'moments': None}}
+            return {'4Delectroshape': {'ref_points': None, 'dist': None, 'moments': None}}
         elif n_dimensions == 6 and n_points <= 6:
             logger.error(f'Number of points in 6D must be at least 7. Number of input points: {points_df.shape[0]}.',
                          extra={'molecule_id': self.molecule_id})
-            return {'6D_ratar1': {'ref_points': None, 'dist': None, 'moments': None}}
+            return {'6Dratar1': {'ref_points': None, 'dist': None, 'moments': None}}
         elif n_dimensions > 7:
             logger.error(f'Unexpected points dimension: {points_df.shape[1]}. Not implemented.',
                          extra={'molecule_id': self.molecule_id})
@@ -1446,7 +1449,7 @@ class Shapes:
     def _reorder_subset_keys(self):
         """
         Change the key order of the nested dictionary data_pseudocenter_subsets (Shapes attribute).
-        Example: 'pc/z123/H/6D_ratar1/moments' is changed to 'pc/z123/6D_ratar1/H/moments'.
+        Example: 'pc/z123/H/6Dratar1/moments' is changed to 'pc/z123/6Dratar1/H/moments'.
 
         Returns
         -------
@@ -1503,6 +1506,12 @@ def process_encoding(input_mol_path, output_dir):
     input_mol_path_list = glob.glob(input_mol_path)
     input_mol_path_list = input_mol_path_list
 
+    if len(input_mol_path_list) == 0:
+        logger.info(f'Input path matches no molecule files: {input_mol_path}', extra={'molecule_id': 'all'})
+    else:
+        logger.info(f'Input path matches {len(input_mol_path_list)} molecule file(s): {input_mol_path}',
+                    extra={'molecule_id': 'all'})
+
     # Get number of molecule structure files and set molecule structure counter
     mol_sum = len(input_mol_path_list)
 
@@ -1521,7 +1530,7 @@ def process_encoding(input_mol_path, output_dir):
         for pmol_counter, pmol in enumerate(pmols, 1):
 
             # Get iteration progress
-            logger.info(f'{mol_counter}/{mol_sum} molecule structure files - {pmol_counter}/{pmol_sum} pmol objects',
+            logger.info(f'Encoding: {mol_counter}/{mol_sum} molecule structure file - {pmol_counter}/{pmol_sum} molecule',
                         extra={'molecule_id': pmol.code})
 
             # Process single binding site:
@@ -1531,7 +1540,6 @@ def process_encoding(input_mol_path, output_dir):
             create_directory(molecule_id_encoding)
 
             # Get output file paths
-            output_log_path = molecule_id_encoding / 'ratar_encoding.log'
             output_enc_path = molecule_id_encoding / 'ratar_encoding.p'
             output_cgo_path = molecule_id_encoding / 'ref_points_cgo.py'
 
@@ -1542,7 +1550,7 @@ def process_encoding(input_mol_path, output_dir):
             save_binding_site(binding_site, str(output_enc_path))
 
             # Save binding site reference points as cgo file
-            #save_cgo_file(binding_site, str(output_cgo_path))
+            save_cgo_file(binding_site, str(output_cgo_path))
 
 
 def save_binding_site(binding_site, output_path):
@@ -1592,48 +1600,57 @@ def save_cgo_file(binding_site, output_path):
     # Collect all PyMol objects here (in order to group them after loading them to PyMol)
     obj_names = []
 
-    for repres in binding_site.shapes.data.keys():
-        for method in binding_site.shapes.data[repres].keys():
-            if method != 'na':
+    # Flatten nested dictionary
+    bs_flat = flatten(binding_site.shapes.data, reducer='path')
 
-                # Get reference points (coordinates)
-                ref_points = binding_site.shapes.data[repres][method]['ref_points']
+    # Select keys for reference points
+    bs_flat_keys = [i for i in bs_flat.keys() if 'ref_points' in i]
 
-                # Set descriptive name for reference points (PDB ID, representatives, dimensions, encoding method)
-                obj_name = f'{binding_site.molecule_id[:4]}_{repres}_{method}'
-                obj_names.append(obj_name)
+    for key in bs_flat_keys:
 
-                # Set size for PyMol spheres
-                size = str(1)
+        if bs_flat[key] is None:
+            logger.info(f'Empty encoding for {key}.')
 
-                lines.append(f'obj_{obj_name} = [')  # Variable cannot start with digit, thus add prefix obj_
+        else:
 
-                # Set color counter (since we iterate over colors for each reference point)
-                counter_colors = 0
+            # Get reference points (coordinates)
+            ref_points = bs_flat[key]
 
-                # For each reference point, write sphere color, coordinates and size to file
-                for index, row in ref_points.iterrows():
+            # Set descriptive name for reference points (PDB ID, representatives, dimensions, encoding method)
+            obj_name = f'{binding_site.molecule_id[:4]}_{key.replace("/", "_").replace("_ref_points", "")}'
+            obj_names.append(obj_name)
 
-                    # Set sphere color
-                    sphere_color = list(sphere_colors[counter_colors])
-                    counter_colors = counter_colors + 1
+            # Set size for PyMol spheres
+            size = str(1)
 
-                    # Write sphere a) color and b) coordinates and size to file
-                    lines.extend(
-                        [
-                            f'\tCOLOR, {str(sphere_color[0])}, {str(sphere_color[1])}, {str(sphere_color[2])},',
-                            f'\tSPHERE, {str(row["x"])}, {str(row["y"])}, {str(row["z"])}, {size},'
-                        ]
-                    )
+            lines.append(f'obj_{obj_name} = [')  # Variable cannot start with digit, thus add prefix obj_
 
-                # Write command to file that will load the reference points as PyMol object
+            # Set color counter (since we iterate over colors for each reference point)
+            counter_colors = 0
+
+            # For each reference point, write sphere color, coordinates and size to file
+            for index, row in ref_points.iterrows():
+
+                # Set sphere color
+                sphere_color = list(sphere_colors[counter_colors])
+                counter_colors = counter_colors + 1
+
+                # Write sphere a) color and b) coordinates and size to file
                 lines.extend(
                     [
-                        f']',
-                        f'cmd.load_cgo(obj_{obj_name}, "{obj_name}")',
-                        ''
+                        f'\tCOLOR, {str(sphere_color[0])}, {str(sphere_color[1])}, {str(sphere_color[2])},',
+                        f'\tSPHERE, {str(row["x"])}, {str(row["y"])}, {str(row["z"])}, {size},'
                     ]
                 )
+
+            # Write command to file that will load the reference points as PyMol object
+            lines.extend(
+                [
+                    f']',
+                    f'cmd.load_cgo(obj_{obj_name}, "{obj_name}")',
+                    ''
+                ]
+            )
 
     # Group all objects to one group
     lines.append(f'cmd.group("{binding_site.molecule_id[:4]}_ref_points", "{" ".join(obj_names)}")')
