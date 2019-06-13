@@ -167,8 +167,8 @@ class MoleculeLoader:
                                                                  9: ('status_bit', str)}
                                                         )
 
-            # Remove all '/' from code (code used as folder name, '/' would cause subdirectory creation)
-            pmol.code = pmol.code.replace('/', '_')
+            # In case molecule code contains absolute/relative path, split by '/' and retain only path stem
+            pmol.code = pmol.code.split('/')[-1]
 
             # Insert additional columns (split ASN22 to ASN and 22)
             res_id_list = []
@@ -226,6 +226,7 @@ class MoleculeLoader:
 
         # If object has no code, set string from file stem and its folder name
         if pmol.code == "":
+            logger.debug(self.input_path, extra={'molecule_id': 'x'})
             pmol.code = '_'.join([self.input_path.parts[-2], self.input_path.stem]).replace('/', '_')
 
         # Get both ATOM and HETATM lines of PDB file
