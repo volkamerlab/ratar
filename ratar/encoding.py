@@ -4,10 +4,9 @@ encoding.py
 Read-across the targetome -
 An integrated structure- and ligand-based workbench for computational target prediction and novel tool compound design
 
-Handles the primary functions for encoding a single binding site.
+Handles the primary functions for encoding one or multiple binding site (s).
 """
 
-# Import packages
 
 import glob
 import logging
