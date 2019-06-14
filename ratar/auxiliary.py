@@ -25,62 +25,6 @@ logger = logging.getLogger(__name__)
 ratar_path = Path(ratar.__file__).parent
 
 
-class AminoAcidDescriptors:
-    """
-    Class used to store amino acid descriptor data, e.g. Z-scales.
-
-    Attributes
-    ----------
-    zscales : pandas.DataFrame
-        Z-scales for standard and a few non-standard amino acids.
-
-    Notes
-    -----
-    Z-scales taken from: https://github.com/Superzchen/iFeature/blob/master/codes/ZSCALE.py
-    """
-
-    def __init__(self):
-        zscales_path = ratar_path / 'data' / 'zscales.csv'
-        self.zscales = pd.read_csv(str(zscales_path), index_col='aa3')
-
-    def _get_zscales_amino_acids(self, molecule, output_log_path=None):
-        """
-        Get all amino acids atoms that are described by Z-scales.
-
-        Parameters
-        ----------
-        molecule : pandas.DataFrame
-            DataFrame containing atom lines from input file.
-        output_log_path : str
-            Path to log file.
-
-        Returns
-        -------
-        pandas.DataFrame
-            DataFrame containing atom lines from input file described by Z-scales.
-        """
-
-        # Get amino acid name per row (atom)
-        mol_aa = molecule['res_name']
-
-        # Get only rows (atoms) that belong to Z-scales amino acids
-        mol_zscales_aa = molecule[mol_aa.apply(lambda y: y in self.zscales.index)].copy()
-
-        # Get only rows (atoms) that DO NOT belong to Z-scales amino acids
-        mol_non_zscales_aa = molecule[mol_aa.apply(lambda y: y not in self.zscales.index)].copy()
-
-        if not mol_non_zscales_aa.empty:
-            if output_log_path is not None:
-                with open(output_log_path, 'a+') as f:
-                    f.write('Atoms removed for binding site encoding:\n\n')
-                    f.write(mol_non_zscales_aa.to_string() + '\n\n')
-            else:
-                print('Atoms removed for binding site encoding:')
-                print(mol_non_zscales_aa)
-
-        return mol_zscales_aa
-
-
 class MoleculeLoader:
     """
     Class used to load molecule data from mol2 and pdb files in the form of unified BioPandas objects.
@@ -118,7 +62,7 @@ class MoleculeLoader:
 
         logger.info('File loaded.', extra={'molecule_id': 'all'})
 
-        return self.pmols
+        return None
 
     def _load_mol2(self, remove_solvent=False):
         """
@@ -166,9 +110,6 @@ class MoleculeLoader:
                                                                  8: ('charge', float),
                                                                  9: ('status_bit', str)}
                                                         )
-
-            # In case molecule code contains absolute/relative path, split by '/' and retain only path stem
-            pmol.code = pmol.code.split('/')[-1]
 
             # Insert additional columns (split ASN22 to ASN and 22)
             res_id_list = []
@@ -226,7 +167,6 @@ class MoleculeLoader:
 
         # If object has no code, set string from file stem and its folder name
         if pmol.code == "":
-            logger.debug(self.input_path, extra={'molecule_id': 'x'})
             pmol.code = '_'.join([self.input_path.parts[-2], self.input_path.stem]).replace('/', '_')
 
         # Get both ATOM and HETATM lines of PDB file
@@ -264,6 +204,54 @@ class MoleculeLoader:
         pmols = [pmol]
 
         return pmols
+
+
+class AminoAcidDescriptors:
+    """
+    Class used to store amino acid descriptor data, e.g. Z-scales.
+
+    Attributes
+    ----------
+    zscales : pandas.DataFrame
+        Z-scales for standard and a few non-standard amino acids.
+
+    Notes
+    -----
+    Z-scales taken from: https://github.com/Superzchen/iFeature/blob/master/codes/ZSCALE.py
+    """
+
+    def __init__(self):
+        zscales_path = ratar_path / 'data' / 'zscales.csv'
+        self.zscales = pd.read_csv(str(zscales_path), index_col='aa3')
+
+    def get_zscales_amino_acids(self, molecule):
+        """
+        Get all amino acids atoms that are described by Z-scales.
+
+        Parameters
+        ----------
+        molecule : pandas.DataFrame
+            DataFrame containing atom lines from input file.
+
+        Returns
+        -------
+        pandas.DataFrame
+            DataFrame containing atom lines from input file described by Z-scales.
+        """
+
+        # Get amino acid name per row (atom)
+        mol_aa = molecule['res_name']
+
+        # Get only rows (atoms) that belong to Z-scales amino acids
+        mol_zscales_aa = molecule[mol_aa.apply(lambda y: y in self.zscales.index)].copy()
+
+        # Get only rows (atoms) that DO NOT belong to Z-scales amino acids
+        mol_non_zscales_aa = molecule[mol_aa.apply(lambda y: y not in self.zscales.index)].copy()
+
+        if not mol_non_zscales_aa.empty:
+            logger.info(f'Atoms removed for binding site encoding: {mol_non_zscales_aa.to_string()}')
+
+        return mol_zscales_aa
 
 
 def load_pseudocenters():
