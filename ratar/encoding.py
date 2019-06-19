@@ -228,59 +228,75 @@ class Representatives:
         Returns
         -------
         pandas.DataFrame
-            DataFrame containing atom lines from input file described by Z-scales.
+            DataFrame containing atom lines from input file that belong to pseudocenters
         """
 
         # Load pseudocenter atoms
         pseudocenter_atoms = load_pseudocenters()
 
-        # Add column containing amino acid names
-        mol['amino_acid'] = [i.split('_')[0][:3] for i in mol['subst_name']]
+        # Collect all molecule atoms that belong to pseudocenters
+        mol_pca_subset = []
 
-        # Per atom in binding site: get atoms that belong to pseudocenters
-        matches = []  # Matching atoms
-        pc_types = []  # Pc type of matching atoms
-        pc_ids = []  # Pc ids of matching atoms
-        pc_atom_ids = []  # Pc atom ids of matching atoms
+        for index, row in mol.iterrows():
 
-        # TODO: review because it is very old code
-        # Iterate over all atoms (lines) in binding site
-        for i in mol.index:
-            line = mol.loc[i]  # Atom in binding site
+            query = f'{row["res_name"]}_{row["atom_name"]}'
 
-            # Get atoms that belong to peptide bond
-            if re.search(r'^[NOC]$', line['atom_name']):
-                matches.append(True)
-                if line['atom_name'] == 'O':
-                    pc_types.append('HBA')
-                    pc_ids.append('PEP_HBA_1')
-                    pc_atom_ids.append('PEP_HBA_1_0')
-                elif line['atom_name'] == 'N':
-                    pc_types.append('HBD')
-                    pc_ids.append('PEP_HBD_1')
-                    pc_atom_ids.append('PEP_HBD_1_N')
-                elif line['atom_name'] == 'C':
-                    pc_types.append('AR')
-                    pc_ids.append('PEP_AR_1')
-                    pc_atom_ids.append('PEP_AR_1_C')
+            if query in list(pseudocenter_atoms['pc_atom_pattern']):  # Non-peptide bond atoms
 
-            # Get other defined atoms
-            else:
-                query = (line['amino_acid'] + '_' + line['atom_name'])
-                matches.append(query in list(pseudocenter_atoms['pattern']))
-                if query in list(pseudocenter_atoms['pattern']):
-                    ix = pseudocenter_atoms.index[pseudocenter_atoms['pattern'] == query].tolist()[
-                        0]  # FIXME tolist needed and why [0]?
-                    pc_types.append(pseudocenter_atoms.iloc[ix]['type'])
-                    pc_ids.append(pseudocenter_atoms.iloc[ix]['pc_id'])
-                    pc_atom_ids.append(pseudocenter_atoms.iloc[ix]['pc_atom_id'])
+                pc_ix = pseudocenter_atoms.index[pseudocenter_atoms['pc_atom_pattern'] == query].tolist()[0]
 
-        bs_pc_atoms = mol[matches].copy()
-        bs_pc_atoms['pc_types'] = pd.Series(pc_types, index=bs_pc_atoms.index)
-        bs_pc_atoms['pc_id'] = pd.Series(pc_ids, index=bs_pc_atoms.index)
-        bs_pc_atoms['pc_atom_id'] = pd.Series(pc_atom_ids, index=bs_pc_atoms.index)
+                mol_pca_subset.append(
+                    [
+                        index,
+                        pseudocenter_atoms.iloc[pc_ix]['pc_type'],
+                        pseudocenter_atoms.iloc[pc_ix]['pc_id'],
+                        pseudocenter_atoms.iloc[pc_ix]['pc_atom_id']
+                    ]
+                )
 
-        return bs_pc_atoms
+            elif row['atom_name'] == 'O':  # Peptide bond atoms
+
+                mol_pca_subset.append(
+                    [
+                        index,
+                        'HBA',
+                        'PEP_HBA_1',
+                        'PEP_HBA_1_0'
+                    ]
+                )
+
+            elif row['atom_name'] == 'N':  # Peptide bond atoms
+
+                mol_pca_subset.append(
+                    [
+                        index,
+                        'HBD',
+                        'PEP_HBD_1',
+                        'PEP_HBD_1_N']
+                )
+
+            elif row['atom_name'] == 'C':  # Peptide bond atoms
+
+                mol_pca_subset.append(
+                    [
+                        index,
+                        'AR',
+                        'PEP_AR_1',
+                        'PEP_AR_1_C'
+                    ]
+                )
+
+        # Cast list of lists to DataFrame
+        mol_pca_subset_df = pd.DataFrame(mol_pca_subset)
+        mol_pca_subset_df.columns = ['index', 'pc_type', 'pc_id', 'pc_atom_id']
+        mol_pca_subset_df.index = [i[0] for i in mol_pca_subset]
+        mol_pca_subset_df.drop(columns=['index'], inplace=True)
+
+        # Join molecule with pseudocenter subset
+        mol_pca_subset_df = mol.join(mol_pca_subset_df, how='outer')
+        mol_pca_subset_df.dropna(how='any', inplace=True)
+
+        return mol_pca_subset_df
 
     def _get_pc(self, mol):
         """
