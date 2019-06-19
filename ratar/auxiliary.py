@@ -313,14 +313,13 @@ def _preprocess_pseudocenters():
 
         # Create prefix of pseudocenter ID
         id_prefix_new = f'{row["residue"]}_{row["pc_type"]}'
-        print(id_prefix_new)
 
         # Set suffix: starting with 1, but incrementing if prefix was seen before
         if id_prefix_new != id_prefix_old:
             id_suffix = 1
         else:
             id_suffix = id_suffix + 1
-        print(id_suffix)
+
         # Add suffix to prefix
         pc_ids.append(f'{id_prefix_new}_{id_suffix}')
 
