@@ -264,14 +264,120 @@ def load_pseudocenters():
     pandas.DataFrame
         DataFrame containing pseudocenter information.
     """
-    with open(ratar_path / 'data' / 'pseudocenter_atoms.p', 'rb') as f:
-        pc_atoms = pickle.load(f)
+
+    pseudocenter_path = ratar_path / 'data' / 'pseudocenter_atoms.csv'
+
+    pc_atoms = pd.read_csv(pseudocenter_path, index_col=0)
 
     # Remove HBDA features information (too few data points)
-    pc_atoms = pc_atoms[pc_atoms['type'] != 'HBDA']
-    pc_atoms.reset_index(drop=True, inplace=True)
+    # pc_atoms = pc_atoms[pc_atoms['pc_type'] != 'HBDA']
+    # pc_atoms.reset_index(drop=True, inplace=True)
 
     return pc_atoms
+
+
+def _preprocess_pseudocenters():
+    """
+    Preprocess pseudocenter csv file as a DataFrame containing per row one pseudocenter with columns for
+    - pseudocenter ID, e.g. CYS_H_1,
+    - residue name, e.g. CYS,
+    - pseudocenter type, e.g. H, and
+    - a list of origin atoms (atoms that belong to pseudocenter), e.g. ['CB', 'SG'].
+
+    Returns
+    -------
+    pandas.DataFrame
+        Pseudocenter data (pseudocenter ID, residue name, pseudocenter type and list of origin atoms).
+    """
+
+    # Load pseudocenter text file
+    pc_df = pd.read_csv(ratar_path / "data" / "pseudocenters.csv", header=None)
+    pc_df.columns = ["residue", "pc_type", "origin_atoms"]
+
+    # Change case of amino acid column
+    pc_df["residue"] = [i.upper() for i in pc_df["residue"]]
+
+    # Cast column with multiple entry string to list
+    pc_df["origin_atoms"] = [i.split(" ") for i in pc_df["origin_atoms"]]
+
+    # Add pseudocenter IDs
+    # Why? Some amino acids have several features of one features type, e.g. ARG has three HBD features.
+
+    pc_ids = []
+
+    # Initialize variables
+    id_prefix_old = ""
+    id_suffix = 1
+
+    for index, row in pc_df.iterrows():
+
+        # Create prefix of pseudocenter ID
+        id_prefix_new = f'{row["residue"]}_{row["pc_type"]}'
+        print(id_prefix_new)
+
+        # Set suffix: starting with 1, but incrementing if prefix was seen before
+        if id_prefix_new != id_prefix_old:
+            id_suffix = 1
+        else:
+            id_suffix = id_suffix + 1
+        print(id_suffix)
+        # Add suffix to prefix
+        pc_ids.append(f'{id_prefix_new}_{id_suffix}')
+
+        # Update prefix
+        id_prefix_old = id_prefix_new
+
+    # Add pseudocenter IDs to DataFrame
+    pc_df.insert(loc=0, column='pc_id', value=pc_ids)
+
+    return pc_df
+
+
+def _preprocess_pseudocenter_atoms():
+    """
+    Preprocess pseudocenter csv file as a DataFrame containing per row one pseudocenter atom with columns for
+    - pseudocenter atom ID, e.g. ASN_HBA_1_OD1,
+    - pseudocenter atom pattern (residue and atom name) e.g. ASN_OD1,
+    - pseudocenter ID, e.g. ASN_HBA_1, and
+    - pseudocenter type, e.g. HBA.
+
+    Returns
+    -------
+    pandas.DataFrame
+        Pseudocenter data (pseudocenter atom ID, pseudocenter atom pattern, pseudocenter ID, and pseudocenter type).
+    """
+
+    # Load pseudocenter DataFrame
+    pc_df = _preprocess_pseudocenters()
+
+    # Define a list of pseudocenter atoms
+    pc_atom_ids = []  # Pseudocenter atom ID
+    pc_atom_pattern = []  # Pseudocenter atom pattern
+    pc_ids = []  # Pseudocenter ID
+    pc_types = []  # Pseudocenter type
+
+    for index, row in pc_df.iterrows():
+        for j in row["origin_atoms"]:  # Some pseudocenters consist of several atoms
+            pc_atom_pattern.append(f'{row["residue"]}_{j}')
+            pc_types.append(row["pc_type"])
+            pc_ids.append(row["pc_id"])
+            pc_atom_ids.append(f'{row["pc_id"]}_{j}')
+
+    # Save to dict
+    pc_atoms = {
+        "pc_atom_id": pc_atom_ids,
+        "pc_atom_pattern": pc_atom_pattern,
+        "pc_id": pc_ids,
+        "pc_type": pc_types
+    }
+
+    # Cast dictionary to DataFrame
+    pc_atoms_df = pd.DataFrame.from_dict(pc_atoms)
+
+    # Save pseudocenter atoms to pickle file
+    pc_atoms_df.to_csv(ratar_path / "data" / "pseudocenter_atoms.csv")
+
+    return pc_atoms_df
 
 
 def create_directory(directory):

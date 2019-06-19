@@ -136,19 +136,21 @@ def test_amino_acid_descriptors(filename, n_atoms, centroid):
     assert abs(molecule_aa_zscales['z'].mean() - centroid[2]) < 0.0001
 
 
-@pytest.mark.parametrize('filename, n_atoms, centroid', [
+@pytest.mark.parametrize('df_index, pc_atom_id, pc_atom_pattern, pc_id, pc_type', [
     (
-        'scpdb_1a9p1.mol2',
-        457,
-        [22.38694, 90.907972, 74.754425]
+        7,
+        'ASN_HBA_1_OD1',
+        'ASN_OD1',
+        'ASN_HBA_1',
+        'HBA'
     )
 ])
-def test_load_pseudocenters():
+def test_load_pseudocenters(df_index, pc_atom_id, pc_atom_pattern, pc_id, pc_type):
 
     pc = load_pseudocenters()
 
-    assert pc.shape == (71, 4)
-    assert pc.loc[0]['pc_atom_id'] == 'ALA_H_1_CB'
-    assert pc.loc[0]['pc_id'] == 'ALA_H_1'
-    assert pc.loc[0]['pattern'] == 'ALA_CB'
-    assert pc.loc[0]['type'] == 'H'
+    assert pc.shape == (76, 4)
+    assert pc.loc[df_index]['pc_atom_id'] == pc_atom_id
+    assert pc.loc[df_index]['pc_atom_pattern'] == pc_atom_pattern
+    assert pc.loc[df_index]['pc_id'] == pc_id
+    assert pc.loc[df_index]['pc_type'] == pc_type
