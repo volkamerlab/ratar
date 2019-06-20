@@ -12,7 +12,6 @@ import glob
 import logging
 from pathlib import Path
 import pickle
-import re
 import sys
 
 from flatten_dict import flatten, unflatten
@@ -127,7 +126,7 @@ class Representatives:
         Dictionary (representatives types, e.g. 'pc') of DataFrames containing molecule structural data.
     """
 
-    def __init__(self, molecule_id):
+    def __init__(self, molecule_id=None):
 
         self.molecule_id = molecule_id
         self.data = {
@@ -218,7 +217,7 @@ class Representatives:
     @staticmethod
     def _get_pca(mol):
         """
-        Extract pseudocenter atoms from binding site.
+        Extract pseudocenter atoms from molecule.
 
         Parameters
         ----------
@@ -228,7 +227,7 @@ class Representatives:
         Returns
         -------
         pandas.DataFrame
-            DataFrame containing atom lines from input file that belong to pseudocenters
+            DataFrame containing atom lines from input file that belong to pseudocenters.
         """
 
         # Load pseudocenter atoms
@@ -300,7 +299,7 @@ class Representatives:
 
     def _get_pc(self, mol):
         """
-        Extract pseudocenters from binding site.
+        Extract pseudocenters from molecule.
 
         Parameters
         ----------
@@ -310,34 +309,39 @@ class Representatives:
         Returns
         -------
         pandas.DataFrame
-            DataFrame containing atom lines from input file described by Z-scales.
+            DataFrame containing atom lines for (aggregated) pseudocenters, i.e. aggregate multiple atoms belonging to
+            one pseudocenter.
         """
 
         # Get pseudocenter atoms
-        bs_pc = self._get_pca(mol)
+        mol_pca_subset_df = self._get_pca(mol)
 
-        # Loop over binding site amino acids
-        for subst_name_id in set(bs_pc['subst_name']):  # FIXME use pandas groupby
+        # Calculate pseudocenters
+        mol_pc_subset = []
 
-            # Loop over pseudocenters of that amino acids
-            for pc_id in set(bs_pc[bs_pc['subst_name'] == subst_name_id]['pc_id']):
+        for key, group in mol_pca_subset_df.groupby(['subst_name', 'pc_id'], sort=False):
 
-                # Get all rows (row indices) of binding site atoms that share the same amino acid and pseudocenter
-                ix = bs_pc[(bs_pc['subst_name'] == subst_name_id) & (bs_pc['pc_id'] == pc_id)].index
-                # If there is more than one atom for this pseudocenter...
+            if len(group) == 1:  # If pseudocenter only contains one atom, keep data
+                row = group.iloc[0].copy()
+                row['atom_id'] = [row['atom_id']]
+                row['atom_name'] = [row['atom_name']]
 
-                if len(ix) != 1:
-                    # ... calculate the mean of the corresponding atom coordinates
-                    bs_pc.at[ix[0], ['x', 'y', 'z']] = bs_pc.loc[ix][['x', 'y', 'z']].mean()
-                    # ... join all atom names to on string and add to dataframe in first row
-                    bs_pc.at[ix[0], ['atom_name']] = ','.join(list(bs_pc.loc[ix]['atom_name']))
-                    # ... remove all rows except the first (i.e. merged atoms)
-                    bs_pc.drop(list(ix[1:]), axis=0, inplace=True)
+                mol_pc_subset.append(row)
 
-        # Drop pc atom ID column
-        bs_pc.drop('pc_atom_id', axis=1, inplace=True)
+            else:  # If pseudocenter contains multiple atoms, aggregate data
+                first_row = group.iloc[0].copy()
+                first_row['atom_id'] = list(group['atom_id'])
+                first_row['atom_name'] = list(group['atom_name'])
+                first_row['x'] = group['x'].mean()
+                first_row['y'] = group['y'].mean()
+                first_row['z'] = group['z'].mean()
+                first_row['charge'] = group['charge'].mean()  # TODO Alternatives to mean of a charge?
 
-        return bs_pc
+                mol_pc_subset.append(first_row)
+
+        mol_pc_subset_df = pd.concat(mol_pc_subset, axis=1).T
+
+        return mol_pc_subset_df
 
 
 class Coordinates:
@@ -352,7 +356,7 @@ class Coordinates:
         Dictionary (representatives types, e.g. 'pc') of DataFrames containing coordinates.
     """
 
-    def __init__(self, molecule_id):
+    def __init__(self, molecule_id=None):
 
         self.molecule_id = molecule_id
         self.data = {
@@ -433,7 +437,7 @@ class PhysicoChemicalProperties:
         DataFrames containing physicochemical properties.
     """
 
-    def __init__(self, molecule_id):
+    def __init__(self, molecule_id=None):
 
         self.molecule_id = molecule_id
         self.data = {
@@ -564,7 +568,7 @@ class Subsets:
         lists containing subset indices.
     """
 
-    def __init__(self, molecule_id):
+    def __init__(self, molecule_id=None):
 
         self.molecule_id = molecule_id
         self.data_pseudocenter_subsets = {
@@ -658,7 +662,7 @@ class Points:
         of dictionaries (subset types, e.g. 'HBA') containing each a DataFrame describing the subsetted atoms.
     """
 
-    def __init__(self, molecule_id):
+    def __init__(self, molecule_id=None):
 
         self.molecule_id = molecule_id
         self.data = {
@@ -822,7 +826,7 @@ class Shapes:
         reference points to representatives), and 'moments' (the first three moments for the distance distribution).
     """
 
-    def __init__(self, molecule_id):
+    def __init__(self, molecule_id=None):
 
         self.molecule_id = molecule_id
         self.data = {
