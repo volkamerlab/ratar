@@ -4,13 +4,47 @@ Unit and regression test for the ratar.encoding module of the ratar package.
 
 import sys
 
-from collections import Counter
 import pytest
 from pathlib import Path
 import pickle
 
-from ratar.auxiliary import MoleculeLoader, load_pseudocenters
+from ratar.auxiliary import MoleculeLoader
 from ratar.encoding import BindingSite, Representatives
+
+
+@pytest.mark.parametrize('filename, mol_n_atoms, pca_n_atoms, pc_n_atoms', [
+    ('AAK1_4wsq_altA_chainA_reduced.mol2', 94, 34, 29)
+])
+def test_get_pseudocenter_data(filename, mol_n_atoms, pca_n_atoms, pc_n_atoms):
+    """
+    Test if pseudocenter atoms are correctly extracted from molecule.
+
+    Parameters
+    ----------
+    filename : str
+        Name of molecule file.
+    mol_n_atoms : int
+        Number of atoms in molecule.
+    pca_n_atoms : int
+        Number of pseudocenter atoms in molecule.
+    pc_n_atoms : int
+        Number of pseudocenters in molecule.
+    """
+
+    # Load molecule
+    path = Path(sys.path[0]) / 'ratar' / 'tests' / 'data' / filename
+    mol_loader = MoleculeLoader(path)
+    mol_loader.load_molecule()
+    molecule = mol_loader.pmols[0].df
+
+    # Set representatives
+    representatives = Representatives('')
+    representatives_pca = representatives._get_pca(molecule)
+    representatives_pc = representatives._get_pc(molecule)
+
+    assert molecule.shape == (mol_n_atoms, 9)
+    assert representatives_pca.shape == (pca_n_atoms, 12)
+    assert representatives_pc.shape == (pc_n_atoms, 12)
 
 
 @pytest.mark.parametrize('mol_file1, mol_file2', [
@@ -41,37 +75,6 @@ def ttest_bindingsites_eq(mol_file1, mol_file2):
 
     assert (bs1 == bs2) is True
     assert (bs1 == bs3) is False
-
-
-@pytest.mark.parametrize('filename, mol_n_atoms, pca_n_atoms', [
-    ('AAK1_4wsq_altA_chainA_reduced.mol2', 94, 34)
-])
-def test_get_pca(filename, mol_n_atoms, pca_n_atoms):
-    """
-    Test if pseudocenter atoms are correctly extracted from molecule.
-
-    Parameters
-    ----------
-    filename : str
-        Name of molecule file.
-    mol_n_atoms : int
-        Number of atoms in molecule.
-    pca_n_atoms : int
-        Number of pseudocenter atoms in molecule.
-    """
-
-    # Load molecule
-    path = Path(sys.path[0]) / 'ratar' / 'tests' / 'data' / filename
-    mol_loader = MoleculeLoader(path)
-    mol_loader.load_molecule()
-    molecule = mol_loader.pmols[0].df
-
-    # Set representatives
-    representatives = Representatives('')
-    representatives_pca = representatives._get_pca(molecule)
-
-    assert molecule.shape == (mol_n_atoms, 9)
-    assert representatives_pca.shape == (pca_n_atoms, 12)
 
 
 @pytest.mark.parametrize('mol_file, encoding_file', [
