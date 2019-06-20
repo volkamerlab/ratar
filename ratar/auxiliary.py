@@ -40,12 +40,24 @@ class MoleculeLoader:
         Absolute path to a mol2 (can contain multiple entries) or pdb file.
     pmols : list of biopandas.mol2.pandas_mol2.PandasMol2 or biopandas.pdb.pandas_pdb.PandasPdb
         List of molecule data in the form of BioPandas objects.
+    n_molecules : int
+        Number of molecules loaded.
+
+    Example
+    -------
+    >>>> from ratar.auxiliary import MoleculeLoader
+
+    >>>> molecule_path = '/path/to/pdb/or/mol2'
+    >>>> molecule_loader = MoleculeLoader()
+    >>>> molecule_loader.load_molecule(molecule_path, remove_solvent=True)
+    >>>> molecule1 = molecule_loader.get_first_molecule()
     """
 
     def __init__(self, input_path):
 
         self.input_path = Path(input_path)
         self.pmols = None
+        self.n_molecules = 0
 
     def load_molecule(self, remove_solvent=False):
 
@@ -59,6 +71,8 @@ class MoleculeLoader:
             self.pmols = self._load_pdb(remove_solvent)
         elif self.input_path.suffix == '.mol2':
             self.pmols = self._load_mol2(remove_solvent)
+
+        self.n_molecules = len(self.pmols)
 
         logger.info('File loaded.', extra={'molecule_id': 'all'})
 
