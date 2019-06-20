@@ -64,6 +64,18 @@ class MoleculeLoader:
 
         return None
 
+    def get_first_molecule(self):
+        """
+        Convenience class method: get the first molecule DataFrame.
+
+        Returns
+        -------
+        DataFrame
+            Data for first molecule in MoleculeLoader class.
+        """
+
+        return self.pmols[0].df
+
     def _load_mol2(self, remove_solvent=False):
         """
         Load molecule data from a mol2 file, which can contain multiple entries.
