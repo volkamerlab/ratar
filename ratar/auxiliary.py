@@ -60,6 +60,16 @@ class MoleculeLoader:
         self.n_molecules = 0
 
     def load_molecule(self, remove_solvent=False):
+        """
+        # TODO docs & move input_path to this function?
+        Parameters
+        ----------
+        remove_solvent
+
+        Returns
+        -------
+
+        """
 
         if self.input_path.exists():
             logger.info(f'File to be loaded: {self.input_path}', extra={'molecule_id': 'all'})
