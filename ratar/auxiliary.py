@@ -29,14 +29,9 @@ class MoleculeLoader:
     """
     Class used to load molecule data from mol2 and pdb files in the form of unified BioPandas objects.
 
-    Parameters
-    ----------
-    input_path : str
-        Absolute path to a mol2 (can contain multiple entries) or pdb file.
-
     Attributes
     ----------
-    input_path : pathlib.PosixPath
+    input_path : str or pathlib.PosixPath
         Absolute path to a mol2 (can contain multiple entries) or pdb file.
     pmols : list of biopandas.mol2.pandas_mol2.PandasMol2 or biopandas.pdb.pandas_pdb.PandasPdb
         List of molecule data in the form of BioPandas objects.
@@ -50,26 +45,35 @@ class MoleculeLoader:
     >>>> molecule_path = '/path/to/pdb/or/mol2'
     >>>> molecule_loader = MoleculeLoader()
     >>>> molecule_loader.load_molecule(molecule_path, remove_solvent=True)
-    >>>> molecule1 = molecule_loader.get_first_molecule()
+
+    >>>> pmols = molecule_loader.pmols
+    >>>> molecule1 = pmols[0].df
+    >>>> molecule1_id = pmols[0].code
+
+    >>>> pmols[0].df == molecule_loader.get_first_molecule()
+    True
     """
 
-    def __init__(self, input_path):
+    def __init__(self):
 
-        self.input_path = Path(input_path)
+        self.input_path = None
         self.pmols = None
         self.n_molecules = 0
 
-    def load_molecule(self, remove_solvent=False):
+    def load_molecule(self, input_path, remove_solvent=False):
         """
-        # TODO docs & move input_path to this function?
+        Load one or multiple molecules from pdb or mol2 file.
+
         Parameters
         ----------
-        remove_solvent
-
-        Returns
-        -------
-
+        input_path : str or pathlib.PosixPath
+            Absolute path to a mol2 (can contain multiple entries) or pdb file.
+        remove_solvent : bool
+            Set True to remove solvent molecules (default: False).
         """
+
+        # Set input path
+        self.input_path = Path(input_path)
 
         if self.input_path.exists():
             logger.info(f'File to be loaded: {self.input_path}', extra={'molecule_id': 'all'})
@@ -77,11 +81,13 @@ class MoleculeLoader:
             logger.error(f'File not found: {self.input_path}', extra={'molecule_id': 'all'})
             raise FileNotFoundError(f'File not found: {self.input_path}')
 
+        # Load molecule data
         if self.input_path.suffix == '.pdb':
             self.pmols = self._load_pdb(remove_solvent)
         elif self.input_path.suffix == '.mol2':
             self.pmols = self._load_mol2(remove_solvent)
 
+        # Set number of loaded molecules
         self.n_molecules = len(self.pmols)
 
         logger.info('File loaded.', extra={'molecule_id': 'all'})
