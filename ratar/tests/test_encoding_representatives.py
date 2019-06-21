@@ -51,7 +51,7 @@ def test_get_representatives(filename, column_names, n_atoms, centroid):
     molecule_path = Path(sys.path[0]) / 'ratar' / 'tests' / 'data' / filename
     molecule_loader = MoleculeLoader()
     molecule_loader.load_molecule(molecule_path)
-    molecule = molecule_loader.pmols[0].df
+    molecule = molecule_loader.get_first_molecule()
 
     # Set representatives
     representatives = Representatives()
