@@ -14,7 +14,6 @@ from pathlib import Path
 from biopandas.mol2 import PandasMol2, split_multimol2
 from biopandas.pdb import PandasPdb
 import pandas as pd
-import pickle
 
 import ratar
 
@@ -46,9 +45,9 @@ class MoleculeLoader:
     >>>> molecule_loader = MoleculeLoader()
     >>>> molecule_loader.load_molecule(molecule_path, remove_solvent=True)
 
-    >>>> pmols = molecule_loader.pmols
-    >>>> molecule1 = pmols[0].df
-    >>>> molecule1_id = pmols[0].code
+    >>>> pmols = molecule_loader.pmols  # Contains one or multiple molecule objects
+    >>>> molecule1 = pmols[0].df  # Molecule data
+    >>>> molecule1_id = pmols[0].code  # Molecule id
 
     >>>> pmols[0].df == molecule_loader.get_first_molecule()
     True
@@ -104,7 +103,10 @@ class MoleculeLoader:
             Data for first molecule in MoleculeLoader class.
         """
 
-        return self.pmols[0].df
+        if len(self.pmols) > 0:
+            return self.pmols[0].df
+        else:
+            raise IndexError('MoleculeLoader.pmols is empty.')
 
     def _load_mol2(self, remove_solvent=False):
         """
@@ -257,6 +259,19 @@ class AminoAcidDescriptors:
     zscales : pandas.DataFrame
         Z-scales for standard and a few non-standard amino acids.
 
+    Example
+    -------
+    >>>> from ratar.auxiliary import MoleculeLoader, AminoAcidDescriptors
+
+    >>>> amino_acid_descriptors = AminoAcidDescriptors()
+
+    >>>> molecule_path = '/path/to/pdb/or/mol2'
+    >>>> molecule_loader = MoleculeLoader()
+    >>>> molecule_loader.load_molecule(molecule_path, remove_solvent=True)
+    >>>> molecule1 == molecule_loader.get_first_molecule()
+
+    >>>> molecule1_zscales = amino_acid_descriptors.get_zscales_amino_acids(molecule1)
+
     Notes
     -----
     Z-scales taken from: https://github.com/Superzchen/iFeature/blob/master/codes/ZSCALE.py
@@ -305,17 +320,22 @@ def load_pseudocenters():
     -------
     pandas.DataFrame
         DataFrame containing pseudocenter information.
+
+    Example
+    -------
+    >>>> from ratar.auxiliary import load_pseudocenters
+    >>>> pseudocenter_atoms = load_pseudocenters()
     """
 
     pseudocenter_path = ratar_path / 'data' / 'pseudocenter_atoms.csv'
 
-    pc_atoms = pd.read_csv(pseudocenter_path, index_col=0)
+    pseudocenter_atoms = pd.read_csv(pseudocenter_path, index_col=0)
 
     # Remove HBDA features information (too few data points)
-    # pc_atoms = pc_atoms[pc_atoms['pc_type'] != 'HBDA']
-    # pc_atoms.reset_index(drop=True, inplace=True)
+    # pseudocenter_atoms = pseudocenter_atoms[pseudocenter_atoms['pc_type'] != 'HBDA']
+    # pseudocenter_atoms.reset_index(drop=True, inplace=True)
 
-    return pc_atoms
+    return pseudocenter_atoms
 
 
 def _preprocess_pseudocenters():
