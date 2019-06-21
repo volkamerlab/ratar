@@ -49,6 +49,22 @@ class BindingSite:
         Representative atoms of binding site for different representation methods.
     shapes : Shapes
         Encoded binding site (reference points, distance distribution and distribution moments).
+
+    Examples
+    --------
+    >>> from ratar.auxiliary import MoleculeLoader
+    >>> from ratar.encoding import Representatives, Coordinates
+
+    >>> molecule_path = '/path/to/pdb/or/mol2'
+
+    >>> molecule_loader = MoleculeLoader()
+    >>> molecule_loader.load_molecule(molecule_path, remove_solvent=True)
+    >>> molecule = molecule_loader.get_first_molecule()
+
+    >>> representatives = Representatives()
+    >>> representatives.get_representatives(molecule)
+
+    >>> shapes = Shapes(pmol)
     """
 
     def __init__(self, pmol):
@@ -124,6 +140,20 @@ class Representatives:
         Molecule ID (e.g. PDB ID).
     data : dict of pandas.DataFrames
         Dictionary (representatives types, e.g. 'pc') of DataFrames containing molecule structural data.
+
+    Examples
+    --------
+    >>> from ratar.auxiliary import MoleculeLoader
+    >>> from ratar.encoding import Representatives
+
+    >>> molecule_path = '/path/to/pdb/or/mol2'
+
+    >>> molecule_loader = MoleculeLoader()
+    >>> molecule_loader.load_molecule(molecule_path, rmeove_solvent=True)
+    >>> molecule = molecule_loader.get_first_molecule()
+
+    >>> representatives = Representatives()
+    >>> representatives.get_representatives(molecule)
     """
 
     def __init__(self, molecule_id=None):
@@ -354,6 +384,23 @@ class Coordinates:
         Molecule ID (e.g. PDB ID).
     data : dict of pandas.DataFrames
         Dictionary (representatives types, e.g. 'pc') of DataFrames containing coordinates.
+
+    Examples
+    --------
+    >>> from ratar.auxiliary import MoleculeLoader
+    >>> from ratar.encoding import Representatives, Coordinates
+
+    >>> molecule_path = '/path/to/pdb/or/mol2'
+
+    >>> molecule_loader = MoleculeLoader()
+    >>> molecule_loader.load_molecule(molecule_path, remove_solvent=True)
+    >>> molecule = molecule_loader.get_first_molecule()
+
+    >>> representatives = Representatives()
+    >>> representatives.get_representatives(molecule)
+
+    >>> coordinates = Coordinates()
+    >>> coordinates.get_coordinates(representatives)
     """
 
     def __init__(self, molecule_id=None):
@@ -435,6 +482,23 @@ class PhysicoChemicalProperties:
     data : dict of dict of pandas.DataFrame
         Dictionary (representatives types, e.g. 'pc') of dictionaries (physicochemical properties types, e.g. 'z123') of
         DataFrames containing physicochemical properties.
+
+    Examples
+    --------
+    >>> from ratar.auxiliary import MoleculeLoader
+    >>> from ratar.encoding import Representatives, Coordinates
+
+    >>> molecule_path = '/path/to/pdb/or/mol2'
+
+    >>> molecule_loader = MoleculeLoader()
+    >>> molecule_loader.load_molecule(molecule_path, remove_solvent=True)
+    >>> molecule = molecule_loader.get_first_molecule()
+
+    >>> representatives = Representatives()
+    >>> representatives.get_representatives(molecule)
+
+    >>> physicochemicalproperties = PhysicoChemicalProperties()
+    >>> physicochemicalproperties.get_physicochemicalproperties(representatives)
     """
 
     def __init__(self, molecule_id=None):
@@ -482,8 +546,8 @@ class PhysicoChemicalProperties:
 
         Parameters
         ----------
-        representatives : pandas.DataFrame
-            Representatives' data for a certain representatives type.
+        representatives : ratar.encoding.Representatives
+            Representatives class instance.
 
         Returns
         -------
@@ -566,6 +630,23 @@ class Subsets:
     data_pseudocenter_subsets : dict of dict of list
         Dictionary (representatives types, e.g. 'pc') of dictionaries (pseudocenter subset types, e.g. 'HBA') of
         lists containing subset indices.
+
+    Examples
+    --------
+    >>> from ratar.auxiliary import MoleculeLoader
+    >>> from ratar.encoding import Representatives, Coordinates
+
+    >>> molecule_path = '/path/to/pdb/or/mol2'
+
+    >>> molecule_loader = MoleculeLoader()
+    >>> molecule_loader.load_molecule(molecule_path, remove_solvent=True)
+    >>> molecule = molecule_loader.get_first_molecule()
+
+    >>> representatives = Representatives()
+    >>> representatives.get_representatives(molecule)
+
+    >>> subsets = Subsets()
+    >>> subsets.get_pseudocenter_subsets_indices(representatives)
     """
 
     def __init__(self, molecule_id=None):
@@ -660,6 +741,33 @@ class Points:
     data_pseudocenter_subsets : dict of dict of dict of pandas.DataFrames
         Dictionary (representatives types, e.g. 'pc') of dictionaries (physicochemical properties, e.g. 'pc_z123')
         of dictionaries (subset types, e.g. 'HBA') containing each a DataFrame describing the subsetted atoms.
+
+    Examples
+    --------
+    >>> from ratar.auxiliary import MoleculeLoader
+    >>> from ratar.encoding import Representatives, Coordinates
+
+    >>> molecule_path = '/path/to/pdb/or/mol2'
+
+    >>> molecule_loader = MoleculeLoader()
+    >>> molecule_loader.load_molecule(molecule_path, remove_solvent=True)
+    >>> molecule = molecule_loader.get_first_molecule()
+
+    >>> representatives = Representatives()
+    >>> representatives.get_representatives(molecule)
+
+    >>> coordinates = Coordinates()
+    >>> coordinates.get_coordinates(representatives)
+
+    >>> physicochemicalproperties = PhysicoChemicalProperties()
+    >>> physicochemicalproperties.get_physicochemicalproperties(representatives)
+
+    >>> subsets = Subsets()
+    >>> subsets.get_pseudocenter_subsets_indices(representatives)
+
+    >>> points = Points()
+    >>> points.get_points(coordinates, physicochemicalproperties)
+    >>> points.get_points_pseudocenter_subsets(subsets)
     """
 
     def __init__(self, molecule_id=None):
