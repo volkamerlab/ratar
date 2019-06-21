@@ -619,7 +619,7 @@ class Subsets:
         """
 
         # Load pseudocenter atoms
-        pseudocenter_atoms = load_pseudocenters()
+        pseudocenter_atoms = load_pseudocenters(remove_hbda=True)
 
         self.data_pseudocenter_subsets = {}
 
@@ -630,11 +630,11 @@ class Subsets:
             repres = representatives.data[k1]
 
             # Loop over all pseudocenter subset types
-            for k2 in list(set(pseudocenter_atoms['type'])):
+            for k2 in list(set(pseudocenter_atoms['pc_type'])):
 
                 # If pseudocenter type exists in dataset, save corresponding subset, else save None
-                if k2 in set(repres['pc_types']):
-                    self.data_pseudocenter_subsets[k1][k2] = list(repres[repres['pc_types'] == k2].index)
+                if k2 in set(repres['pc_type']):
+                    self.data_pseudocenter_subsets[k1][k2] = list(repres[repres['pc_type'] == k2].index)
                 else:
                     self.data_pseudocenter_subsets[k1][k2] = []
 
