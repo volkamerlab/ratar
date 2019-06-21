@@ -53,13 +53,13 @@ def test_molecule_loader(filename, code, n_atoms, centroid):
     """
 
     # Load molecule
-    path = Path(sys.path[0]) / 'ratar' / 'tests' / 'data' / filename
-    mol_loader = MoleculeLoader(path)
-    mol_loader.load_molecule()
+    molecule_path = Path(sys.path[0]) / 'ratar' / 'tests' / 'data' / filename
+    molecule_loader = MoleculeLoader()
+    molecule_loader.load_molecule(molecule_path)
 
-    assert len(mol_loader.pmols) == len(code)
+    assert len(molecule_loader.pmols) == len(code)
 
-    for c, v in enumerate(mol_loader.pmols):
+    for c, v in enumerate(molecule_loader.pmols):
         assert v.code == code[c]
         assert v.df.shape == (n_atoms[c], 9)
         assert list(v.df.columns) == ['atom_id', 'atom_name', 'res_id', 'res_name', 'subst_name', 'x', 'y', 'z', 'charge']
@@ -87,11 +87,11 @@ def test_molecule_loader_remove_solvent(filename, n_atoms):
     """
 
     # Load molecule
-    path = Path(sys.path[0]) / 'ratar' / 'tests' / 'data' / filename
-    mol_loader = MoleculeLoader(path)
-    mol_loader.load_molecule(remove_solvent=True)
+    molecule_path = Path(sys.path[0]) / 'ratar' / 'tests' / 'data' / filename
+    molecule_loader = MoleculeLoader()
+    molecule_loader.load_molecule(molecule_path, remove_solvent=True)
 
-    assert mol_loader.pmols[0].df.shape == (n_atoms, 9)
+    assert molecule_loader.pmols[0].df.shape == (n_atoms, 9)
 
 
 @pytest.mark.parametrize('filename, n_atoms, centroid', [
@@ -116,10 +116,10 @@ def test_amino_acid_descriptors(filename, n_atoms, centroid):
     """
 
     # Load molecule
-    path = Path(sys.path[0]) / 'ratar' / 'tests' / 'data' / filename
-    mol_loader = MoleculeLoader(path)
-    mol_loader.load_molecule()
-    molecule = mol_loader.pmols[0].df
+    molecule_path = Path(sys.path[0]) / 'ratar' / 'tests' / 'data' / filename
+    molecule_loader = MoleculeLoader()
+    molecule_loader.load_molecule(molecule_path)
+    molecule = molecule_loader.pmols[0].df
 
     # Load amino acid descriptors
     aa_descriptors = AminoAcidDescriptors()

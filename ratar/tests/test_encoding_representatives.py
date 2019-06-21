@@ -12,7 +12,11 @@ from ratar.encoding import Representatives
 
 
 @pytest.mark.parametrize('filename, mol_n_atoms, ca_n_atoms', [
-    ('AAK1_4wsq_altA_chainA_reduced.mol2', 94, 8)
+    (
+        'AAK1_4wsq_altA_chainA_reduced.mol2',
+        94,
+        8
+    )
 ])
 def test_get_ca(filename, mol_n_atoms, ca_n_atoms):
     """
@@ -29,10 +33,10 @@ def test_get_ca(filename, mol_n_atoms, ca_n_atoms):
     """
 
     # Load molecule
-    path = Path(sys.path[0]) / 'ratar' / 'tests' / 'data' / filename
-    mol_loader = MoleculeLoader(path)
-    mol_loader.load_molecule()
-    molecule = mol_loader.pmols[0].df
+    molecule_path = Path(sys.path[0]) / 'ratar' / 'tests' / 'data' / filename
+    molecule_loader = MoleculeLoader()
+    molecule_loader.load_molecule(molecule_path)
+    molecule = molecule_loader.pmols[0].df
 
     # Set representatives
     representatives = Representatives()
@@ -43,7 +47,11 @@ def test_get_ca(filename, mol_n_atoms, ca_n_atoms):
 
 
 @pytest.mark.parametrize('filename, mol_n_atoms, pca_n_atoms,', [
-    ('AAK1_4wsq_altA_chainA_reduced.mol2', 94, 34)
+    (
+        'AAK1_4wsq_altA_chainA_reduced.mol2',
+        94,
+        34
+    )
 ])
 def test_get_pca(filename, mol_n_atoms, pca_n_atoms):
     """
@@ -60,10 +68,10 @@ def test_get_pca(filename, mol_n_atoms, pca_n_atoms):
     """
 
     # Load molecule
-    path = Path(sys.path[0]) / 'ratar' / 'tests' / 'data' / filename
-    mol_loader = MoleculeLoader(path)
-    mol_loader.load_molecule()
-    molecule = mol_loader.pmols[0].df
+    molecule_path = Path(sys.path[0]) / 'ratar' / 'tests' / 'data' / filename
+    molecule_loader = MoleculeLoader()
+    molecule_loader.load_molecule(molecule_path)
+    molecule = molecule_loader.pmols[0].df
 
     # Set representatives
     representatives = Representatives()
@@ -74,7 +82,11 @@ def test_get_pca(filename, mol_n_atoms, pca_n_atoms):
 
 
 @pytest.mark.parametrize('filename, mol_n_atoms, pc_n_atoms', [
-    ('AAK1_4wsq_altA_chainA_reduced.mol2', 94, 29)
+    (
+        'AAK1_4wsq_altA_chainA_reduced.mol2',
+        94,
+        29
+    )
 ])
 def test_get_pc(filename, mol_n_atoms, pc_n_atoms):
     """
@@ -91,10 +103,10 @@ def test_get_pc(filename, mol_n_atoms, pc_n_atoms):
     """
 
     # Load molecule
-    path = Path(sys.path[0]) / 'ratar' / 'tests' / 'data' / filename
-    mol_loader = MoleculeLoader(path)
-    mol_loader.load_molecule()
-    molecule = mol_loader.pmols[0].df
+    molecule_path = Path(sys.path[0]) / 'ratar' / 'tests' / 'data' / filename
+    molecule_loader = MoleculeLoader()
+    molecule_loader.load_molecule(molecule_path)
+    molecule = molecule_loader.pmols[0].df
 
     # Set representatives
     representatives = Representatives()
