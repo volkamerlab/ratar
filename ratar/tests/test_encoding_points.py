@@ -25,6 +25,18 @@ from ratar.encoding import Representatives, Coordinates, PhysicoChemicalProperti
     )
 ])
 def test_get_points(filename, keys, n_dimensions):
+    """
+    Test if points are correctly extracted from representatives of a molecule.
+    
+    Parameters
+    ----------
+    filename : str
+        Name of molecule file.
+    keys : list of str
+        Flattened keys for different types of representatives and physicochemical properties.
+    n_dimensions : list of int
+        Number of dimensions for different types of representatives and physicochemical properties.
+    """
 
     # Load molecule
     molecule_path = Path(sys.path[0]) / 'ratar' / 'tests' / 'data' / filename
