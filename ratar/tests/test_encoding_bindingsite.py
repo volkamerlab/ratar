@@ -14,7 +14,7 @@ from ratar.encoding import BindingSite
 @pytest.mark.parametrize('mol_file1, mol_file2', [
     ('AAK1_4wsq_altA_chainA.mol2', 'AAK1_4wsq_altA_chainB.mol2')
 ])
-def test_bindingsites_eq(mol_file1, mol_file2):
+def ttest_bindingsites_eq(mol_file1, mol_file2):
     """
     Test __eq__ functions for encoding classes.
 
