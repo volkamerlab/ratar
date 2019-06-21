@@ -15,8 +15,23 @@ from ratar.encoding import Representatives, Coordinates
     (
         'AAK1_4wsq_altA_chainA_reduced.mol2',
         'x y z'.split(),
-        {'ca': 8, 'pca': 34, 'pc': 29},
-        {'ca': [6.2681, 11.9717, 42.4514], 'pca': [5.6836, 12.9039, 43.9326], 'pc': [5.8840, 12.5871, 43.3804]}
+        dict(
+            zip(
+                'ca pca pc'.split(),
+                [8, 34, 29]
+            )
+        ),
+        dict(
+            zip(
+                'ca pca pc'.split(),
+                [
+                    [6.2681, 11.9717, 42.4514],
+                    [5.6836, 12.9039, 43.9326],
+                    [5.8840, 12.5871, 43.3804]
+                ]
+            )
+        )
+
     )
 ])
 def test_get_coordinates(filename, column_names, n_atoms, centroid):
