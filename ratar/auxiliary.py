@@ -37,19 +37,19 @@ class MoleculeLoader:
     n_molecules : int
         Number of molecules loaded.
 
-    Example
-    -------
-    >>>> from ratar.auxiliary import MoleculeLoader
+    Examples
+    --------
 
-    >>>> molecule_path = '/path/to/pdb/or/mol2'
-    >>>> molecule_loader = MoleculeLoader()
-    >>>> molecule_loader.load_molecule(molecule_path, remove_solvent=True)
+    >>> from ratar.auxiliary import MoleculeLoader
+    >>> molecule_path = '/path/to/pdb/or/mol2'
+    >>> molecule_loader = MoleculeLoader()
+    >>> molecule_loader.load_molecule(molecule_path, remove_solvent=True)
 
-    >>>> pmols = molecule_loader.pmols  # Contains one or multiple molecule objects
-    >>>> molecule1 = pmols[0].df  # Molecule data
-    >>>> molecule1_id = pmols[0].code  # Molecule id
+    >>> pmols = molecule_loader.pmols  # Contains one or multiple molecule objects
+    >>> molecule1 = pmols[0].df  # Molecule data
+    >>> molecule1_id = pmols[0].code  # Molecule id
 
-    >>>> pmols[0].df == molecule_loader.get_first_molecule()
+    >>> pmols[0].df == molecule_loader.get_first_molecule()
     True
     """
 
@@ -259,18 +259,18 @@ class AminoAcidDescriptors:
     zscales : pandas.DataFrame
         Z-scales for standard and a few non-standard amino acids.
 
-    Example
-    -------
-    >>>> from ratar.auxiliary import MoleculeLoader, AminoAcidDescriptors
+    Examples
+    --------
+    >>> from ratar.auxiliary import MoleculeLoader, AminoAcidDescriptors
 
-    >>>> amino_acid_descriptors = AminoAcidDescriptors()
+    >>> amino_acid_descriptors = AminoAcidDescriptors()
 
-    >>>> molecule_path = '/path/to/pdb/or/mol2'
-    >>>> molecule_loader = MoleculeLoader()
-    >>>> molecule_loader.load_molecule(molecule_path, remove_solvent=True)
-    >>>> molecule1 == molecule_loader.get_first_molecule()
+    >>> molecule_path = '/path/to/pdb/or/mol2'
+    >>> molecule_loader = MoleculeLoader()
+    >>> molecule_loader.load_molecule(molecule_path, remove_solvent=True)
+    >>> molecule1 == molecule_loader.get_first_molecule()
 
-    >>>> molecule1_zscales = amino_acid_descriptors.get_zscales_amino_acids(molecule1)
+    >>> molecule1_zscales = amino_acid_descriptors.get_zscales_amino_acids(molecule1)
 
     Notes
     -----
@@ -311,20 +311,25 @@ class AminoAcidDescriptors:
         return mol_zscales_aa
 
 
-def load_pseudocenters():
+def load_pseudocenters(remove_hbda=False):
     """
     Load pseudocenters from file.
     Remove HBDA features, since they contain too few data points for encoding.
+
+    Parameters
+    ----------
+    remove_hbda : bool
+        Set True if pseudocenter type HBDA shall be removed (default: False).
 
     Returns
     -------
     pandas.DataFrame
         DataFrame containing pseudocenter information.
 
-    Example
-    -------
-    >>>> from ratar.auxiliary import load_pseudocenters
-    >>>> pseudocenter_atoms = load_pseudocenters()
+    Examples
+    --------
+    >>> from ratar.auxiliary import load_pseudocenters
+    >>> pseudocenter_atoms = load_pseudocenters()
     """
 
     pseudocenter_path = ratar_path / 'data' / 'pseudocenter_atoms.csv'
@@ -332,8 +337,9 @@ def load_pseudocenters():
     pseudocenter_atoms = pd.read_csv(pseudocenter_path, index_col=0)
 
     # Remove HBDA features information (too few data points)
-    # pseudocenter_atoms = pseudocenter_atoms[pseudocenter_atoms['pc_type'] != 'HBDA']
-    # pseudocenter_atoms.reset_index(drop=True, inplace=True)
+    if remove_hbda:
+        pseudocenter_atoms = pseudocenter_atoms[pseudocenter_atoms['pc_type'] != 'HBDA']
+        pseudocenter_atoms.reset_index(drop=True, inplace=True)
 
     return pseudocenter_atoms
 
