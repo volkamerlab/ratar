@@ -4,6 +4,7 @@ Unit and regression test for the Points class in the ratar.encoding module of th
 
 import sys
 
+from flatten_dict import flatten
 from pathlib import Path
 import pytest
 
@@ -11,12 +12,19 @@ from ratar.auxiliary import MoleculeLoader
 from ratar.encoding import Representatives, Coordinates, PhysicoChemicalProperties, Subsets, Points
 
 
-@pytest.mark.parametrize('', [
+@pytest.mark.parametrize('filename, keys, n_dimensions', [
     (
-
+        'AAK1_4wsq_altA_chainA_reduced.mol2',
+        'ca/no ca/z1 ca/z123 pca/no pca/z1 pca/z123 pc/no pc/z1 pc/z123'.split(),
+        dict(
+            zip(
+                'ca/no ca/z1 ca/z123 pca/no pca/z1 pca/z123 pc/no pc/z1 pc/z123'.split(),
+                [3, 4, 6, 3, 4, 6, 3, 4, 6]
+            )
+        )
     )
 ])
-def test_get_points():
+def test_get_points(filename, keys, n_dimensions):
 
     # Load molecule
     molecule_path = Path(sys.path[0]) / 'ratar' / 'tests' / 'data' / filename
@@ -41,8 +49,13 @@ def test_get_points():
     subsets.get_pseudocenter_subsets_indices(representatives)
 
     # Set points
-    points = Points
+    points = Points()
     points.get_points(coordinates, physicochemicalproperties)
-    points.get_points_pseudocenter_subsets(coordinates, physicochemicalproperties, subsets)
+    points.get_points_pseudocenter_subsets(subsets)
 
-    assert 0 == 1
+    points_flat = flatten(points.data, reducer='path')
+
+    assert sorted(points_flat.keys()) == sorted(keys)
+
+    for key, value in points_flat.items():
+        assert value.shape[1] == n_dimensions[key]
