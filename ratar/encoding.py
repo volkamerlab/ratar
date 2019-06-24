@@ -19,7 +19,7 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 from scipy.special import cbrt
-from scipy.stats.stats import skew
+from scipy.stats.stats import moment
 import warnings
 
 from ratar.auxiliary import MoleculeLoader, AminoAcidDescriptors
@@ -1158,7 +1158,8 @@ class Shapes:
             self.data_pseudocenter_subsets[k] = self._get_shape_by_method(v)
 
         # Change key order of (flattened) nested dictionary (reverse subset type and encoding type)
-        self.data_pseudocenter_subsets = self._reorder_subset_keys()
+        # Example: 'pc/z123/H/6Dratar1/moments' is changed to 'pc/z123/6Dratar1/H/moments'.
+        self.data_pseudocenter_subsets = self._reorder_subset_keys(self.data_pseudocenter_subsets, [0, 1, 3, 2, 4])
 
         # Unflatten dictionary back to nested dictionary
         self.data_pseudocenter_subsets = unflatten(self.data_pseudocenter_subsets, splitter='path')
@@ -1573,11 +1574,11 @@ class Shapes:
             Reference points, distance distributions, and moments.
         """
 
-        # Store reference points as data frame
+        # Store reference points as DataFrame
         ref_points = pd.concat(ref_points, axis=1).transpose()
         ref_points.index = ['c' + str(i) for i in range(1, len(ref_points.index) + 1)]
 
-        # Store distance distributions as data frame
+        # Store distance distributions as DataFrame
         dist = pd.concat(dist, axis=1)
         dist.columns = ['dist_c' + str(i) for i in range(1, len(dist.columns) + 1)]
 
@@ -1653,12 +1654,12 @@ class Shapes:
 
         Parameters
         ----------
-        dist : pandas.Series
+        dist : pandas.DataFrame
             Distance distribution, i.e. distances from reference point to all representatives (points)
 
         Returns
         -------
-        pandas.Series
+        pandas.DataFrame
             First, second, and third moment of distance distribution.
         """
 
@@ -1666,19 +1667,20 @@ class Shapes:
         if len(dist) > 0:
             m1 = dist.mean()
             m2 = dist.std()
-            m3 = pd.Series(cbrt(skew(dist.values, axis=0)), index=dist.columns.tolist())
+            m3 = pd.Series(cbrt(moment(dist, moment=3)), index=dist.columns.tolist())
         else:
             # In case there is only one data point.
             # However, this should not be possible due to restrictions in get_shape function.
             m1, m2, m3 = None, None, None
 
-        # Store all moments in data frame
+        # Store all moments in DataFrame
         moments = pd.concat([m1, m2, m3], axis=1)
         moments.columns = ['m1', 'm2', 'm3']
 
         return moments
 
-    def _reorder_subset_keys(self):
+    @staticmethod
+    def _reorder_subset_keys(nested_dict, key_order):
         """
         Change the key order of the nested dictionary data_pseudocenter_subsets (Shapes attribute).
         Example: 'pc/z123/H/6Dratar1/moments' is changed to 'pc/z123/6Dratar1/H/moments'.
@@ -1689,18 +1691,26 @@ class Shapes:
             Dictionary of DataFrames.
         """
 
-        self.data_pseudocenter_subsets = flatten(self.data_pseudocenter_subsets, reducer='path')
+        flat_dict = flatten(nested_dict, reducer='path')
 
-        keys_old = self.data_pseudocenter_subsets.keys()
+        keys_old = flat_dict.keys()
+
+        print(set([len(i.split('/')) for i in keys_old]))
+
+        if len(set([len(i.split('/')) for i in keys_old])) > 1:
+            raise KeyError(f'Flattened keys are nested differently: {[len(i.split("/")) for i in keys_old]}')
+        elif [len(i.split('/')) for i in keys_old][0] != len(key_order):
+            raise IOError(f'Key order length ({len(key_order)}) does not match nested levels in dictionary ({len(keys_old)}).')
+
         keys_new = [i.split('/') for i in keys_old]
-        key_order = [0, 1, 3, 2, 4]
+        #key_order = [0, 1, 3, 2, 4]
         keys_new = [[i[j] for j in key_order] for i in keys_new]
         keys_new = ['/'.join(i) for i in keys_new]
 
         for key_old, key_new in zip(keys_old, keys_new):
-            self.data_pseudocenter_subsets[key_new] = self.data_pseudocenter_subsets.pop(key_old)
+            flat_dict[key_new] = flat_dict.pop(key_old)
 
-        return self.data_pseudocenter_subsets
+        return flat_dict
 
 
 def process_encoding(input_mol_path, output_dir):
