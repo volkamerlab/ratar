@@ -1630,9 +1630,9 @@ class Shapes:
         """
 
         if not point.size == 3:
-            sys.exit('Error: Input point is not of length 3.')
+            raise IOError(f'Input point has {point.size} dimensions. Must have 3 dimensions.')
         if not points.shape[1] > 2:
-            sys.exit('Error: Input points are not of at least length 3.')
+            raise IOError(f'Input points have {points.size} dimensions. Must have at least 3 dimensions.')
 
         # Get distances (in space, i.e. 3D) to all points
         dist_c_3d = self._calc_distances_to_point(points.iloc[:, 0:3], point)
