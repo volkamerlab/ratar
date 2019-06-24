@@ -54,15 +54,11 @@ def test_get_coordinates(filename, column_names, n_atoms, centroid):
     molecule_path = Path(sys.path[0]) / 'ratar' / 'tests' / 'data' / filename
     molecule_loader = MoleculeLoader()
     molecule_loader.load_molecule(molecule_path)
-    molecule = molecule_loader.get_first_molecule()
-
-    # Set representatives
-    representatives = Representatives()
-    representatives.get_representatives(molecule)
+    pmol = molecule_loader.get_first_molecule()
 
     # Set coordinates
     coordinates = Coordinates()
-    coordinates.get_coordinates(representatives)
+    coordinates.get_coordinates_from_pmol(pmol)
 
     for key, value in coordinates.data.items():
         assert all(value.columns == column_names)

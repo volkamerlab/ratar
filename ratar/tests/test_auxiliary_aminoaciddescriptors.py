@@ -35,7 +35,8 @@ def test_amino_acid_descriptors(filename, n_atoms, centroid):
     molecule_path = Path(sys.path[0]) / 'ratar' / 'tests' / 'data' / filename
     molecule_loader = MoleculeLoader()
     molecule_loader.load_molecule(molecule_path)
-    molecule = molecule_loader.get_first_molecule()
+    pmol = molecule_loader.get_first_molecule()
+    molecule = pmol.df
 
     # Load amino acid descriptors
     aa_descriptors = AminoAcidDescriptors()

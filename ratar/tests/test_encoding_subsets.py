@@ -36,15 +36,11 @@ def test_get_pseudocenter_subsets_indices(filename, subsets_names, example_indic
     molecule_path = Path(sys.path[0]) / 'ratar' / 'tests' / 'data' / filename
     molecule_loader = MoleculeLoader()
     molecule_loader.load_molecule(molecule_path)
-    molecule = molecule_loader.get_first_molecule()
-
-    # Set representatives
-    representatives = Representatives()
-    representatives.get_representatives(molecule)
+    pmol = molecule_loader.get_first_molecule()
 
     # Set subsets
     subsets = Subsets()
-    subsets.get_pseudocenter_subsets_indices(representatives)
+    subsets.get_pseudocenter_subsets_indices_from_pmol(pmol)
 
     assert list(subsets.pseudocenters.keys()).sort() == subsets_names.sort()
     assert list(subsets.pseudocenter_atoms.keys()).sort() == subsets_names.sort()

@@ -99,12 +99,12 @@ class MoleculeLoader:
 
         Returns
         -------
-        DataFrame
+        biopandas.mol2.pandas_mol2.PandasMol2 or biopandas.pdb.pandas_pdb.PandasPdb
             Data for first molecule in MoleculeLoader class.
         """
 
         if len(self.pmols) > 0:
-            return self.pmols[0].df
+            return self.pmols[0]
         else:
             raise IndexError('MoleculeLoader.pmols is empty.')
 

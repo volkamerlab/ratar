@@ -51,11 +51,11 @@ def test_get_representatives(filename, column_names, n_atoms, centroid):
     molecule_path = Path(sys.path[0]) / 'ratar' / 'tests' / 'data' / filename
     molecule_loader = MoleculeLoader()
     molecule_loader.load_molecule(molecule_path)
-    molecule = molecule_loader.get_first_molecule()
+    pmol = molecule_loader.get_first_molecule()
 
     # Set representatives
     representatives = Representatives()
-    representatives.get_representatives(molecule)
+    representatives.get_representatives_from_pmol(pmol)
 
     for key, value in representatives.data.items():
         assert all(value.columns == column_names[key])

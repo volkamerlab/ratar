@@ -61,10 +61,7 @@ class BindingSite:
     >>> molecule_loader.load_molecule(molecule_path, remove_solvent=True)
     >>> molecule = molecule_loader.get_first_molecule()
 
-    >>> representatives = Representatives()
-    >>> representatives.get_representatives(molecule)
-
-    >>> shapes = Shapes(pmol)
+    >>> binding_site = BindingSite(molecule)
     """
 
     def __init__(self, pmol):
@@ -149,11 +146,12 @@ class Representatives:
     >>> molecule_path = '/path/to/pdb/or/mol2'
 
     >>> molecule_loader = MoleculeLoader()
-    >>> molecule_loader.load_molecule(molecule_path, rmeove_solvent=True)
-    >>> molecule = molecule_loader.get_first_molecule()
+    >>> molecule_loader.load_molecule(molecule_path, remove_solvent=True)
+    >>> pmol = molecule_loader.get_first_molecule()
 
     >>> representatives = Representatives()
-    >>> representatives.get_representatives(molecule)
+    >>> representatives.get_representatives_from_pmol(pmol)
+    >>> representatives
     """
 
     def __init__(self, molecule_id=None):
@@ -195,6 +193,18 @@ class Representatives:
             rules = False
 
         return all(rules)
+
+    def get_representatives_from_pmol(self, pmol):
+        """
+        Convenience class method: Get representatives from pmol object.
+
+        Parameters
+        ----------
+        pmol : biopandas.mol2.pandas_mol2.PandasMol2 or biopandas.pdb.pandas_pdb.PandasPdb
+        Content of mol2 or pdb file as BioPandas object.
+        """
+
+        self.get_representatives(pmol.df)
 
     def get_representatives(self, molecule):
         """
@@ -394,13 +404,10 @@ class Coordinates:
 
     >>> molecule_loader = MoleculeLoader()
     >>> molecule_loader.load_molecule(molecule_path, remove_solvent=True)
-    >>> molecule = molecule_loader.get_first_molecule()
-
-    >>> representatives = Representatives()
-    >>> representatives.get_representatives(molecule)
+    >>> pmol = molecule_loader.get_first_molecule()
 
     >>> coordinates = Coordinates()
-    >>> coordinates.get_coordinates(representatives)
+    >>> coordinates.get_coordinates_from_pmol(pmol)
     """
 
     def __init__(self, molecule_id=None):
@@ -441,6 +448,21 @@ class Coordinates:
             rules = False
 
         return all(rules)
+
+    def get_coordinates_from_pmol(self, pmol):
+        """
+        Convenience class method: Get coordinates from pmol object.
+
+        Parameters
+        ----------
+        pmol : biopandas.mol2.pandas_mol2.PandasMol2 or biopandas.pdb.pandas_pdb.PandasPdb
+        Content of mol2 or pdb file as BioPandas object.
+        """
+
+        representatives = Representatives()
+        representatives.get_representatives(pmol.df)
+
+        self.get_coordinates(representatives)
 
     def get_coordinates(self, representatives):
         """
@@ -492,13 +514,10 @@ class PhysicoChemicalProperties:
 
     >>> molecule_loader = MoleculeLoader()
     >>> molecule_loader.load_molecule(molecule_path, remove_solvent=True)
-    >>> molecule = molecule_loader.get_first_molecule()
-
-    >>> representatives = Representatives()
-    >>> representatives.get_representatives(molecule)
+    >>> pmol = molecule_loader.get_first_molecule()
 
     >>> physicochemicalproperties = PhysicoChemicalProperties()
-    >>> physicochemicalproperties.get_physicochemicalproperties(representatives)
+    >>> physicochemicalproperties.get_physicochemicalproperties_from_pmol(pmol)
     """
 
     def __init__(self, molecule_id=None):
@@ -539,6 +558,21 @@ class PhysicoChemicalProperties:
             rules = False
 
         return all(rules)
+
+    def get_physicochemicalproperties_from_pmol(self, pmol):
+        """
+        Convenience class method: Get physicochemical properties from pmol object.
+
+        Parameters
+        ----------
+        pmol : biopandas.mol2.pandas_mol2.PandasMol2 or biopandas.pdb.pandas_pdb.PandasPdb
+        Content of mol2 or pdb file as BioPandas object.
+        """
+
+        representatives = Representatives()
+        representatives.get_representatives(pmol.df)
+
+        self.get_physicochemicalproperties(representatives)
 
     def get_physicochemicalproperties(self, representatives):
         """
@@ -640,13 +674,10 @@ class Subsets:
 
     >>> molecule_loader = MoleculeLoader()
     >>> molecule_loader.load_molecule(molecule_path, remove_solvent=True)
-    >>> molecule = molecule_loader.get_first_molecule()
-
-    >>> representatives = Representatives()
-    >>> representatives.get_representatives(molecule)
+    >>> pmol = molecule_loader.get_first_molecule()
 
     >>> subsets = Subsets()
-    >>> subsets.get_pseudocenter_subsets_indices(representatives)
+    >>> subsets.get_pseudocenter_subsets_indices_from_pmol(pmol)
     """
 
     def __init__(self, molecule_id=None):
@@ -682,6 +713,21 @@ class Subsets:
             rules = False
 
         return all(rules)
+
+    def get_pseudocenter_subsets_indices_from_pmol(self, pmol):
+        """
+        Convenience class method: Get pseudocenter subsets indices from pmol object.
+
+        Parameters
+        ----------
+        pmol : biopandas.mol2.pandas_mol2.PandasMol2 or biopandas.pdb.pandas_pdb.PandasPdb
+        Content of mol2 or pdb file as BioPandas object.
+        """
+
+        representatives = Representatives()
+        representatives.get_representatives(pmol.df)
+
+        self.get_pseudocenter_subsets_indices(representatives)
 
     def get_pseudocenter_subsets_indices(self, representatives):
         """
@@ -751,23 +797,10 @@ class Points:
 
     >>> molecule_loader = MoleculeLoader()
     >>> molecule_loader.load_molecule(molecule_path, remove_solvent=True)
-    >>> molecule = molecule_loader.get_first_molecule()
-
-    >>> representatives = Representatives()
-    >>> representatives.get_representatives(molecule)
-
-    >>> coordinates = Coordinates()
-    >>> coordinates.get_coordinates(representatives)
-
-    >>> physicochemicalproperties = PhysicoChemicalProperties()
-    >>> physicochemicalproperties.get_physicochemicalproperties(representatives)
-
-    >>> subsets = Subsets()
-    >>> subsets.get_pseudocenter_subsets_indices(representatives)
+    >>> pmol = molecule_loader.get_first_molecule()
 
     >>> points = Points()
-    >>> points.get_points(coordinates, physicochemicalproperties)
-    >>> points.get_points_pseudocenter_subsets(subsets)
+    >>> points.get_points_from_pmol(pmol)
     """
 
     def __init__(self, molecule_id=None):
@@ -829,6 +862,31 @@ class Points:
             rules = False
 
         return all(rules)
+
+    def get_points_from_pmol(self, pmol):
+        """
+        Convenience class method: Get points from pmol object.
+
+        Parameters
+        ----------
+        pmol : biopandas.mol2.pandas_mol2.PandasMol2 or biopandas.pdb.pandas_pdb.PandasPdb
+        Content of mol2 or pdb file as BioPandas object.
+        """
+
+        representatives = Representatives()
+        representatives.get_representatives(pmol.df)
+
+        coordinates = Coordinates()
+        coordinates.get_coordinates(representatives)
+
+        physicochemicalproperties = PhysicoChemicalProperties()
+        physicochemicalproperties.get_physicochemicalproperties(representatives)
+
+        subsets = Subsets()
+        subsets.get_pseudocenter_subsets_indices(representatives)
+
+        self.get_points(coordinates, physicochemicalproperties)
+        self.get_points_pseudocenter_subsets(subsets)
 
     def get_points(self, coordinates, physicochemicalproperties):
         """
@@ -932,6 +990,20 @@ class Shapes:
         of dictionaries (encoding method, e.g. '3Dusr') of dictionaries (subsets types, e.g. 'HBA') of dictionaries
         containing DataFrames for the encoding: 'ref_points' (the reference points), 'distances' (the distances from
         reference points to representatives), and 'moments' (the first three moments for the distance distribution).
+
+    Examples
+    --------
+    >>> from ratar.auxiliary import MoleculeLoader
+    >>> from ratar.encoding import Representatives, Coordinates
+
+    >>> molecule_path = '/path/to/pdb/or/mol2'
+
+    >>> molecule_loader = MoleculeLoader()
+    >>> molecule_loader.load_molecule(molecule_path, remove_solvent=True)
+    >>> pmol = molecule_loader.get_first_molecule()
+
+    >>> shapes = Shapes()
+    >>> shapes.get_shapes_from_pmol(pmol)
     """
 
     def __init__(self, molecule_id=None):
@@ -993,6 +1065,34 @@ class Shapes:
             rules = False
 
         return all(rules)
+
+    def get_shapes_from_pmol(self, pmol):
+        """
+        Convenience class method: Get shapes from pmol object.
+
+        Parameters
+        ----------
+        pmol : biopandas.mol2.pandas_mol2.PandasMol2 or biopandas.pdb.pandas_pdb.PandasPdb
+        Content of mol2 or pdb file as BioPandas object.
+        """
+
+        representatives = Representatives()
+        representatives.get_representatives(pmol)
+
+        coordinates = Coordinates()
+        coordinates.get_coordinates(representatives)
+
+        physicochemicalproperties = PhysicoChemicalProperties()
+        physicochemicalproperties.get_physicochemicalproperties(representatives)
+
+        subsets = Subsets()
+        subsets.get_pseudocenter_subsets_indices(representatives)
+
+        points = Points()
+        points.get_points(coordinates, physicochemicalproperties)
+        points.get_points_pseudocenter_subsets(subsets)
+
+        self.get_shapes(points)
 
     def get_shapes(self, points):
         """

@@ -42,28 +42,11 @@ def test_get_points(filename, keys, n_dimensions):
     molecule_path = Path(sys.path[0]) / 'ratar' / 'tests' / 'data' / filename
     molecule_loader = MoleculeLoader()
     molecule_loader.load_molecule(molecule_path)
-    molecule = molecule_loader.get_first_molecule()
-
-    # Set representatives
-    representatives = Representatives()
-    representatives.get_representatives(molecule)
-
-    # Set coordinates
-    coordinates = Coordinates()
-    coordinates.get_coordinates(representatives)
-
-    # Set physicochemical properties
-    physicochemicalproperties = PhysicoChemicalProperties()
-    physicochemicalproperties.get_physicochemicalproperties(representatives)
-
-    # Set subsets
-    subsets = Subsets()
-    subsets.get_pseudocenter_subsets_indices(representatives)
+    pmol = molecule_loader.get_first_molecule()
 
     # Set points
     points = Points()
-    points.get_points(coordinates, physicochemicalproperties)
-    points.get_points_pseudocenter_subsets(subsets)
+    points.get_points_from_pmol(pmol)
 
     points_flat = flatten(points.data, reducer='path')
 

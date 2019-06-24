@@ -67,15 +67,11 @@ def test_get_physicochemicalproperties(filename, column_names, n_atoms, centroid
     molecule_path = Path(sys.path[0]) / 'ratar' / 'tests' / 'data' / filename
     molecule_loader = MoleculeLoader()
     molecule_loader.load_molecule(molecule_path)
-    molecule = molecule_loader.get_first_molecule()
-
-    # Set representatives
-    representatives = Representatives()
-    representatives.get_representatives(molecule)
+    pmol = molecule_loader.get_first_molecule()
 
     # Set physicochemical properties
     physicochemicalproperties = PhysicoChemicalProperties()
-    physicochemicalproperties.get_physicochemicalproperties(representatives)
+    physicochemicalproperties.get_physicochemicalproperties_from_pmol(pmol)
 
     pcp_flat = flatten(physicochemicalproperties.data, reducer='path')
 
