@@ -9,7 +9,7 @@ from pathlib import Path
 import pytest
 
 from ratar.auxiliary import MoleculeLoader
-from ratar.encoding import Representatives, Coordinates, PhysicoChemicalProperties, Subsets, Points
+from ratar.encoding import Points
 
 
 @pytest.mark.parametrize('filename, keys, n_dimensions', [

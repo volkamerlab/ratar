@@ -8,7 +8,7 @@ import pytest
 from pathlib import Path
 
 from ratar.auxiliary import MoleculeLoader
-from ratar.encoding import Representatives, Coordinates
+from ratar.encoding import Coordinates
 
 
 @pytest.mark.parametrize('filename, column_names, n_atoms, centroid', [

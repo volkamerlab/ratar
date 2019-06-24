@@ -8,7 +8,7 @@ from pathlib import Path
 import pytest
 
 from ratar.auxiliary import MoleculeLoader
-from ratar.encoding import Representatives, Subsets
+from ratar.encoding import Subsets
 
 
 @pytest.mark.parametrize('filename, subsets_names, example_indices', [
