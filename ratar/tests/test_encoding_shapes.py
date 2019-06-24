@@ -54,3 +54,19 @@ def test_reorder_nested_dict_keys(nested_dict, key_order, flat_keys_before, flat
 
     assert sorted(list(flatten(nested_dict, reducer='path').keys())) == flat_keys_before
     assert sorted(list(flatten(reordered_dict, reducer='path').keys())) == flat_keys_after
+
+
+@pytest.mark.parametrize('point, points, nearest_point', [
+    (
+        pd.Series([1, 2, 3]),
+        pd.DataFrame([[1, 2, 4], [1, 2, 5]]),
+        pd.Series([1, 2, 4]),
+    )
+])
+def test_calc_nearest_point(point, points, nearest_point):
+
+    shapes = Shapes()
+
+
+    assert all(shapes._calc_nearest_point(point, points, 1) == nearest_point)
+
