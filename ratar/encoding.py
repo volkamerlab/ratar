@@ -1664,9 +1664,10 @@ class Shapes:
         """
 
         # Get first, second, and third moment (mean, standard deviation, and skewness) for a distance distribution
+        # Second and third moment: delta degrees of freedom = 0 (divisor N)
         if len(dist) > 0:
             m1 = dist.mean()
-            m2 = dist.std()
+            m2 = dist.std(ddof=0)
             m3 = pd.Series(cbrt(moment(dist, moment=3)), index=dist.columns.tolist())
         else:
             # In case there is only one data point.
