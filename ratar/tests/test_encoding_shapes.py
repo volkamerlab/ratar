@@ -56,17 +56,33 @@ def test_reorder_nested_dict_keys(nested_dict, key_order, flat_keys_before, flat
     assert sorted(list(flatten(reordered_dict, reducer='path').keys())) == flat_keys_after
 
 
-@pytest.mark.parametrize('point, points, nearest_point', [
+@pytest.mark.parametrize('point, points, nearest_point_ref', [
     (
         pd.Series([1, 2, 3]),
         pd.DataFrame([[1, 2, 4], [1, 2, 5]]),
-        pd.Series([1, 2, 4]),
+        pd.Series([1, 2, 4])
     )
 ])
-def test_calc_nearest_point(point, points, nearest_point):
+def test_calc_nearest_point(point, points, nearest_point_ref):
 
     shapes = Shapes()
+    nearest_point = shapes._calc_nearest_point(point, points, 1)
 
 
-    assert all(shapes._calc_nearest_point(point, points, 1) == nearest_point)
+    assert all(abs(nearest_point - nearest_point_ref) < 0.0001)
 
+
+@pytest.mark.parametrize('points, ref_point, distances_to_point_ref', [
+    (
+        pd.DataFrame([[1, 2, 4], [1, 2, 5]]),
+        pd.Series([1, 2, 3]),
+        pd.Series([1.0, 2.0])
+    )
+])
+def test_calc_distances_to_point(points, ref_point, distances_to_point_ref):
+
+    shapes = Shapes()
+    distances_to_point = shapes._calc_distances_to_point(points, ref_point)
+
+    assert all(distances_to_point.index == distances_to_point_ref.index)
+    assert all(abs(distances_to_point - distances_to_point_ref) < 0.0001)
