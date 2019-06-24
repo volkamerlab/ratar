@@ -59,9 +59,9 @@ class BindingSite:
 
     >>> molecule_loader = MoleculeLoader()
     >>> molecule_loader.load_molecule(molecule_path, remove_solvent=True)
-    >>> molecule = molecule_loader.get_first_molecule()
+    >>> pmol = molecule_loader.get_first_molecule()
 
-    >>> binding_site = BindingSite(molecule)
+    >>> binding_site = BindingSite(pmol)
     """
 
     def __init__(self, pmol):
@@ -1705,7 +1705,6 @@ class Shapes:
             raise IOError(f'Key order length ({len(key_order)}) does not match nested levels in dictionary ({len(keys_old)}).')
 
         keys_new = [i.split('/') for i in keys_old]
-        #key_order = [0, 1, 3, 2, 4]
         keys_new = [[i[j] for j in key_order] for i in keys_new]
         keys_new = ['/'.join(i) for i in keys_new]
 
@@ -1743,6 +1742,11 @@ def process_encoding(input_mol_path, output_dir):
         Path to molecule structure file(s), can include a wildcard to match multiple files.
     output_dir : str
         Output directory.
+
+    Examples
+    --------
+    >>> from ratar.encoding import process_encoding
+    >>> process_encoding('/path/to/pdb/or/mol2', '/path/to/output/directory')
     """
 
     # Get all molecule structure files
@@ -1806,6 +1810,20 @@ def save_binding_site(binding_site, output_path):
         Encoded binding site.
     output_path : str
         Path to output file.
+
+    Examples
+    --------
+    >>> from ratar.auxiliary import MoleculeLoader
+    >>> from ratar.encoding import BindingSite, save_binding_site
+
+    >>> molecule_path = '/path/to/pdb/or/mol2'
+
+    >>> molecule_loader = MoleculeLoader()
+    >>> molecule_loader.load_molecule(molecule_path, remove_solvent=True)
+    >>> pmol = molecule_loader.get_first_molecule()
+
+    >>> binding_site = BindingSite(pmol)
+    >>> save_binding_site(binding_site, '/path/to/output/directory')
     """
 
     create_directory(Path(output_path).parent)
@@ -1828,6 +1846,20 @@ def save_cgo_file(binding_site, output_path):
     Notes
     -----
     Python script (cgo file) for PyMol.
+
+    Examples
+    --------
+    >>> from ratar.auxiliary import MoleculeLoader
+    >>> from ratar.encoding import BindingSite, save_cgo_file
+
+    >>> molecule_path = '/path/to/pdb/or/mol2'
+
+    >>> molecule_loader = MoleculeLoader()
+    >>> molecule_loader.load_molecule(molecule_path, remove_solvent=True)
+    >>> pmol = molecule_loader.get_first_molecule()
+
+    >>> binding_site = BindingSite(pmol)
+    >>> save_cgo_file(binding_site, '/path/to/output/directory')
     """
 
     # Set PyMol sphere colors (for reference points)
@@ -1901,99 +1933,3 @@ def save_cgo_file(binding_site, output_path):
     with open(output_path, 'w') as f:
         f.write('\n'.join(lines))
 
-
-def get_encoded_binding_site_path(code, output_path):
-    """
-    Get a binding site pickle path based on a path wildcard constructed from
-    - a molecule code (can contain only PDB ID to check for file matches) and
-    - the path to the ratar encoding output directory.
-
-    Constructed wildcard: f'{output_path}/encoding/*{code}*/ratar_encoding.p'
-
-    Parameters
-    ----------
-    code: str
-        Molecule code (is or contains PDB ID).
-    output_path: str
-        Path to output directory containing ratar related files.
-
-    Returns
-    -------
-    str
-        Path to binding site pickle file.
-    """
-
-    # Define wildcard for path to pickle file
-    bs_wildcard = f'{output_path}/encoding/*{code}*/ratar_encoding.p'
-
-    # Retrieve all paths that match the wildcard
-    bs_path = glob.glob(bs_wildcard)
-
-    # If wildcard matches no file, retry.
-    if len(bs_path) == 0:
-        lines = [
-            'Error: Your input path matches no file. Please retry.',
-            'Your input wildcard was the following: ',
-            bs_wildcard
-        ]
-        raise FileNotFoundError('\n'.join(lines))
-
-    # If wildcard matches multiple files, retry.
-    elif len(bs_path) > 1:
-        lines = [
-            'Error: Your input path matches multiple files. Please select one of the following as input string: ',
-            bs_path,
-            'Your input wildcard was the following: ',
-            bs_wildcard
-        ]
-        raise FileNotFoundError('\n'.join(lines))
-
-    # If wildcard matches one file, return file path.
-    else:
-        bs_path = bs_path[0]
-        return bs_path
-
-
-def load_binding_site(output_path):
-    """
-    Load an encoded binding site from a pickle file.
-
-    Parameters
-    ----------
-    output_path : str
-        Path to binding site pickle file.
-
-    Returns
-    -------
-    encoding.BindingSite
-        Encoded binding site.
-    """
-
-    # Retrieve all paths that match the input path
-    bs_path = glob.glob(output_path)
-
-    # If input path matches no file, retry.
-    if len(bs_path) == 0:
-        lines = [
-            'Error: Your input path matches no file. Please retry.',
-            'Your input path was the following: ',
-            bs_path
-        ]
-        raise FileNotFoundError('\n'.join(lines))
-
-    # If input path matches multiple files, retry.
-    elif len(bs_path) > 1:
-        lines = [
-            'Error: Your input path matches multiple files. Please select one of the following as input string: ',
-            bs_path,
-            '\nYour input path was the following: ',
-            output_path
-        ]
-        raise FileNotFoundError('\n'.join(lines))
-
-    # If input path matches one file, load file.
-    else:
-        bs_path = bs_path[0]
-        with open(bs_path, 'rb') as f:
-            binding_site = pickle.load(f)
-        return binding_site
