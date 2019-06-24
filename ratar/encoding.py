@@ -398,7 +398,7 @@ class Coordinates:
     Examples
     --------
     >>> from ratar.auxiliary import MoleculeLoader
-    >>> from ratar.encoding import Representatives, Coordinates
+    >>> from ratar.encoding import Coordinates
 
     >>> molecule_path = '/path/to/pdb/or/mol2'
 
@@ -408,6 +408,7 @@ class Coordinates:
 
     >>> coordinates = Coordinates()
     >>> coordinates.get_coordinates_from_pmol(pmol)
+    >>> coordinates
     """
 
     def __init__(self, molecule_id=None):
@@ -508,7 +509,7 @@ class PhysicoChemicalProperties:
     Examples
     --------
     >>> from ratar.auxiliary import MoleculeLoader
-    >>> from ratar.encoding import Representatives, Coordinates
+    >>> from ratar.encoding import PhysicoChemicalProperties
 
     >>> molecule_path = '/path/to/pdb/or/mol2'
 
@@ -518,6 +519,7 @@ class PhysicoChemicalProperties:
 
     >>> physicochemicalproperties = PhysicoChemicalProperties()
     >>> physicochemicalproperties.get_physicochemicalproperties_from_pmol(pmol)
+    >>> physicochemicalproperties
     """
 
     def __init__(self, molecule_id=None):
@@ -668,7 +670,7 @@ class Subsets:
     Examples
     --------
     >>> from ratar.auxiliary import MoleculeLoader
-    >>> from ratar.encoding import Representatives, Coordinates
+    >>> from ratar.encoding import Subsets
 
     >>> molecule_path = '/path/to/pdb/or/mol2'
 
@@ -678,6 +680,7 @@ class Subsets:
 
     >>> subsets = Subsets()
     >>> subsets.get_pseudocenter_subsets_indices_from_pmol(pmol)
+    >>> subsets
     """
 
     def __init__(self, molecule_id=None):
@@ -791,7 +794,7 @@ class Points:
     Examples
     --------
     >>> from ratar.auxiliary import MoleculeLoader
-    >>> from ratar.encoding import Representatives, Coordinates
+    >>> from ratar.encoding import Points
 
     >>> molecule_path = '/path/to/pdb/or/mol2'
 
@@ -801,6 +804,7 @@ class Points:
 
     >>> points = Points()
     >>> points.get_points_from_pmol(pmol)
+    >>> points
     """
 
     def __init__(self, molecule_id=None):
@@ -994,7 +998,7 @@ class Shapes:
     Examples
     --------
     >>> from ratar.auxiliary import MoleculeLoader
-    >>> from ratar.encoding import Representatives, Coordinates
+    >>> from ratar.encoding import Shapes
 
     >>> molecule_path = '/path/to/pdb/or/mol2'
 
@@ -1004,6 +1008,7 @@ class Shapes:
 
     >>> shapes = Shapes()
     >>> shapes.get_shapes_from_pmol(pmol)
+    >>> shapes
     """
 
     def __init__(self, molecule_id=None):
@@ -1077,7 +1082,7 @@ class Shapes:
         """
 
         representatives = Representatives()
-        representatives.get_representatives(pmol)
+        representatives.get_representatives(pmol.df)
 
         coordinates = Coordinates()
         coordinates.get_coordinates(representatives)
