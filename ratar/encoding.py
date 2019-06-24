@@ -1672,6 +1672,7 @@ class Shapes:
         else:
             # In case there is only one data point.
             # However, this should not be possible due to restrictions in get_shape function.
+            logger.info(f'Only one data point available for moment calculation, thus write None to moments.')
             m1, m2, m3 = None, None, None
 
         # Store all moments in DataFrame
