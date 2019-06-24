@@ -1159,7 +1159,7 @@ class Shapes:
 
         # Change key order of (flattened) nested dictionary (reverse subset type and encoding type)
         # Example: 'pc/z123/H/6Dratar1/moments' is changed to 'pc/z123/6Dratar1/H/moments'.
-        self.data_pseudocenter_subsets = self._reorder_subset_keys(self.data_pseudocenter_subsets, [0, 1, 3, 2, 4])
+        self.data_pseudocenter_subsets = self._reorder_nested_dict_keys(self.data_pseudocenter_subsets, [0, 1, 3, 2, 4])
 
         # Unflatten dictionary back to nested dictionary
         self.data_pseudocenter_subsets = unflatten(self.data_pseudocenter_subsets, splitter='path')
@@ -1681,7 +1681,7 @@ class Shapes:
         return moments
 
     @staticmethod
-    def _reorder_subset_keys(nested_dict, key_order):
+    def _reorder_nested_dict_keys(nested_dict, key_order):
         """
         Change the key order of the nested dictionary data_pseudocenter_subsets (Shapes attribute).
         Example: 'pc/z123/H/6Dratar1/moments' is changed to 'pc/z123/6Dratar1/H/moments'.
