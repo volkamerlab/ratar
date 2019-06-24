@@ -1607,7 +1607,7 @@ class Shapes:
         pandas.Series
             Distances from reference point to representatives.
         """
-        # TODO use here np.linalg.norm?
+
         distances = np.sqrt(((points - ref_point) ** 2).sum(axis=1))
 
         return distances
