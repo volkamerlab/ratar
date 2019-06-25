@@ -1331,7 +1331,10 @@ class Shapes:
         cross_norm = np.linalg.norm(cross)  # Norm of cross product
         cross_unit = cross / cross_norm  # Cross unit vector
         a_norm = np.linalg.norm(a)  # Norm of vector a
-        c4 = pd.Series(a_norm / 2 * cross_unit, index=['x', 'y', 'z'])
+        c = pd.Series(a_norm / 2 * cross_unit, index=['x', 'y', 'z'])
+
+        # Add adjusted cross product vector to c1, the centroid
+        c4 = c1 + c
 
         # Get distances from c4 to all other points
         dist_c4 = self._calc_distances_to_point(points, c4)
@@ -1402,14 +1405,17 @@ class Shapes:
         # 3. Calculate cross product of a_s and b_s
         # (keep same units and normalise vector to have half the norm of vector a)
         cross = np.cross(a_s, b_s)
-        c_s = pd.Series(np.sqrt(sum(a ** 2)) / 2 * cross / (np.sqrt(sum(cross ** 2))), index=['x', 'y', 'z'])
+        cross_norm = np.linalg.norm(cross)  # Norm of cross product
+        cross_unit = cross / cross_norm  # Cross unit vector
+        a_norm = np.linalg.norm(a)  # Norm of vector a
+        c_s = pd.Series(a_norm / 2 * cross_unit, index=['x', 'y', 'z'])
 
         # 4. Add c to c1 to define the spatial components of the forth and fifth reference points
 
         # Add 4th dimension
         name_4thdim = points.columns[3]
         c = c_s.append(pd.Series([0], index=[name_4thdim]))
-        c1_s = c1[0:3].append(pd.Series([0], index=[name_4thdim]))
+        c1_s = c1[0:3].append(pd.Series([0], index=[name_4thdim]))  # TODO check what is done here!
 
         # Get values for 4th dimension (min and max of 4th dimension)
         max_value_4thdim = max(points.iloc[:, [3]].values)[0]
