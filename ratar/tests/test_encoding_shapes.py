@@ -114,3 +114,196 @@ def test_get_shape_dict(ref_points, dist, moments_ref):
     assert (abs(shape_dict['moments'] - moments_ref) < 0.0001).all(axis=None)
 
 
+@pytest.mark.parametrize('coord_origin, coord_point_a, coord_point_b', [
+    (
+        pd.Series([0, 0, 0, 3]),
+        pd.Series([1, 0, 0]),
+        pd.Series([0, 1, 0])
+    ),
+    (
+        pd.Series([0, 0]),
+        pd.Series([1, 0]),
+        pd.Series([0, 1])
+    )
+])
+def test_calc_adjusted_3d_cross_product_exceptions(coord_origin, coord_point_a, coord_point_b):
+
+    shapes = Shapes()
+
+    with pytest.raises(ValueError):
+        shapes._calc_adjusted_3d_cross_product(coord_origin, coord_point_a, coord_point_b)
+
+
+@pytest.mark.parametrize('coord_origin, coord_point_a, coord_point_b, adjusted_3d_cross_product_ref', [
+    (
+        pd.Series([0, 0, 0]),
+        pd.Series([1, 0, 0]),
+        pd.Series([0, 1, 0]),
+        pd.Series([0, 0, 1])
+    ),
+    (
+        pd.Series([0, 0, 0, 3]),
+        pd.Series([1, 0, 0, 3]),
+        pd.Series([0, 1, 0, 3]),
+        pd.Series([0, 0, 1])
+    ),
+    (
+        pd.Series([0, 0, 0]),
+        pd.Series([1, 0, 0]),
+        pd.Series([0, 2, 0]),
+        pd.Series([0, 0, 1.5])
+    )
+])
+def test_calc_adjusted_3d_cross_product(coord_origin, coord_point_a, coord_point_b, adjusted_3d_cross_product_ref):
+
+    shapes = Shapes()
+
+    adjusted_3d_cross_product = shapes._calc_adjusted_3d_cross_product(coord_origin, coord_point_a, coord_point_b)
+
+    assert (abs(adjusted_3d_cross_product - adjusted_3d_cross_product_ref) < 0.0001).all()
+
+
+@pytest.mark.parametrize('points', [
+    (
+        pd.DataFrame([[0, 0, 0], [1, 0, 0], [0, 1, 0]])  # Must be at least 4 points
+    ),
+    (
+        pd.DataFrame([[0, 0, 0, 0], [1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 0, 1]])  # Points must be in 3D
+    )
+])
+def test_calc_shape_3dim_usr_exceptions(points):
+
+    shapes = Shapes()
+
+    with pytest.raises(ValueError):
+        shapes._calc_shape_3dim_usr(points)
+
+
+@pytest.mark.parametrize('points', [
+    (
+        pd.DataFrame([[0, 0, 0], [1, 0, 0], [0, 1, 0]])  # Must be at least 4 points
+    ),
+    (
+        pd.DataFrame([[0, 0, 0, 0], [1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 0, 1]])  # Points must be in 3D
+    )
+])
+def test_calc_shape_3dim_csr_exceptions(points):
+
+    shapes = Shapes()
+
+    with pytest.raises(ValueError):
+        shapes._calc_shape_3dim_csr(points)
+
+
+@pytest.mark.parametrize('points', [
+    (
+        pd.DataFrame([[0, 0, 0, 0], [1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 0, 1]])  # Must be at least 5 points
+    ),
+    (
+        pd.DataFrame([[0, 0, 0], [1, 0, 0], [0, 1, 0], [1, 1, 1], [1, 1, 0]])  # Points must be in 4D
+    ),
+    (
+        pd.DataFrame([[0, 0, 0, 0, 0], [1, 0, 0, 0, 0], [0, 1, 0, 0, 0], [1, 1, 1, 1, 1], [1, 1, 0, 1, 1]])  # Points must be in 4D
+    )
+])
+def test_calc_shape_4dim_electroshape_exceptions(points):
+
+    shapes = Shapes()
+
+    with pytest.raises(ValueError):
+        shapes._calc_shape_4dim_electroshape(points)
+
+
+@pytest.mark.parametrize('points, ref_points', [
+    (
+        pd.DataFrame([
+            [0, 0, 0],
+            [1, 0, 0],
+            [0, 1, 0],
+            [0, 0, 1],
+            [0, 2, 0],
+            [0, 0, 10],
+            [0, 0, 5],
+        ], columns='x y z'.split()
+        ),
+        pd.DataFrame([
+            [0.1429, 0.4286, 2.2857],
+            [0, 0, 1],
+            [0, 0, 10],
+            [0, 2, 0]
+        ], index='c1 c2 c3 c4'.split(), columns='x y z'.split()
+        )
+    )
+])
+def test_calc_shape_3dim_usr(points, ref_points):
+
+    shapes = Shapes()
+
+    shape_3dim_usr = shapes._calc_shape_3dim_usr(points)
+
+    assert shape_3dim_usr['ref_points'].shape == ref_points.shape
+    assert (abs(shape_3dim_usr['ref_points'] - ref_points) < 0.0001).all(axis=None)
+
+
+@pytest.mark.parametrize('points, ref_points', [
+    (
+        pd.DataFrame([
+            [0, 0, 0],
+            [1, 0, 0],
+            [0, 1, 0],
+            [0, 0, 1],
+            [0, 2, 0],
+            [0, 0, 10],
+            [0, 0, 5],
+        ], columns='x y z'.split()
+        ),
+        pd.DataFrame([
+            [0.1429, 0.4286, 2.2857],
+            [0, 0, 10],
+            [0, 2, 0],
+            [-3.6883, -0.0626, 2.1875]
+        ], index='c1 c2 c3 c4'.split(), columns='x y z'.split()
+        )
+    )
+])
+def test_calc_shape_3dim_csr(points, ref_points):
+
+    shapes = Shapes()
+
+    shape_3dim_usr = shapes._calc_shape_3dim_csr(points)
+
+    assert shape_3dim_usr['ref_points'].shape == ref_points.shape
+    assert (abs(shape_3dim_usr['ref_points'] - ref_points) < 0.0001).all(axis=None)
+
+
+@pytest.mark.parametrize('points, ref_points', [
+    (
+        pd.DataFrame([
+            [0, 0, 0, 0],
+            [1, 0, 0, 0],
+            [0, 1, 0, 0],
+            [0, 0, 1, 0],
+            [0, 0, 0, 1],
+            [0, 0, 10, 10],
+            [0, 0, 5, -1],
+        ], columns='x y z z1'.split()
+        ),
+        pd.DataFrame([
+            [0.1429, 0.1429, 2.2857, 1.4286],
+            [0, 0, 10, 10],
+            [1, 0, 0, 0],
+            [-3.6883, -0.0626, 2.1875],
+            [0, 0, 0]
+        ], index='c1 c2 c3 c4 c5'.split(), columns='x y z z1'.split()
+        )
+    )
+])
+def test_calc_shape_4dim_electroshape(points, ref_points):
+
+    shapes = Shapes()
+
+    shape_3dim_usr = shapes._calc_shape_4dim_electroshape(points)
+
+    assert shape_3dim_usr['ref_points'].shape == ref_points.shape
+    assert (abs(shape_3dim_usr['ref_points'] - ref_points) < 0.0002).all(axis=None)
+
