@@ -68,7 +68,6 @@ def test_calc_nearest_point(point, points, nearest_point_ref):
     shapes = Shapes()
     nearest_point = shapes._calc_nearest_point(point, points, 1)
 
-
     assert all(abs(nearest_point - nearest_point_ref) < 0.0001)
 
 
@@ -86,3 +85,32 @@ def test_calc_distances_to_point(points, ref_point, distances_to_point_ref):
 
     assert all(distances_to_point.index == distances_to_point_ref.index)
     assert all(abs(distances_to_point - distances_to_point_ref) < 0.0001)
+
+
+@pytest.mark.parametrize('ref_points, dist, moments_ref', [
+    (
+        [pd.Series([1, 2, 3]), pd.Series([4, 5, 6])],
+        [pd.Series([3, 4, 4]), pd.Series([1, 1, 1])],
+        pd.DataFrame(
+            [
+                [3.6667, 0.4714, -0.4200],
+                [1.0, 0.0, 0.0]
+            ],
+            index='dist_c1 dist_c2'.split(),
+            columns='m1 m2 m3'.split()
+        )
+    )
+])
+def test_get_shape_dict(ref_points, dist, moments_ref):
+
+    shapes = Shapes()
+    shape_dict = shapes._get_shape_dict(ref_points, dist)
+
+    assert all(shape_dict['ref_points'].index == [f'c{i+1}' for i, j in enumerate(ref_points)])
+    assert all(shape_dict['dist'].columns == [f'dist_c{i+1}' for i, j in enumerate(dist)])
+    assert all(shape_dict['moments'].index == [f'dist_c{i+1}' for i, j in enumerate(dist)])
+    assert all(shape_dict['moments'].columns == 'm1 m2 m3'.split())
+
+    assert (abs(shape_dict['moments'] - moments_ref) < 0.0001).all(axis=None)
+
+
