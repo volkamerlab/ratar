@@ -1247,7 +1247,9 @@ class Shapes:
         """
 
         if points.shape[1] != 3:
-            sys.exit(f'Error: Dimension of input (points) is not {points.shape[1]} as requested.')
+            raise ValueError(f'Dimension of input (points) must be 3 but is {points.shape[1]}.')
+        if points.shape[0] < 4:
+            raise ValueError(f'Number of points must be at least 4 but is {points.shape[0]}.')
 
         # Get centroid of input coordinates
         c1 = points.mean(axis=0)
@@ -1303,7 +1305,9 @@ class Shapes:
         """
 
         if points.shape[1] != 3:
-            sys.exit(f'Error: Dimension of input (points) is not {points.shape[1]} as requested.')
+            raise ValueError(f'Dimension of input (points) must be 3 but is {points.shape[1]}.')
+        if points.shape[0] < 4:
+            raise ValueError(f'Number of points must be at least 4 but is {points.shape[0]}.')
 
         # Get centroid of input coordinates, and distances from c1 to all other points
         c1 = points.mean(axis=0)
@@ -1324,9 +1328,9 @@ class Shapes:
 
         # Calculate cross product of a and b (keep same units and normalise vector to have half the norm of vector a)
         cross = np.cross(a, b)  # Cross product
-        cross_norm = np.sqrt(sum(cross ** 2))  # Norm of cross product
+        cross_norm = np.linalg.norm(cross)  # Norm of cross product
         cross_unit = cross / cross_norm  # Cross unit vector
-        a_norm = np.sqrt(sum(a ** 2))  # Norm of vector a
+        a_norm = np.linalg.norm(a)  # Norm of vector a
         c4 = pd.Series(a_norm / 2 * cross_unit, index=['x', 'y', 'z'])
 
         # Get distances from c4 to all other points
@@ -1370,7 +1374,9 @@ class Shapes:
         """
 
         if points.shape[1] != 4:
-            sys.exit(f'Error: Dimension of input (points) is not {points.shape[1]} as requested.')
+            raise ValueError(f'Dimension of input (points) must be 4 but is {points.shape[1]}.')
+        if points.shape[0] < 5:
+            raise ValueError(f'Number of points must be at least 5 but is {points.shape[0]}.')
 
         # Get centroid of input coordinates (in 4 dimensions), and distances from c1 to all other points
         c1 = points.mean(axis=0)
@@ -1450,7 +1456,9 @@ class Shapes:
         """
 
         if points.shape[1] != 6:
-            sys.exit(f'Error: Dimension of input (points) is not {points.shape[1]} as requested.')
+            raise ValueError(f'Dimension of input (points) must be 6 but is {points.shape[1]}.')
+        if points.shape[0] < 7:
+            raise ValueError(f'Number of points must be at least 7 but is {points.shape[0]}.')
 
         # Get centroid of input coordinates (in 7 dimensions), and distances from c1 to all other points
         c1 = points.mean(axis=0)
@@ -1516,10 +1524,10 @@ class Shapes:
         3. Get nearest point in points (in 3D) and return its 6D vector.
         """
 
-        if not coord_origin.size == coord_point_a.size == coord_point_b.size:
-            sys.exit('Error: The three input pandas.Series are not of same length.')
-        if not coord_origin.size > 2:
-            sys.exit('Error: The three input pandas.Series are not at least of length 3.')
+        if len(set([coord_origin.size, coord_point_a.size, coord_point_b.size])) > 1:
+            raise ValueError(f'The three input pandas.Series are not of same length: {[coord_origin.size, coord_point_a.size, coord_point_b.size]}')
+        if coord_origin.size < 3:
+            raise ValueError('The three input pandas.Series are not at least of length 3.')
 
         # Span vectors to point a and b from origin point
         a = coord_point_a - coord_origin
@@ -1630,9 +1638,9 @@ class Shapes:
         """
 
         if not point.size == 3:
-            raise IOError(f'Input point has {point.size} dimensions. Must have 3 dimensions.')
+            raise ValueError(f'Input point has {point.size} dimensions. Must have 3 dimensions.')
         if not points.shape[1] > 2:
-            raise IOError(f'Input points have {points.size} dimensions. Must have at least 3 dimensions.')
+            raise ValueError(f'Input points have {points.size} dimensions. Must have at least 3 dimensions.')
 
         # Get distances (in space, i.e. 3D) to all points
         dist_c_3d = self._calc_distances_to_point(points.iloc[:, 0:3], point)
@@ -1702,7 +1710,7 @@ class Shapes:
         if len(set([len(i.split('/')) for i in keys_old])) > 1:
             raise KeyError(f'Flattened keys are nested differently: {[len(i.split("/")) for i in keys_old]}')
         elif [len(i.split('/')) for i in keys_old][0] != len(key_order):
-            raise IOError(f'Key order length ({len(key_order)}) does not match nested levels in dictionary ({len(keys_old)}).')
+            raise ValueError(f'Key order length ({len(key_order)}) does not match nested levels in dictionary ({len(keys_old)}).')
 
         keys_new = [i.split('/') for i in keys_old]
         keys_new = [[i[j] for j in key_order] for i in keys_new]
