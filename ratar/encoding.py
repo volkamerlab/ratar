@@ -1576,11 +1576,11 @@ class Shapes:
 
         # Store reference points as DataFrame
         ref_points = pd.concat(ref_points, axis=1).transpose()
-        ref_points.index = ['c' + str(i) for i in range(1, len(ref_points.index) + 1)]
+        ref_points.index = [f'c{i+1}' for i, j in enumerate(ref_points.index)]
 
         # Store distance distributions as DataFrame
         dist = pd.concat(dist, axis=1)
-        dist.columns = ['dist_c' + str(i) for i in range(1, len(dist.columns) + 1)]
+        dist.columns = [f'dist_c{i+1}' for i, j in enumerate(dist.columns)]
 
         # Get first, second, and third moment for each distance distribution
         moments = self._calc_moments(dist)
