@@ -1322,19 +1322,7 @@ class Shapes:
         dist_ref3 = self._calc_distances_to_point(points, ref3)
 
         # Get forth reference point, including chirality information
-        # Define two vectors spanning ref1, ref2, and ref3 (from ref1)
-        a = ref2 - ref1
-        b = ref3 - ref1
-
-        # Calculate cross product of a and b (keep same units and normalise vector to have half the norm of vector a)
-        cross = np.cross(a, b)  # Cross product
-        cross_norm = np.linalg.norm(cross)  # Norm of cross product
-        cross_unit = cross / cross_norm  # Cross unit vector
-        a_norm = np.linalg.norm(a)  # Norm of vector a
-        c = pd.Series(a_norm / 2 * cross_unit, index=['x', 'y', 'z'])
-
-        # Add adjusted cross product vector to ref1, the centroid
-        ref4 = ref1 + c
+        ref4 = self._calc_scaled_3d_cross_product(ref1, ref2, ref3, 'half_norm_a')
 
         # Get distances from ref4 to all other points
         dist_ref4 = self._calc_distances_to_point(points, ref4)
@@ -1394,24 +1382,12 @@ class Shapes:
         dist_ref3 = self._calc_distances_to_point(points, ref3)
 
         # Get forth and fifth reference point:
-        # 1. Define two vectors spanning ref1, ref2, and ref3 (from ref1)
-        a = ref2 - ref1
-        b = ref3 - ref1
+        # a) Get first three dimensions
+        c_s = self._calc_scaled_3d_cross_product(ref1, ref2, ref3, 'half_norm_a')
 
-        # 2. Calculate cross product of dimensions 1-3 of a and b; normalise vector to half the norm of a
-        cross = np.cross(a[0:3], b[0:3])
-        cross_norm = np.linalg.norm(cross)  # Norm of cross product
-        cross_unit = cross / cross_norm  # Cross unit vector
-        a_norm = np.linalg.norm(a)  # Norm of vector a (note: a with all dimensions)
-        c_s = pd.Series(a_norm / 2 * cross_unit, index=['x', 'y', 'z'])
-
-        # 3. Move new vector to centroid
-        c_s = ref1[0:3] + c_s
-
-        # 4. Add forth dimension with maximum and minmum of points' 4th dimension
+        # b) Add forth dimension with maximum and minmum of points' 4th dimension
         max_value_4thdim = max(points.iloc[:, [3]].values)[0]
         min_value_4thdim = min(points.iloc[:, [3]].values)[0]
-
         ref4 = c_s.append(pd.Series([scaling_factor * max_value_4thdim], index=[points.columns[3]]))
         ref5 = c_s.append(pd.Series([scaling_factor * min_value_4thdim], index=[points.columns[3]]))
 
@@ -1472,12 +1448,12 @@ class Shapes:
         ref4 = points.loc[dist_ref3.idxmax()]
         dist_ref4 = self._calc_distances_to_point(points, ref4)
 
-        # Get adjusted cross product
+        # Get scaled cross product
         ref5_3d = self._calc_scaled_3d_cross_product(ref1, ref2, ref3, 'mean_norm')  # FIXME order of importance, right?
-        ref6_3d = self._calc_scaled_3d_cross_product(ref1, ref3, ref4)
-        ref7_3d = self._calc_scaled_3d_cross_product(ref1, ref4, ref2)
+        ref6_3d = self._calc_scaled_3d_cross_product(ref1, ref3, ref4, 'mean_norm')
+        ref7_3d = self._calc_scaled_3d_cross_product(ref1, ref4, ref2, 'mean_norm')
 
-        # Get remaining reference points as nearest atoms to adjusted cross products
+        # Get remaining reference points as nearest atoms to scaled cross products
         ref5 = self._calc_nearest_point(ref5_3d, points, scaling_factor)
         ref6 = self._calc_nearest_point(ref6_3d, points, scaling_factor)
         ref7 = self._calc_nearest_point(ref7_3d, points, scaling_factor)
@@ -1507,7 +1483,7 @@ class Shapes:
             Point with a least N dimensions (N > 2).
         scaled_by : str
             Method to scale the cross product vector:
-            - 'electroshape': scaled by half the norm of point_a (including all dimensions)
+            - 'half_norm_a': scaled by half the norm of point_a (including all dimensions)
             - 'mean_norm': scaled by the mean norm of point_a and point_b (including first 3 dimensions)
 
         Returns
@@ -1532,6 +1508,7 @@ class Shapes:
 
         # Span vectors to point a and b from origin point
         a = point_a - point_origin
+        print(a)
         b = point_b - point_origin
 
         # Calculate cross product
@@ -1544,28 +1521,28 @@ class Shapes:
         cross_unit = cross / cross_norm
 
         # Calculate value to scale cross product vector
-        adjusted_by_list = 'electroshape mean_norm'.split()
+        scaled_by_list = 'half_norm_a mean_norm'.split()
 
-        if scaled_by == adjusted_by_list[0]:
+        if scaled_by == scaled_by_list[0]:
             # Calculate half the norm of first vector (including all dimensions)
-            adjusted_scalar = np.linalg.norm(a)
+            scaled_scalar = np.linalg.norm(a) / 2
+            print(scaled_scalar)
 
-        elif scaled_by == adjusted_by_list[1]:
+        elif scaled_by == scaled_by_list[1]:
             # Calculate mean of both vector norms (including first 3 dimensions)
-            adjusted_scalar = (np.linalg.norm(a[0:3]) + np.linalg.norm(b[0:3])) / 2
+            scaled_scalar = (np.linalg.norm(a[0:3]) + np.linalg.norm(b[0:3])) / 2
         else:
-            raise ValueError(f'Scaling method unknown: {scaled_by}. Use: {", ".join(adjusted_by_list)}')
+            raise ValueError(f'Scaling method unknown: {scaled_by}. Use: {", ".join(scaled_by_list)}')
 
+        print(cross_unit)
         # Adjust cross product to length of the mean of both vectors described by the cross product
-        cross_adjusted = cross_unit * adjusted_scalar
+        cross_scaled = cross_unit * scaled_scalar
 
-        # Move adjusted cross product so that it originates from origin point
-        c_3d = point_origin[0:3] + pd.Series(cross_adjusted, index=point_origin[0:3].index)
+        # Move scaled cross product so that it originates from origin point
+        c_3d = point_origin[0:3] + pd.Series(cross_scaled, index=point_origin[0:3].index)
+        print(c_3d)
 
         return c_3d
-
-    def _calc_adjusted_6d_cross_product(self):
-        pass
 
     def _get_shape_dict(self, ref_points, dist):
         """
