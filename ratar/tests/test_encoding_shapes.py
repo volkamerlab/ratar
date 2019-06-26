@@ -61,6 +61,11 @@ def test_reorder_nested_dict_keys(nested_dict, key_order, flat_keys_before, flat
         pd.Series([1, 2, 3]),
         pd.DataFrame([[1, 2, 4], [1, 2, 5]]),
         pd.Series([1, 2, 4])
+    ),
+    (
+        pd.Series([1, 2, 3]),
+        pd.DataFrame([[1, 2, 4, 9], [1, 2, 5, 9]]),
+        pd.Series([1, 2, 4, 9])
     )
 ])
 def test_calc_nearest_point(point, points, nearest_point_ref):
@@ -168,8 +173,8 @@ def test_calc_scaled_3d_cross_product_exceptions(coord_origin, coord_point_a, co
         pd.Series([0, 0, 0, 0]),
         pd.Series([1, 0, 0, 1]),
         pd.Series([0, 2, 0, 1]),
-        'electroshape',
-        pd.Series([0, 0, 1.4142])
+        'half_norm_a',
+        pd.Series([0, 0, 0.7071])
     )
 ])
 def test_calc_scaled_3d_cross_product(coord_origin, coord_point_a, coord_point_b, scaled_by, scaled_3d_cross_product_ref):
@@ -288,6 +293,17 @@ def test_calc_shape_4dim_electroshape_exceptions(points):
             [0, 0, 0, 0, 0],
             [1, 1, 0, 0, 0]
         ])  # Points must be in 4D
+    ),
+    (
+        pd.DataFrame([
+            [0, 0, 0, 0, 0],
+            [1, 0, 0, 0, 0],
+            [2, 0, 0, 0, 0],
+            [3, 0, 0, 0, 0],
+            [4, 0, 0, 0, 0],
+            [5, 0, 0, 0, 0],
+            [6, 0, 0, 0, 0]
+        ])  # Vectors are linear dependent
     )
 ])
 def test_calc_shape_6dim_ratar1_exceptions(points):
@@ -392,4 +408,82 @@ def test_calc_shape_4dim_electroshape(points, ref_points):
     assert (abs(shape_3dim_usr['ref_points'] - ref_points) < 0.0001).all(axis=None)
 
 
+@pytest.mark.parametrize('points, ref_points', [
+    (
+        pd.DataFrame([
+            [0, 0, 0, 0, 0, 0],
+            [1, 0, 0, 1, 0, 0],
+            [0, 1, 0, 0, 1, 0],
+            [0, 0, 1, 0, 0, 1],
+            [1, 1, 0, 2, 0, 0],
+            [1, 0, 1, 0, 2, 0],
+            [1, 1, 1, 0, 0, 2]
+        ], columns='x y z z1 z2 z3'.split()
+        ),
+        pd.DataFrame([
+            [0.5714, 0.4286, 0.4286, 0.4285, 0.4285, 0.4285],
+            [0, 0, 0, 0, 0, 0],
+            [1, 1, 1, 0, 0, 2],
+            [1, 1, 0, 2, 0, 0],
+            [1, 1, 0, 2, 0, 0],
+            [0, 1, 0, 0, 1, 0],
+            [0, 1, 0, 0, 1, 0]  # TODO linear dependent reference points! Bad!
+        ], index='ref1 ref2 ref3 ref4 ref5 ref6 ref7'.split(), columns='x y z z1 z2 z3'.split()
+        )
+    )
+])
+def test_calc_shape_6dim_ratar1(points, ref_points):
 
+    shapes = Shapes()
+
+    shape_6dim_ratar1 = shapes._calc_shape_6dim_ratar1(points)
+
+    assert shape_6dim_ratar1['ref_points'].shape == ref_points.shape
+
+    for index, row in shape_6dim_ratar1['ref_points'].iterrows():
+        assert abs(row - ref_points.loc[index] < 0.0001).all(axis=None)
+
+
+@pytest.mark.parametrize('points_df', [
+    (
+        pd.DataFrame([
+            [0, 0]
+        ])
+    ),  # Too few dimensions.
+    (
+        pd.DataFrame([
+            [1, 0, 0],
+            [0, 1, 0],
+            [0, 0, 1]
+        ])
+    ),  # Too few points for 3D.
+    (
+            pd.DataFrame([
+                [1, 0, 0, 0],
+                [0, 1, 0, 0],
+                [0, 0, 1, 0],
+                [0, 0, 0, 1]
+            ])
+    ),  # Too few points for 4D.
+    (
+            pd.DataFrame([
+                [1, 0, 0, 0, 0, 0],
+                [0, 1, 0, 0, 0, 0],
+                [0, 0, 1, 0, 0, 0],
+                [0, 0, 0, 1, 0, 0],
+                [0, 0, 0, 0, 1, 0],
+                [0, 0, 0, 0, 0, 1]
+            ])
+    ),  # Too few points for 6D.
+    (
+            pd.DataFrame([
+                [0, 0, 0, 0, 0, 0, 0]
+            ])
+    ),  # Too many dimensions
+])
+def test_get_shape_by_method_exceptions(points_df):
+
+    shapes = Shapes()
+
+    with pytest.raises(ValueError):
+        shapes._get_shape_by_method(points_df)
