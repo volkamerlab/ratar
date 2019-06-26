@@ -1233,10 +1233,10 @@ class Shapes:
         Notes
         -----
         1. Calculate reference points for a set of points:
-           - c1, centroid
-           - c2, closest atom to c1
-           - c3, farthest atom to c1
-           - c4, farthest atom to c3
+           - ref1, centroid
+           - ref2, closest atom to ref1
+           - ref3, farthest atom to ref1
+           - ref4, farthest atom to ref3
         2. Calculate distances (distance distribution) from reference points to all other points.
         3. Calculate first, second, and third moment for each distance distribution.
 
@@ -1252,28 +1252,28 @@ class Shapes:
             raise ValueError(f'Number of points must be at least 4 but is {points.shape[0]}.')
 
         # Get centroid of input coordinates
-        c1 = points.mean(axis=0)
+        ref1 = points.mean(axis=0)
 
-        # Get distances from c1 to all other points
-        dist_c1 = self._calc_distances_to_point(points, c1)
+        # Get distances from ref1 to all other points
+        dist_ref1 = self._calc_distances_to_point(points, ref1)
 
-        # Get closest and farthest atom to centroid c1
-        c2, c3 = points.loc[dist_c1.idxmin()], points.loc[dist_c1.idxmax()]
+        # Get closest and farthest atom to ref1
+        ref2, ref3 = points.loc[dist_ref1.idxmin()], points.loc[dist_ref1.idxmax()]
 
-        # Get distances from c2 to all other points, get distances from c3 to all other points
-        dist_c2 = self._calc_distances_to_point(points, c2)
-        dist_c3 = self._calc_distances_to_point(points, c3)
+        # Get distances from ref2 to all other points, get distances from ref3 to all other points
+        dist_ref2 = self._calc_distances_to_point(points, ref2)
+        dist_ref3 = self._calc_distances_to_point(points, ref3)
 
-        # Get farthest atom to farthest atom to centroid c3
-        c4 = points.loc[dist_c3.idxmax()]
+        # Get farthest atom to ref3
+        ref4 = points.loc[dist_ref3.idxmax()]
 
-        # Get distances from c4 to all other points
-        dist_c4 = self._calc_distances_to_point(points, c4)
+        # Get distances from ref4 to all other points
+        dist_ref4 = self._calc_distances_to_point(points, ref4)
 
-        c = [c1, c2, c3, c4]
-        dist = [dist_c1, dist_c2, dist_c3, dist_c4]
+        reference_points = [ref1, ref2, ref3, ref4]
+        distances = [dist_ref1, dist_ref2, dist_ref3, dist_ref4]
 
-        return self._get_shape_dict(c, dist)
+        return self._get_shape_dict(reference_points, distances)
 
     def _calc_shape_3dim_csr(self, points):
         """
@@ -1292,10 +1292,10 @@ class Shapes:
         Notes
         -----
         1. Calculate reference points for a set of points:
-           - c1, centroid
-           - c2, farthest atom to c1
-           - c3, farthest atom to c2
-           - c4, cross product of two vectors spanning c1, c2, and c3
+           - ref1, centroid
+           - ref2, farthest atom to ref1
+           - ref3, farthest atom to ref2
+           - ref4, cross product of two vectors spanning ref1, ref2, and ref3
         2. Calculate distances (distance distribution) from reference points to all other points.
         3. Calculate first, second, and third moment for each distance distribution.
 
@@ -1309,22 +1309,22 @@ class Shapes:
         if points.shape[0] < 4:
             raise ValueError(f'Number of points must be at least 4 but is {points.shape[0]}.')
 
-        # Get centroid of input coordinates, and distances from c1 to all other points
-        c1 = points.mean(axis=0)
-        dist_c1 = self._calc_distances_to_point(points, c1)
+        # Get centroid of input coordinates, and distances from ref1 to all other points
+        ref1 = points.mean(axis=0)
+        dist_ref1 = self._calc_distances_to_point(points, ref1)
 
-        # Get farthest atom to centroid c1, and distances from c2 to all other points
-        c2 = points.loc[dist_c1.idxmax()]
-        dist_c2 = self._calc_distances_to_point(points, c2)
+        # Get farthest atom to ref1, and distances from ref2 to all other points
+        ref2 = points.loc[dist_ref1.idxmax()]
+        dist_ref2 = self._calc_distances_to_point(points, ref2)
 
-        # Get farthest atom to farthest atom to centroid c2, and distances from c3 to all other points
-        c3 = points.loc[dist_c2.idxmax()]
-        dist_c3 = self._calc_distances_to_point(points, c3)
+        # Get farthest atom to ref2, and distances from ref3 to all other points
+        ref3 = points.loc[dist_ref2.idxmax()]
+        dist_ref3 = self._calc_distances_to_point(points, ref3)
 
         # Get forth reference point, including chirality information
-        # Define two vectors spanning c1, c2, and c3 (from c1)
-        a = c2 - c1
-        b = c3 - c1
+        # Define two vectors spanning ref1, ref2, and ref3 (from ref1)
+        a = ref2 - ref1
+        b = ref3 - ref1
 
         # Calculate cross product of a and b (keep same units and normalise vector to have half the norm of vector a)
         cross = np.cross(a, b)  # Cross product
@@ -1333,16 +1333,16 @@ class Shapes:
         a_norm = np.linalg.norm(a)  # Norm of vector a
         c = pd.Series(a_norm / 2 * cross_unit, index=['x', 'y', 'z'])
 
-        # Add adjusted cross product vector to c1, the centroid
-        c4 = c1 + c
+        # Add adjusted cross product vector to ref1, the centroid
+        ref4 = ref1 + c
 
-        # Get distances from c4 to all other points
-        dist_c4 = self._calc_distances_to_point(points, c4)
+        # Get distances from ref4 to all other points
+        dist_ref4 = self._calc_distances_to_point(points, ref4)
 
-        c = [c1, c2, c3, c4]
-        dist = [dist_c1, dist_c2, dist_c3, dist_c4]
+        reference_points = [ref1, ref2, ref3, ref4]
+        distances = [dist_ref1, dist_ref2, dist_ref3, dist_ref4]
 
-        return self._get_shape_dict(c, dist)
+        return self._get_shape_dict(reference_points, distances)
 
     def _calc_shape_4dim_electroshape(self, points, scaling_factor=1):
         """
@@ -1363,10 +1363,10 @@ class Shapes:
         Notes
         -----
         1. Calculate reference points for a set of points:
-           - c1, centroid
-           - c2, farthest atom to c1
-           - c3, farthest atom to c2
-           - c4 and c5, cross product of 2 vectors spanning c1, c2, and c3 with positive/negative sign in 4th dimension
+           - ref1, centroid
+           - ref2, farthest atom to ref1
+           - ref3, farthest atom to ref2
+           - ref4 and ref5, cross product of 2 vectors spanning ref1, ref2, and ref3 with positive/negative sign in 4th dimension
         2. Calculate distances (distance distribution) from reference points to all other points.
         3. Calculate first, second, and third moment for each distance distribution.
 
@@ -1381,53 +1381,48 @@ class Shapes:
         if points.shape[0] < 5:
             raise ValueError(f'Number of points must be at least 5 but is {points.shape[0]}.')
 
-        # Get centroid of input coordinates (in 4 dimensions), and distances from c1 to all other points
-        c1 = points.mean(axis=0)
-        dist_c1 = self._calc_distances_to_point(points, c1)
+        # Get centroid of input coordinates (in 4 dimensions), and distances from ref1 to all other points
+        ref1 = points.mean(axis=0)
+        dist_ref1 = self._calc_distances_to_point(points, ref1)
 
-        # Get farthest atom to centroid c1 (in 4 dimensions), and distances from c2 to all other points
-        c2 = points.loc[dist_c1.idxmax()]
-        dist_c2 = self._calc_distances_to_point(points, c2)
+        # Get farthest atom to ref1 (in 4 dimensions), and distances from ref2 to all other points
+        ref2 = points.loc[dist_ref1.idxmax()]
+        dist_ref2 = self._calc_distances_to_point(points, ref2)
 
-        # Get farthest atom to farthest atom to centroid c2 (in 4 dimensions), and distances from c3 to all other points
-        c3 = points.loc[dist_c2.idxmax()]
-        dist_c3 = self._calc_distances_to_point(points, c3)
+        # Get farthest atom to ref2 (in 4 dimensions), and distances from ref3 to all other points
+        ref3 = points.loc[dist_ref2.idxmax()]
+        dist_ref3 = self._calc_distances_to_point(points, ref3)
 
         # Get forth and fifth reference point:
-        # 1. Define two vectors spanning c1, c2, and c3 (from c1)
-        a = c2 - c1
-        b = c3 - c1
+        # 1. Define two vectors spanning ref1, ref2, and ref3 (from ref1)
+        a = ref2 - ref1
+        b = ref3 - ref1
 
-        # 2. Get only spatial part of a and b
-        a_s = a[0:3]
-        b_s = b[0:3]
-
-        # 3. Calculate cross product of a_s and b_s
-        # (keep same units and normalise vector to have half the norm of vector a)
-        cross = np.cross(a_s, b_s)
+        # 2. Calculate cross product of dimensions 1-3 of a and b; normalise vector to half the norm of a
+        cross = np.cross(a[0:3], b[0:3])
         cross_norm = np.linalg.norm(cross)  # Norm of cross product
         cross_unit = cross / cross_norm  # Cross unit vector
-        a_norm = np.linalg.norm(a)  # Norm of vector a
+        a_norm = np.linalg.norm(a)  # Norm of vector a (note: a with all dimensions)
         c_s = pd.Series(a_norm / 2 * cross_unit, index=['x', 'y', 'z'])
 
-        # 4. Move new vector to centroid
-        c_s = c1[0:3] + c_s
+        # 3. Move new vector to centroid
+        c_s = ref1[0:3] + c_s
 
-        # 5. Add forth dimension with maximum and minmum of points' 4th dimension
+        # 4. Add forth dimension with maximum and minmum of points' 4th dimension
         max_value_4thdim = max(points.iloc[:, [3]].values)[0]
         min_value_4thdim = min(points.iloc[:, [3]].values)[0]
 
-        c4 = c_s.append(pd.Series([max_value_4thdim], index=[points.columns[3]]))
-        c5 = c_s.append(pd.Series([min_value_4thdim], index=[points.columns[3]]))
+        ref4 = c_s.append(pd.Series([scaling_factor * max_value_4thdim], index=[points.columns[3]]))
+        ref5 = c_s.append(pd.Series([scaling_factor * min_value_4thdim], index=[points.columns[3]]))
 
-        # Get distances from c4 and c5 to all other points
-        dist_c4 = self._calc_distances_to_point(points, c4)
-        dist_c5 = self._calc_distances_to_point(points, c5)
+        # Get distances from ref4 and ref5 to all other points
+        dist_ref4 = self._calc_distances_to_point(points, ref4)
+        dist_ref5 = self._calc_distances_to_point(points, ref5)
 
-        c = [c1, c2, c3, c4, c5]
-        dist = [dist_c1, dist_c2, dist_c3, dist_c4, dist_c5]
+        reference_points = [ref1, ref2, ref3, ref4, ref5]
+        distances = [dist_ref1, dist_ref2, dist_ref3, dist_ref4, dist_ref5]
 
-        return self._get_shape_dict(c, dist)
+        return self._get_shape_dict(reference_points, distances)
 
     def _calc_shape_6dim(self, points, scaling_factor=1):
         """
