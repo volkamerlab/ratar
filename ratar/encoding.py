@@ -1424,7 +1424,7 @@ class Shapes:
 
         return self._get_shape_dict(reference_points, distances)
 
-    def _calc_shape_6dim(self, points, scaling_factor=1):
+    def _calc_shape_6dim_ratar1(self, points, scaling_factor=1):
         """
         Encode binding site in 6D.
 
@@ -1441,13 +1441,13 @@ class Shapes:
         Notes
         -----
         1. Calculate reference points for a set of points:
-           - c1, centroid
-           - c2, closest atom to c1
-           - c3, farthest atom to c1
-           - c4, farthest atom to c3
-           - c5, nearest atom to translated and scaled cross product of two vectors spanning c1, c2, and c3
-           - c6, nearest atom to translated and scaled cross product of two vectors spanning c1, c3, and c4
-           - c7, nearest atom to translated and scaled cross product of two vectors spanning c1, c4, and c2
+           - ref1, centroid
+           - ref2, closest atom to ref1
+           - ref3, farthest atom to ref1
+           - ref4, farthest atom to ref3
+           - ref5, nearest atom to translated and scaled cross product of two vectors spanning ref1, ref2, and ref3
+           - ref6, nearest atom to translated and scaled cross product of two vectors spanning ref1, ref3, and ref4
+           - ref7, nearest atom to translated and scaled cross product of two vectors spanning ref1, ref4, and ref2
         2. Calculate distances (distance distribution) from reference points to all other points.
         3. Calculate first, second, and third moment for each distance distribution.
         """
@@ -1457,54 +1457,58 @@ class Shapes:
         if points.shape[0] < 7:
             raise ValueError(f'Number of points must be at least 7 but is {points.shape[0]}.')
 
-        # Get centroid of input coordinates (in 7 dimensions), and distances from c1 to all other points
-        c1 = points.mean(axis=0)
-        dist_c1 = self._calc_distances_to_point(points, c1)
+        # Get centroid of input coordinates (in 7 dimensions), and distances from ref1 to all other points
+        ref1 = points.mean(axis=0)
+        dist_ref1 = self._calc_distances_to_point(points, ref1)
 
-        # Get closest and farthest atom to centroid c1 (in 7 dimensions),
-        # and distances from c2 and c3 to all other points
-        c2, c3 = points.loc[dist_c1.idxmin()], points.loc[dist_c1.idxmax()]
-        dist_c2 = self._calc_distances_to_point(points, c2)
-        dist_c3 = self._calc_distances_to_point(points, c3)
+        # Get closest and farthest atom to centroid ref1 (in 7 dimensions),
+        # and distances from ref2 and ref3 to all other points
+        ref2, ref3 = points.loc[dist_ref1.idxmin()], points.loc[dist_ref1.idxmax()]
+        dist_ref2 = self._calc_distances_to_point(points, ref2)
+        dist_ref3 = self._calc_distances_to_point(points, ref3)
 
-        # Get farthest atom to farthest atom to centroid c2 (in 7 dimensions),
-        # and distances from c3 to all other points
-        c4 = points.loc[dist_c3.idxmax()]
-        dist_c4 = self._calc_distances_to_point(points, c4)
+        # Get farthest atom to farthest atom to centroid ref2 (in 7 dimensions),
+        # and distances from ref3 to all other points
+        ref4 = points.loc[dist_ref3.idxmax()]
+        dist_ref4 = self._calc_distances_to_point(points, ref4)
 
         # Get adjusted cross product
-        c5_3d = self._calc_adjusted_3d_cross_product(c1, c2, c3)  # FIXME order of importance, right?
-        c6_3d = self._calc_adjusted_3d_cross_product(c1, c3, c4)
-        c7_3d = self._calc_adjusted_3d_cross_product(c1, c4, c2)
+        ref5_3d = self._calc_scaled_3d_cross_product(ref1, ref2, ref3, 'mean_norm')  # FIXME order of importance, right?
+        ref6_3d = self._calc_scaled_3d_cross_product(ref1, ref3, ref4)
+        ref7_3d = self._calc_scaled_3d_cross_product(ref1, ref4, ref2)
 
         # Get remaining reference points as nearest atoms to adjusted cross products
-        c5 = self._calc_nearest_point(c5_3d, points, scaling_factor)
-        c6 = self._calc_nearest_point(c6_3d, points, scaling_factor)
-        c7 = self._calc_nearest_point(c7_3d, points, scaling_factor)
+        ref5 = self._calc_nearest_point(ref5_3d, points, scaling_factor)
+        ref6 = self._calc_nearest_point(ref6_3d, points, scaling_factor)
+        ref7 = self._calc_nearest_point(ref7_3d, points, scaling_factor)
 
-        # Get distances from c5, c6, and c7 to all other points
-        dist_c5 = self._calc_distances_to_point(points, c5)
-        dist_c6 = self._calc_distances_to_point(points, c6)
-        dist_c7 = self._calc_distances_to_point(points, c7)
+        # Get distances from ref5, ref6, and ref7 to all other points
+        dist_ref5 = self._calc_distances_to_point(points, ref5)
+        dist_ref6 = self._calc_distances_to_point(points, ref6)
+        dist_ref7 = self._calc_distances_to_point(points, ref7)
 
-        c = [c1, c2, c3, c4, c5, c6, c7]
-        dist = [dist_c1, dist_c2, dist_c3, dist_c4, dist_c5, dist_c6, dist_c7]
+        reference_points = [ref1, ref2, ref3, ref4, ref5, ref6, ref7]
+        distances = [dist_ref1, dist_ref2, dist_ref3, dist_ref4, dist_ref5, dist_ref6, dist_ref7]
 
-        return self._get_shape_dict(c, dist)
+        return self._get_shape_dict(reference_points, distances)
 
     @staticmethod
-    def _calc_adjusted_3d_cross_product(coord_origin, coord_point_a, coord_point_b):
+    def _calc_scaled_3d_cross_product(point_origin, point_a, point_b, scaled_by):
         """
         Calculates a translated and scaled 3D cross product vector based on three input vectors.
 
         Parameters
         ----------
-        coord_origin : pandas.Series
+        point_origin : pandas.Series
             Point with a least N dimensions (N > 2).
-        coord_point_a : pandas.Series
-            Point with a least N dimensions (N > 2)
-        coord_point_b : pandas.Series
-            Point with a least N dimensions (N > 2)
+        point_a : pandas.Series
+            Point with a least N dimensions (N > 2).
+        point_b : pandas.Series
+            Point with a least N dimensions (N > 2).
+        scaled_by : str
+            Method to scale the cross product vector:
+            - 'electroshape': scaled by half the norm of point_a (including all dimensions)
+            - 'mean_norm': scaled by the mean norm of point_a and point_b (including first 3 dimensions)
 
         Returns
         -------
@@ -1521,41 +1525,42 @@ class Shapes:
         3. Get nearest point in points (in 3D) and return its 6D vector.
         """
 
-        if len(set([coord_origin.size, coord_point_a.size, coord_point_b.size])) > 1:
-            raise ValueError(f'The three input pandas.Series are not of same length: {[coord_origin.size, coord_point_a.size, coord_point_b.size]}')
-        if coord_origin.size < 3:
+        if len({point_origin.size, point_a.size, point_b.size}) > 1:
+            raise ValueError(f'The three input pandas.Series are not of same length: {[point_origin.size, point_a.size, point_b.size]}')
+        if point_origin.size < 3:
             raise ValueError('The three input pandas.Series are not at least of length 3.')
 
         # Span vectors to point a and b from origin point
-        a = coord_point_a - coord_origin
-        b = coord_point_b - coord_origin
-
-        # Get only first three dimensions
-        a_3d = a[0:3]
-        b_3d = b[0:3]
-
-        # Calculate norm of vectors and their mean norm
-        a_3d_norm = np.sqrt(sum(a_3d ** 2))
-        b_3d_norm = np.sqrt(sum(b_3d ** 2))
-        ab_3d_norm = (a_3d_norm + b_3d_norm) / 2
+        a = point_a - point_origin
+        b = point_b - point_origin
 
         # Calculate cross product
-        cross = np.cross(a_3d, b_3d)
+        cross = np.cross(a[0:3], b[0:3])
 
         # Calculate norm of cross product
-        cross_norm = np.sqrt(sum(cross ** 2))
+        cross_norm = np.linalg.norm(cross)
 
         # Calculate unit vector of cross product
         cross_unit = cross / cross_norm
 
-        # Adjust cross product to length of the mean of both vectors described by the cross product
-        cross_adjusted = ab_3d_norm * cross_unit
+        # Calculate value to scale cross product vector
+        adjusted_by_list = 'electroshape mean_norm'.split()
 
-        # Cast adjusted cross product to Series
-        coord_cross = pd.Series(cross_adjusted, index=a_3d.index)
+        if scaled_by == adjusted_by_list[0]:
+            # Calculate half the norm of first vector (including all dimensions)
+            adjusted_scalar = np.linalg.norm(a)
+
+        elif scaled_by == adjusted_by_list[1]:
+            # Calculate mean of both vector norms (including first 3 dimensions)
+            adjusted_scalar = (np.linalg.norm(a[0:3]) + np.linalg.norm(b[0:3])) / 2
+        else:
+            raise ValueError(f'Scaling method unknown: {scaled_by}. Use: {", ".join(adjusted_by_list)}')
+
+        # Adjust cross product to length of the mean of both vectors described by the cross product
+        cross_adjusted = cross_unit * adjusted_scalar
 
         # Move adjusted cross product so that it originates from origin point
-        c_3d = coord_origin[0:3] + coord_cross
+        c_3d = point_origin[0:3] + pd.Series(cross_adjusted, index=point_origin[0:3].index)
 
         return c_3d
 
@@ -1581,11 +1586,11 @@ class Shapes:
 
         # Store reference points as DataFrame
         ref_points = pd.concat(ref_points, axis=1).transpose()
-        ref_points.index = [f'c{i+1}' for i, j in enumerate(ref_points.index)]
+        ref_points.index = [f'ref{i+1}' for i, j in enumerate(ref_points.index)]
 
         # Store distance distributions as DataFrame
         dist = pd.concat(dist, axis=1)
-        dist.columns = [f'dist_c{i+1}' for i, j in enumerate(dist.columns)]
+        dist.columns = [f'dist_ref{i+1}' for i, j in enumerate(dist.columns)]
 
         # Get first, second, and third moment for each distance distribution
         moments = self._calc_moments(dist)
