@@ -7,6 +7,7 @@ import sys
 import pandas as pd
 
 from flatten_dict import flatten
+from pathlib import Path
 import pytest
 
 from ratar.auxiliary import MoleculeLoader
@@ -528,3 +529,49 @@ def test_get_shape_by_method(points_df, shape_keys):
     shape = shapes._get_shape_by_method(points_df)
 
     assert list(shape.keys()) == shape_keys
+
+
+@pytest.mark.parametrize('filename, keys, n_dimensions', [
+    (
+            'AAK1_4wsq_altA_chainA.mol2',
+            'ca/no ca/z1 ca/z123 pca/no pca/z1 pca/z123 pc/no pc/z1 pc/z123'.split(),
+            dict(
+                zip(
+                    'ca/no ca/z1 ca/z123 pca/no pca/z1 pca/z123 pc/no pc/z1 pc/z123'.split(),
+                    [3, 4, 6, 3, 4, 6, 3, 4, 6]
+                )
+            )
+    )
+])
+def ttest_get_shapes_from_pmol(filename, keys, n_dimensions):
+    """
+    Test if points are correctly extracted from representatives of a molecule.
+
+    Parameters
+    ----------
+    filename : str
+        Name of molecule file.
+    keys : list of str
+        Flattened keys for different types of representatives and physicochemical properties.
+    n_dimensions : list of int
+        Number of dimensions for different types of representatives and physicochemical properties.
+    """
+
+    # Load molecule
+    molecule_path = Path(sys.path[0]) / 'ratar' / 'tests' / 'data' / filename
+    molecule_loader = MoleculeLoader()
+    molecule_loader.load_molecule(molecule_path)
+    pmol = molecule_loader.get_first_molecule()
+
+    # Set points
+    shapes = Shapes()
+    shapes.get_shapes_from_pmol(pmol)
+
+    shapes_flat = flatten(shapes.data, reducer='path')
+
+    print(shapes_flat.keys())
+
+    assert sorted(shapes_flat.keys()) == sorted(keys)
+
+    for key, value in shapes_flat.items():
+        assert value.shape[1] == n_dimensions[key]
