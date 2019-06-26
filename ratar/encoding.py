@@ -437,7 +437,7 @@ class Coordinates:
         """
 
         obj1 = flatten(self.data, reducer='path')
-        obj2 = flatten(other.coord_dict, reducer='path')
+        obj2 = flatten(other.data, reducer='path')
 
         try:
             rules = [
