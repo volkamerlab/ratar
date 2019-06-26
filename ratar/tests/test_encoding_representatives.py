@@ -31,7 +31,7 @@ from ratar.encoding import Representatives
         }
     )
 ])
-def test_get_representatives(filename, column_names, n_atoms, centroid):
+def test_get_representatives_from_pmol(filename, column_names, n_atoms, centroid):
     """
     Test if representatives are correctly extracted from representatives of a molecule.
 

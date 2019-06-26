@@ -18,7 +18,7 @@ from ratar.encoding import Subsets
         ('pc', 'HBA', [5, 13, 14, 20, 36, 55, 65, 76, 83, 89])
     )
 ])
-def test_get_pseudocenter_subsets_indices(filename, subsets_names, example_indices):
+def test_get_pseudocenter_subsets_indices_from_pmol(filename, subsets_names, example_indices):
     """
     Test if pseudocenter subset indices are extracted correctly.
 

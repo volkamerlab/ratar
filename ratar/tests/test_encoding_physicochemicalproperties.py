@@ -47,7 +47,7 @@ from ratar.encoding import PhysicoChemicalProperties
         )
     )
 ])
-def test_get_physicochemicalproperties(filename, column_names, n_atoms, centroid):
+def test_get_physicochemicalproperties_from_pmol(filename, column_names, n_atoms, centroid):
     """
     Test if coordinates are correctly extracted from representatives of a molecule.
 

@@ -34,7 +34,7 @@ from ratar.encoding import Coordinates
 
     )
 ])
-def test_get_coordinates(filename, column_names, n_atoms, centroid):
+def test_get_coordinates_from_pmol(filename, column_names, n_atoms, centroid):
     """
     Test if coordinates are correctly extracted from representatives of a molecule.
 

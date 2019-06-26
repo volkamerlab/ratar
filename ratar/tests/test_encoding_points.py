@@ -24,7 +24,7 @@ from ratar.encoding import Points
         )
     )
 ])
-def test_get_points(filename, keys, n_dimensions):
+def test_get_points_from_pmol(filename, keys, n_dimensions):
     """
     Test if points are correctly extracted from representatives of a molecule.
     
