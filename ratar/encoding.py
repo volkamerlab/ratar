@@ -1508,7 +1508,6 @@ class Shapes:
 
         # Span vectors to point a and b from origin point
         a = point_a - point_origin
-        print(a)
         b = point_b - point_origin
 
         # Calculate cross product
@@ -1516,6 +1515,8 @@ class Shapes:
 
         # Calculate norm of cross product
         cross_norm = np.linalg.norm(cross)
+        if cross_norm == 0:
+            raise ValueError(f'Cross product is zero, thus vectors are linear dependent.')
 
         # Calculate unit vector of cross product
         cross_unit = cross / cross_norm
@@ -1526,7 +1527,6 @@ class Shapes:
         if scaled_by == scaled_by_list[0]:
             # Calculate half the norm of first vector (including all dimensions)
             scaled_scalar = np.linalg.norm(a) / 2
-            print(scaled_scalar)
 
         elif scaled_by == scaled_by_list[1]:
             # Calculate mean of both vector norms (including first 3 dimensions)
@@ -1534,13 +1534,11 @@ class Shapes:
         else:
             raise ValueError(f'Scaling method unknown: {scaled_by}. Use: {", ".join(scaled_by_list)}')
 
-        print(cross_unit)
-        # Adjust cross product to length of the mean of both vectors described by the cross product
+        # Scale cross product to length of the mean of both vectors described by the cross product
         cross_scaled = cross_unit * scaled_scalar
 
         # Move scaled cross product so that it originates from origin point
         c_3d = point_origin[0:3] + pd.Series(cross_scaled, index=point_origin[0:3].index)
-        print(c_3d)
 
         return c_3d
 
@@ -1560,6 +1558,8 @@ class Shapes:
         dict of DataFrames
             Reference points, distance distributions, and moments.
         """
+
+        # TODO include test for linear independence of reference points
 
         # Store reference points as DataFrame
         ref_points = pd.concat(ref_points, axis=1).transpose()
@@ -1683,8 +1683,6 @@ class Shapes:
         flat_dict = flatten(nested_dict, reducer='path')
 
         keys_old = flat_dict.keys()
-
-        print(set([len(i.split('/')) for i in keys_old]))
 
         if len(set([len(i.split('/')) for i in keys_old])) > 1:
             raise KeyError(f'Flattened keys are nested differently: {[len(i.split("/")) for i in keys_old]}')
