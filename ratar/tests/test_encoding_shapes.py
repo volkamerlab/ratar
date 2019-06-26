@@ -479,7 +479,7 @@ def test_calc_shape_6dim_ratar1(points, ref_points):
             pd.DataFrame([
                 [0, 0, 0, 0, 0, 0, 0]
             ])
-    ),  # Too many dimensions
+    )  # Too many dimensions
 ])
 def test_get_shape_by_method_exceptions(points_df):
 
@@ -487,3 +487,44 @@ def test_get_shape_by_method_exceptions(points_df):
 
     with pytest.raises(ValueError):
         shapes._get_shape_by_method(points_df)
+
+
+@pytest.mark.parametrize('points_df, shape_keys', [
+    (
+        pd.DataFrame([
+            [1, 1, 1],
+            [1, 0, 0],
+            [0, 1, 0],
+            [0, 0, 1]
+        ]),
+        '3Dusr 3Dcsr'.split()
+    ),
+    (
+        pd.DataFrame([
+            [1, 1, 1, 1],
+            [1, 0, 0, 0],
+            [0, 1, 0, 0],
+            [0, 0, 1, 0],
+            [0, 0, 0, 1]
+        ]),
+        '4Delectroshape'.split()
+    ),
+    (
+        pd.DataFrame([
+            [1, 1, 1, 1, 1, 1],
+            [2, 0, 0, 0, 0, 0],
+            [0, 1, 0, 0, 0, 0],
+            [0, 0, 1, 0, 0, 0],
+            [0, 0, 0, 1, 0, 0],
+            [0, 0, 0, 0, 1, 0],
+            [0, 0, 0, 0, 0, 1]
+        ]),
+        '6Dratar1'.split()
+    )
+])
+def test_get_shape_by_method(points_df, shape_keys):
+
+    shapes = Shapes()
+    shape = shapes._get_shape_by_method(points_df)
+
+    assert list(shape.keys()) == shape_keys
