@@ -1422,17 +1422,17 @@ class Shapes:
         if points.shape[0] < 7:
             raise ValueError(f'Number of points must be at least 7 but is {points.shape[0]}.')
 
-        # Get centroid of input coordinates (in 7 dimensions), and distances from ref1 to all other points
+        # Get centroid of input coordinates (in 6 dimensions), and distances from ref1 to all other points
         ref1 = points.mean(axis=0)
         dist_ref1 = self._calc_distances_to_point(points, ref1)
 
-        # Get closest and farthest atom to centroid ref1 (in 7 dimensions),
+        # Get closest and farthest atom to centroid ref1 (in 6 dimensions),
         # and distances from ref2 and ref3 to all other points
         ref2, ref3 = points.loc[dist_ref1.idxmin()], points.loc[dist_ref1.idxmax()]
         dist_ref2 = self._calc_distances_to_point(points, ref2)
         dist_ref3 = self._calc_distances_to_point(points, ref3)
 
-        # Get farthest atom to farthest atom to centroid ref2 (in 7 dimensions),
+        # Get farthest atom to farthest atom to centroid ref2 (in 6 dimensions),
         # and distances from ref3 to all other points
         ref4 = points.loc[dist_ref3.idxmax()]
         dist_ref4 = self._calc_distances_to_point(points, ref4)
