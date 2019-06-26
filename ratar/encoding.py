@@ -1410,19 +1410,15 @@ class Shapes:
         a_norm = np.linalg.norm(a)  # Norm of vector a
         c_s = pd.Series(a_norm / 2 * cross_unit, index=['x', 'y', 'z'])
 
-        # 4. Add c to c1 to define the spatial components of the forth and fifth reference points
+        # 4. Move new vector to centroid
+        c_s = c1[0:3] + c_s
 
-        # Add 4th dimension
-        name_4thdim = points.columns[3]
-        c = c_s.append(pd.Series([0], index=[name_4thdim]))
-        c1_s = c1[0:3].append(pd.Series([0], index=[name_4thdim]))  # TODO check what is done here!
-
-        # Get values for 4th dimension (min and max of 4th dimension)
+        # 5. Add forth dimension with maximum and minmum of points' 4th dimension
         max_value_4thdim = max(points.iloc[:, [3]].values)[0]
         min_value_4thdim = min(points.iloc[:, [3]].values)[0]
 
-        c4 = c1_s + c + pd.Series([0, 0, 0, scaling_factor * max_value_4thdim], index=['x', 'y', 'z', name_4thdim])
-        c5 = c1_s + c + pd.Series([0, 0, 0, scaling_factor * min_value_4thdim], index=['x', 'y', 'z', name_4thdim])
+        c4 = c_s.append(pd.Series([max_value_4thdim], index=[points.columns[3]]))
+        c5 = c_s.append(pd.Series([min_value_4thdim], index=[points.columns[3]]))
 
         # Get distances from c4 and c5 to all other points
         dist_c4 = self._calc_distances_to_point(points, c4)
