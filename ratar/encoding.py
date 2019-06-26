@@ -12,7 +12,6 @@ import glob
 import logging
 from pathlib import Path
 import pickle
-import sys
 
 from flatten_dict import flatten, unflatten
 import numpy as np
@@ -1193,28 +1192,17 @@ class Shapes:
         elif n_dimensions == 4 and n_points > 4:
             return {'4Delectroshape': self._calc_shape_4dim_electroshape(points_df)}
         elif n_dimensions == 6 and n_points > 6:
-            return {'6Dratar1': self._calc_shape_6dim(points_df)}
+            return {'6Dratar1': self._calc_shape_6dim_ratar1(points_df)}
         elif n_dimensions < 3:
-            logger.error(f'Unexpected points dimension: {points_df.shape[1]}. Not implemented.',
-                         extra={'molecule_id': self.molecule_id})
-            return None
+            raise ValueError(f'Unexpected points dimension: {points_df.shape[1]}. Not implemented.')
         elif n_dimensions == 3 and n_points <= 3:
-            logger.error(f'Number of points in 3D must be at least 4. Number of input points: {points_df.shape[0]}.',
-                         extra={'molecule_id': self.molecule_id})
-            return {'3Dusr': {'ref_points': None, 'dist': None, 'moments': None},
-                    '3Dcsr': {'ref_points': None, 'dist': None, 'moments': None}}
+            raise ValueError(f'Number of points in 3D must be at least 4. Number of input points: {points_df.shape[0]}.')
         elif n_dimensions == 4 and n_points <= 4:
-            logger.error(f'Number of points in 4D must be at least 5. Number of input points: {points_df.shape[0]}.',
-                         extra={'molecule_id': self.molecule_id})
-            return {'4Delectroshape': {'ref_points': None, 'dist': None, 'moments': None}}
+            raise ValueError(f'Number of points in 4D must be at least 5. Number of input points: {points_df.shape[0]}.')
         elif n_dimensions == 6 and n_points <= 6:
-            logger.error(f'Number of points in 6D must be at least 7. Number of input points: {points_df.shape[0]}.',
-                         extra={'molecule_id': self.molecule_id})
-            return {'6Dratar1': {'ref_points': None, 'dist': None, 'moments': None}}
-        elif n_dimensions > 7:
-            logger.error(f'Unexpected points dimension: {points_df.shape[1]}. Not implemented.',
-                         extra={'molecule_id': self.molecule_id})
-            return None
+            raise ValueError(f'Number of points in 6D must be at least 7. Number of input points: {points_df.shape[0]}.')
+        elif n_dimensions > 6:
+            raise ValueError(f'Unexpected points dimension: {points_df.shape[1]}. Not implemented.')
 
     def _calc_shape_3dim_usr(self, points):
         """
@@ -1354,7 +1342,8 @@ class Shapes:
            - ref1, centroid
            - ref2, farthest atom to ref1
            - ref3, farthest atom to ref2
-           - ref4 and ref5, cross product of 2 vectors spanning ref1, ref2, and ref3 with positive/negative sign in 4th dimension
+           - ref4 and ref5, cross product of 2 vectors spanning ref1, ref2, and ref3; 4th dimensions set to maximum and
+             minimum value in 4th dimension of input points
         2. Calculate distances (distance distribution) from reference points to all other points.
         3. Calculate first, second, and third moment for each distance distribution.
 
@@ -1502,7 +1491,8 @@ class Shapes:
         """
 
         if len({point_origin.size, point_a.size, point_b.size}) > 1:
-            raise ValueError(f'The three input pandas.Series are not of same length: {[point_origin.size, point_a.size, point_b.size]}')
+            raise ValueError(f'The three input pandas.Series are not of same length: '
+                             f'{[point_origin.size, point_a.size, point_b.size]}')
         if point_origin.size < 3:
             raise ValueError('The three input pandas.Series are not at least of length 3.')
 
@@ -1559,7 +1549,7 @@ class Shapes:
             Reference points, distance distributions, and moments.
         """
 
-        # TODO include test for linear independence of reference points
+        # TODO include test for linear independence / degeneracy of reference points
 
         # Store reference points as DataFrame
         ref_points = pd.concat(ref_points, axis=1).transpose()
