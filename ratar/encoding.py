@@ -1741,11 +1741,11 @@ def process_encoding(input_mol_path, output_dir):
     mol_sum = len(input_mol_path_list)
 
     # Iterate over all binding sites (molecule structure files)
-    for mol_counter, mol in enumerate(input_mol_path_list, 1):
+    for mol_counter, mol_path in enumerate(input_mol_path_list, 1):
 
         # Load binding site from molecule structure file
-        bs_loader = MoleculeLoader(mol)
-        bs_loader.load_molecule(remove_solvent=True)
+        bs_loader = MoleculeLoader()
+        bs_loader.load_molecule(mol_path, remove_solvent=True)
         pmols = bs_loader.pmols
 
         # Get number of pmol objects and set pmol counter
