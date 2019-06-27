@@ -1692,7 +1692,7 @@ class Shapes:
         return flat_dict
 
 
-def process_encoding(input_mol_path, output_dir):
+def process_encoding(input_mol_path, output_dir, remove_solvent=False):
     """
     Process a list of molecule structure files (retrieved by an input path to one or multiple files) and
     save per binding site multiple output files to an output directory.
@@ -1720,6 +1720,8 @@ def process_encoding(input_mol_path, output_dir):
         Path to molecule structure file(s), can include a wildcard to match multiple files.
     output_dir : str
         Output directory.
+    remove_solvent : bool
+        Solvent atoms are removed when set to True (default: False).
 
     Examples
     --------
@@ -1745,7 +1747,7 @@ def process_encoding(input_mol_path, output_dir):
 
         # Load binding site from molecule structure file
         bs_loader = MoleculeLoader()
-        bs_loader.load_molecule(mol_path, remove_solvent=True)
+        bs_loader.load_molecule(mol_path, remove_solvent)
         pmols = bs_loader.pmols
 
         # Get number of pmol objects and set pmol counter

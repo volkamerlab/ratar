@@ -75,7 +75,7 @@ def main():
 
     # Process encoding
     logger.info(f'PROCESS ENCODING...', extra={'molecule_id': 'all'})
-    process_encoding(input_mol_path, output_dir)
+    process_encoding(input_mol_path, output_dir, remove_solvent=True)
 
     # Get end time of encoding step and runtime
     encoding_end = datetime.datetime.now()
