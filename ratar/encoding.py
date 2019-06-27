@@ -380,6 +380,9 @@ class Representatives:
 
         mol_pc_subset_df = pd.concat(mol_pc_subset, axis=1).T
 
+        # Change datatype from object to float for selected columns
+        mol_pc_subset_df[['x', 'y', 'z', 'charge']] = mol_pc_subset_df[['x', 'y', 'z', 'charge']].astype(float)
+
         return mol_pc_subset_df
 
 
