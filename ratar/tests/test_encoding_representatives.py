@@ -63,3 +63,105 @@ def test_get_representatives_from_pmol(filename, column_names, n_atoms, centroid
         assert abs(value['x'].mean() - centroid[key][0]) < 0.0001
         assert abs(value['y'].mean() - centroid[key][1]) < 0.0001
         assert abs(value['z'].mean() - centroid[key][2]) < 0.0001
+
+
+@pytest.mark.parametrize('filename', [
+    (
+        'AAK1_4wsq_altA_chainA_reduced.mol2'
+    )
+])
+def test_get_ca_datatypes(filename):
+
+    # Load molecule
+    molecule_path = Path(sys.path[0]) / 'ratar' / 'tests' / 'data' / filename
+    molecule_loader = MoleculeLoader()
+    molecule_loader.load_molecule(molecule_path)
+    pmol = molecule_loader.get_first_molecule()
+
+    repres = Representatives()
+    ca = repres._get_ca(pmol.df)
+
+    datatypes = {
+        'atom_id': int,
+        'atom_name': object,
+        'res_id': object,
+        'res_name': object,
+        'subst_name': object,
+        'x': float,
+        'y': float,
+        'z': float,
+        'charge': float
+    }
+
+    for index, datatype in ca.dtypes.items():
+        assert datatype == datatypes[index]
+
+
+@pytest.mark.parametrize('filename', [
+    (
+        'AAK1_4wsq_altA_chainA_reduced.mol2'
+    )
+])
+def test_get_pca_datatypes(filename):
+
+    # Load molecule
+    molecule_path = Path(sys.path[0]) / 'ratar' / 'tests' / 'data' / filename
+    molecule_loader = MoleculeLoader()
+    molecule_loader.load_molecule(molecule_path)
+    pmol = molecule_loader.get_first_molecule()
+
+    repres = Representatives()
+    pca = repres._get_pca(pmol.df)
+
+    datatypes = {
+        'atom_id': int,
+        'atom_name': object,
+        'res_id': object,
+        'res_name': object,
+        'subst_name': object,
+        'x': float,
+        'y': float,
+        'z': float,
+        'charge': float,
+        'pc_type': object,
+        'pc_id': object,
+        'pc_atom_id': object
+    }
+
+    for index, datatype in pca.dtypes.items():
+        assert datatype == datatypes[index]
+
+
+@pytest.mark.parametrize('filename', [
+    (
+        'AAK1_4wsq_altA_chainA_reduced.mol2'
+    )
+])
+def test_get_pca_pc_datatypes(filename):
+
+    # Load molecule
+    molecule_path = Path(sys.path[0]) / 'ratar' / 'tests' / 'data' / filename
+    molecule_loader = MoleculeLoader()
+    molecule_loader.load_molecule(molecule_path)
+    pmol = molecule_loader.get_first_molecule()
+
+    repres = Representatives()
+    pc = repres._get_pc(pmol.df)
+
+    datatypes = {
+        'atom_id': object,
+        'atom_name': object,
+        'res_id': object,
+        'res_name': object,
+        'subst_name': object,
+        'x': float,
+        'y': float,
+        'z': float,
+        'charge': float,
+        'pc_type': object,
+        'pc_id': object,
+        'pc_atom_id': object
+    }
+
+    for index, datatype in pc.dtypes.items():
+        assert datatype == datatypes[index]
