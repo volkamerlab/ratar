@@ -33,8 +33,6 @@ def test_calc_moments(distances, moment1, moment2, moment3):
     shapes = Shapes()
     moments = shapes._calc_moments(distances)
 
-    print(moments)
-
     assert all((moments['m1'] - moment1) < 0.0001)
     assert all((moments['m2'] - moment2) < 0.0001)
     assert all((moments['m3'] - moment3) < 0.0001)
@@ -176,6 +174,13 @@ def test_calc_scaled_3d_cross_product_exceptions(coord_origin, coord_point_a, co
         pd.Series([0, 2, 0, 1]),
         'half_norm_a',
         pd.Series([0, 0, 0.7071])
+    ),
+    (
+        pd.Series([5.8840, 12.5871, 43.3804]),
+        pd.Series([2.0888, 16.4158, 54.4161]),
+        pd.Series([9.5988, 10.512, 35.0883]),
+        'half_norm_a',
+        pd.Series([2.1283, 16.6303, 40.6861])
     )
 ])
 def test_calc_scaled_3d_cross_product(coord_origin, coord_point_a, coord_point_b, scaled_by, scaled_3d_cross_product_ref):
@@ -531,19 +536,15 @@ def test_get_shape_by_method(points_df, shape_keys):
     assert list(shape.keys()) == shape_keys
 
 
-@pytest.mark.parametrize('filename, keys, n_dimensions', [
+@pytest.mark.parametrize('filename, keys_ref', [
     (
-            'AAK1_4wsq_altA_chainA.mol2',
-            'ca/no ca/z1 ca/z123 pca/no pca/z1 pca/z123 pc/no pc/z1 pc/z123'.split(),
-            dict(
-                zip(
-                    'ca/no ca/z1 ca/z123 pca/no pca/z1 pca/z123 pc/no pc/z1 pc/z123'.split(),
-                    [3, 4, 6, 3, 4, 6, 3, 4, 6]
-                )
-            )
+            'AAK1_4wsq_altA_chainA_reduced.mol2',
+            f'ca/no/3Dusr ca/no/3Dcsr ca/z1/4Delectroshape ca/z123/6Dratar1 '
+            f'pca/no/3Dusr pca/no/3Dcsr pca/z1/4Delectroshape pca/z123/6Dratar1 '
+            f'pc/no/3Dusr pc/no/3Dcsr pc/z1/4Delectroshape pc/z123/6Dratar1'.split()
     )
 ])
-def ttest_get_shapes_from_pmol(filename, keys, n_dimensions):
+def test_get_shapes_from_pmol(filename, keys_ref):
     """
     Test if points are correctly extracted from representatives of a molecule.
 
@@ -551,10 +552,8 @@ def ttest_get_shapes_from_pmol(filename, keys, n_dimensions):
     ----------
     filename : str
         Name of molecule file.
-    keys : list of str
+    keys_ref : list of str
         Flattened keys for different types of representatives and physicochemical properties.
-    n_dimensions : list of int
-        Number of dimensions for different types of representatives and physicochemical properties.
     """
 
     # Load molecule
@@ -569,9 +568,7 @@ def ttest_get_shapes_from_pmol(filename, keys, n_dimensions):
 
     shapes_flat = flatten(shapes.data, reducer='path')
 
-    print(shapes_flat.keys())
+    keys_ref = sorted(keys_ref)
+    keys_calc = sorted(set(['/'.join(i.split('/')[:-1]) for i in shapes_flat.keys()]))
 
-    assert sorted(shapes_flat.keys()) == sorted(keys)
-
-    for key, value in shapes_flat.items():
-        assert value.shape[1] == n_dimensions[key]
+    assert keys_calc == keys_ref
