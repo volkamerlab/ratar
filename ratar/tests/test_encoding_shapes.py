@@ -14,6 +14,43 @@ from ratar.auxiliary import MoleculeLoader
 from ratar.encoding import Shapes
 
 
+@pytest.mark.parametrize('mol_file1, mol_file2', [
+    ('AAK1_4wsq_altA_chainA.mol2', 'AAK1_4wsq_altA_chainB.mol2')
+])
+def test_shapes_eq(mol_file1, mol_file2):
+    """
+    Test __eq__ function for Shapes class.
+
+    Parameters
+    ----------
+    mol_file1 : str
+        Name of file containing the structure for molecule A.
+    mol_file2 : str
+        Name of file containing the structure for molecule B.
+
+    """
+
+    molecule_path1 = Path(sys.path[0]) / 'ratar' / 'tests' / 'data' / mol_file1
+    molecule_path2 = Path(sys.path[0]) / 'ratar' / 'tests' / 'data' / mol_file2
+
+    molecule_loader1 = MoleculeLoader()
+    molecule_loader2 = MoleculeLoader()
+
+    molecule_loader1.load_molecule(molecule_path1)
+    molecule_loader2.load_molecule(molecule_path2)
+
+    obj1 = Shapes()
+    obj2 = Shapes()
+    obj3 = Shapes()
+
+    obj1.get_shapes_from_pmol(molecule_loader1.get_first_molecule())
+    obj2.get_shapes_from_pmol(molecule_loader1.get_first_molecule())
+    obj3.get_shapes_from_pmol(molecule_loader2.get_first_molecule())
+
+    assert (obj1 == obj2) is True
+    assert (obj1 == obj3) is False
+
+
 @pytest.mark.parametrize('distances, moment1, moment2, moment3', [
     (
         pd.DataFrame([

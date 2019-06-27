@@ -14,9 +14,9 @@ from ratar.encoding import BindingSite
 @pytest.mark.parametrize('mol_file1, mol_file2', [
     ('AAK1_4wsq_altA_chainA.mol2', 'AAK1_4wsq_altA_chainB.mol2')
 ])
-def ttest_bindingsites_eq(mol_file1, mol_file2):
+def test_bindingsites_eq(mol_file1, mol_file2):
     """
-    Test __eq__ functions for encoding classes.
+    Test __eq__ function for BindingSite class.
 
     Parameters
     ----------
@@ -36,9 +36,9 @@ def ttest_bindingsites_eq(mol_file1, mol_file2):
     molecule_loader1.load_molecule(molecule_path1)
     molecule_loader2.load_molecule(molecule_path2)
 
-    bs1 = BindingSite(molecule_loader1.pmols[0])
-    bs2 = BindingSite(molecule_loader1.pmols[0])
-    bs3 = BindingSite(molecule_loader2.pmols[0])
+    obj1 = BindingSite(molecule_loader1.get_first_molecule())
+    obj2 = BindingSite(molecule_loader1.get_first_molecule())
+    obj3 = BindingSite(molecule_loader2.get_first_molecule())
 
-    assert (bs1 == bs2) is True
-    assert (bs1 == bs3) is False
+    assert (obj1 == obj2) is True
+    assert (obj1 == obj3) is False
