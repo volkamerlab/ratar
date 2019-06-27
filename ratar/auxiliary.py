@@ -332,6 +332,8 @@ def load_pseudocenters(remove_hbda=False):
     >>> pseudocenter_atoms = load_pseudocenters()
     """
 
+    # TODO summarize pseudocenter functions in Pseudocenter class?
+
     pseudocenter_path = ratar_path / 'data' / 'pseudocenter_atoms.csv'
 
     pseudocenter_atoms = pd.read_csv(pseudocenter_path, index_col=0)
