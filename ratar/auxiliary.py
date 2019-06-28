@@ -85,6 +85,8 @@ class MoleculeLoader:
             self.molecules_list = self._load_pdb(remove_solvent)
         elif self.input_path.suffix == '.mol2':
             self.molecules_list = self._load_mol2(remove_solvent)
+        else:
+            raise IOError(f'Unsupported file format {self.input_path.suffix}, only pdb and mol2 are supported.')
 
         # Set number of loaded molecules
         self.n_molecules = len(self.molecules_list)
