@@ -40,9 +40,9 @@ def test_subsets_eq(mol_file1, mol_file2):
     obj2 = Subsets()
     obj3 = Subsets()
 
-    obj1.get_subsets_from_pmol(molecule_loader1.get_first_molecule())
-    obj2.get_subsets_from_pmol(molecule_loader1.get_first_molecule())
-    obj3.get_subsets_from_pmol(molecule_loader2.get_first_molecule())
+    obj1.get_pseudocenter_subsets_indices_from_pmol(molecule_loader1.get_first_molecule())
+    obj2.get_pseudocenter_subsets_indices_from_pmol(molecule_loader1.get_first_molecule())
+    obj3.get_pseudocenter_subsets_indices_from_pmol(molecule_loader2.get_first_molecule())
 
     assert (obj1 == obj2) is True
     assert (obj1 == obj3) is False
