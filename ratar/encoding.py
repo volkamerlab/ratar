@@ -712,7 +712,7 @@ class Subsets:
         try:
             rules = [
                 obj1.keys() == obj2.keys(),
-                all([v.equals(obj2[k]) for k, v in obj1.items()])
+                all([v == obj2[k] for k, v in obj1.items()])
             ]
         except KeyError:
             rules = False
