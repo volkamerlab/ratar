@@ -2,8 +2,7 @@
 Unit and regression test for the MoleculeLoader class in the ratar.auxiliary module of the ratar package.
 """
 
-import sys
-
+import numpy as np
 import pytest
 from pathlib import Path
 
@@ -63,9 +62,9 @@ def test_molecule_loader(filename, code, n_atoms, centroid):
         assert v.code == code[c]
         assert v.df.shape == (n_atoms[c], 9)
         assert list(v.df.columns) == ['atom_id', 'atom_name', 'res_id', 'res_name', 'subst_name', 'x', 'y', 'z', 'charge']
-        assert abs(v.df['x'].mean() - centroid[c][0]) < 0.0001
-        assert abs(v.df['y'].mean() - centroid[c][1]) < 0.0001
-        assert abs(v.df['z'].mean() - centroid[c][2]) < 0.0001
+        assert np.isclose(v.df['x'].mean(), centroid[c][0], rtol=1e-04)
+        assert np.isclose(v.df['y'].mean(), centroid[c][1], rtol=1e-04)
+        assert np.isclose(v.df['z'].mean(), centroid[c][2], rtol=1e-04)
 
 
 @pytest.mark.parametrize('filename, n_atoms', [

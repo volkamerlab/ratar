@@ -2,8 +2,7 @@
 Unit and regression test for the Coordinates class in the ratar.encoding module of the ratar package.
 """
 
-import sys
-
+import numpy as np
 import pytest
 from pathlib import Path
 
@@ -100,6 +99,6 @@ def test_get_coordinates_from_molecule(filename, column_names, n_atoms, centroid
     for key, value in coordinates.data.items():
         assert all(value.columns == column_names)
         assert value.shape[0] == n_atoms[key]
-        assert abs(value['x'].mean() - centroid[key][0]) < 0.0001
-        assert abs(value['y'].mean() - centroid[key][1]) < 0.0001
-        assert abs(value['z'].mean() - centroid[key][2]) < 0.0001
+        assert np.isclose(value['x'].mean(), centroid[key][0], rtol=1e-04)
+        assert np.isclose(value['y'].mean(), centroid[key][1], rtol=1e-04)
+        assert np.isclose(value['z'].mean(), centroid[key][2], rtol=1e-04)

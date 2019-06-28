@@ -2,8 +2,6 @@
 Unit and regression test for the Subsets class in the ratar.encoding module of the ratar package.
 """
 
-import sys
-
 from pathlib import Path
 import pytest
 

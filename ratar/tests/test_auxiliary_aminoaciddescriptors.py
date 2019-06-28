@@ -2,8 +2,7 @@
 Unit and regression test for the AminoAcidDescriptor class in the ratar.auxiliary module of the ratar package.
 """
 
-import sys
-
+import numpy as np
 import pytest
 from pathlib import Path
 
@@ -44,9 +43,9 @@ def test_amino_acid_descriptors(filename, n_atoms, centroid):
     molecule_aa_zscales = aa_descriptors.get_zscales_amino_acids(molecule.df)
 
     assert aa_descriptors.zscales.shape == (20, 5)
-    assert abs(aa_descriptors.zscales.mean().mean() - 0.028100) < 0.0001
+    assert np.isclose(aa_descriptors.zscales.mean().mean(), 0.028100)
 
     assert molecule_aa_zscales.shape == (n_atoms, 9)
-    assert abs(molecule_aa_zscales['x'].mean() - centroid[0]) < 0.0001
-    assert abs(molecule_aa_zscales['y'].mean() - centroid[1]) < 0.0001
-    assert abs(molecule_aa_zscales['z'].mean() - centroid[2]) < 0.0001
+    assert np.isclose(molecule_aa_zscales['x'].mean(), centroid[0], rtol=1e-04)
+    assert np.isclose(molecule_aa_zscales['y'].mean(), centroid[1], rtol=1e-04)
+    assert np.isclose(molecule_aa_zscales['z'].mean(), centroid[2], rtol=1e-04)

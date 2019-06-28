@@ -2,8 +2,6 @@
 Unit and regression test for the Points class in the ratar.encoding module of the ratar package.
 """
 
-import sys
-
 from flatten_dict import flatten
 from pathlib import Path
 import pytest

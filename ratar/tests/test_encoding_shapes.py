@@ -2,11 +2,9 @@
 Unit and regression test for the Shapes class in the ratar.encoding module of the ratar package.
 """
 
-import sys
-
-import pandas as pd
-
 from flatten_dict import flatten
+import numpy as np
+import pandas as pd
 from pathlib import Path
 import pytest
 
@@ -70,9 +68,9 @@ def test_calc_moments(distances, moment1, moment2, moment3):
     shapes = Shapes()
     moments = shapes._calc_moments(distances)
 
-    assert all((moments['m1'] - moment1) < 0.0001)
-    assert all((moments['m2'] - moment2) < 0.0001)
-    assert all((moments['m3'] - moment3) < 0.0001)
+    assert np.isclose(moments['m1'], moment1, rtol=1e-04).all()
+    assert np.isclose(moments['m2'], moment2, rtol=1e-04).all()
+    assert np.isclose(moments['m3'], moment3, rtol=1e-04).all()
 
 
 @pytest.mark.parametrize('nested_dict, key_order, flat_keys_before, flat_keys_after', [
@@ -109,7 +107,7 @@ def test_calc_nearest_point(point, points, nearest_point_ref):
     shapes = Shapes()
     nearest_point = shapes._calc_nearest_point(point, points, 1)
 
-    assert all(abs(nearest_point - nearest_point_ref) < 0.0001)
+    assert all(np.isclose(nearest_point, nearest_point_ref, rtol=1e-04))
 
 
 @pytest.mark.parametrize('points, ref_point, distances_to_point_ref', [
@@ -125,7 +123,7 @@ def test_calc_distances_to_point(points, ref_point, distances_to_point_ref):
     distances_to_point = shapes._calc_distances_to_point(points, ref_point)
 
     assert all(distances_to_point.index == distances_to_point_ref.index)
-    assert all(abs(distances_to_point - distances_to_point_ref) < 0.0001)
+    assert all(np.isclose(distances_to_point, distances_to_point_ref, rtol=1e-04))
 
 
 @pytest.mark.parametrize('ref_points, dist, moments_ref', [
@@ -152,7 +150,7 @@ def test_get_shape_dict(ref_points, dist, moments_ref):
     assert all(shape_dict['moments'].index == [f'dist_ref{i+1}' for i, j in enumerate(dist)])
     assert all(shape_dict['moments'].columns == 'm1 m2 m3'.split())
 
-    assert (abs(shape_dict['moments'] - moments_ref) < 0.0001).all(axis=None)
+    assert np.isclose(shape_dict['moments'], moments_ref, rtol=1e-04).all(axis=None)
 
 
 @pytest.mark.parametrize('coord_origin, coord_point_a, coord_point_b, scaled_by', [
@@ -226,7 +224,7 @@ def test_calc_scaled_3d_cross_product(coord_origin, coord_point_a, coord_point_b
 
     scaled_3d_cross_product = shapes._calc_scaled_3d_cross_product(coord_origin, coord_point_a, coord_point_b, scaled_by)
 
-    assert (abs(scaled_3d_cross_product - scaled_3d_cross_product_ref) < 0.0001).all()
+    assert np.isclose(scaled_3d_cross_product, scaled_3d_cross_product_ref, rtol=1e-04).all()
 
 
 @pytest.mark.parametrize('points', [
@@ -370,7 +368,7 @@ def test_calc_shape_6dim_ratar1_exceptions(points):
         ], columns='x y z'.split()
         ),
         pd.DataFrame([
-            [0.1429, 0.4286, 2.2857],
+            [0.14286, 0.42857, 2.28571],
             [0, 0, 1],
             [0, 0, 10],
             [0, 2, 0]
@@ -385,7 +383,7 @@ def test_calc_shape_3dim_usr(points, ref_points):
     shape_3dim_usr = shapes._calc_shape_3dim_usr(points)
 
     assert shape_3dim_usr['ref_points'].shape == ref_points.shape
-    assert (abs(shape_3dim_usr['ref_points'] - ref_points) < 0.0001).all(axis=None)
+    assert np.isclose(shape_3dim_usr['ref_points'], ref_points, rtol=1e-04).all(axis=None)
 
 
 @pytest.mark.parametrize('points, ref_points', [
@@ -401,7 +399,7 @@ def test_calc_shape_3dim_usr(points, ref_points):
         ], columns='x y z'.split()
         ),
         pd.DataFrame([
-            [0.1429, 0.4286, 2.2857],
+            [0.14286, 0.42857, 2.28571],
             [0, 0, 10],
             [0, 2, 0],
             [-3.6883, -0.0626, 2.1875]
@@ -416,7 +414,7 @@ def test_calc_shape_3dim_csr(points, ref_points):
     shape_3dim_usr = shapes._calc_shape_3dim_csr(points)
 
     assert shape_3dim_usr['ref_points'].shape == ref_points.shape
-    assert (abs(shape_3dim_usr['ref_points'] - ref_points) < 0.0001).all(axis=None)
+    assert np.isclose(shape_3dim_usr['ref_points'], ref_points, rtol=1e-04).all(axis=None)
 
 
 @pytest.mark.parametrize('points, ref_points', [
@@ -432,7 +430,7 @@ def test_calc_shape_3dim_csr(points, ref_points):
         ], columns='x y z z1'.split()
         ),
         pd.DataFrame([
-            [0.1429, 0.1429, 2.2857, 1.4286],
+            [0.14286, 0.14286, 2.2857, 1.4286],
             [0, 0, 10, 10],
             [1, 0, 0, 0],
             [1.4206, 5.7647, 2.4135, 10],
@@ -448,7 +446,7 @@ def test_calc_shape_4dim_electroshape(points, ref_points):
     shape_3dim_usr = shapes._calc_shape_4dim_electroshape(points)
 
     assert shape_3dim_usr['ref_points'].shape == ref_points.shape
-    assert (abs(shape_3dim_usr['ref_points'] - ref_points) < 0.0001).all(axis=None)
+    assert np.isclose(shape_3dim_usr['ref_points'], ref_points, rtol=1e-04).all(axis=None)
 
 
 @pytest.mark.parametrize('points, ref_points', [
@@ -464,7 +462,7 @@ def test_calc_shape_4dim_electroshape(points, ref_points):
         ], columns='x y z z1 z2 z3'.split()
         ),
         pd.DataFrame([
-            [0.5714, 0.4286, 0.4286, 0.4285, 0.4285, 0.4285],
+            [0.5714, 0.4286, 0.4286, 0.4286, 0.4286, 0.4286],
             [0, 0, 0, 0, 0, 0],
             [1, 1, 1, 0, 0, 2],
             [1, 1, 0, 2, 0, 0],
@@ -484,7 +482,7 @@ def test_calc_shape_6dim_ratar1(points, ref_points):
     assert shape_6dim_ratar1['ref_points'].shape == ref_points.shape
 
     for index, row in shape_6dim_ratar1['ref_points'].iterrows():
-        assert abs(row - ref_points.loc[index] < 0.0001).all(axis=None)
+        assert np.isclose(row, ref_points.loc[index], rtol=1e-04).all(axis=None)
 
 
 @pytest.mark.parametrize('points_df', [
@@ -594,7 +592,7 @@ def test_get_shapes_from_molecule(filename, keys_ref):
     """
 
     # Load molecule
-    molecule_path = Path(sys.path[0]) / 'ratar' / 'tests' / 'data' / filename
+    molecule_path = Path(__name__).parent / 'ratar' / 'tests' / 'data' / filename
     molecule_loader = MoleculeLoader()
     molecule_loader.load_molecule(molecule_path)
     molecule = molecule_loader.get_first_molecule()

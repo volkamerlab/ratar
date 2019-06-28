@@ -2,9 +2,8 @@
 Unit and regression test for the PhysicoChemicalProperties class in the ratar.encoding module of the ratar package.
 """
 
-import sys
-
 from flatten_dict import flatten
+import numpy as np
 import pytest
 from pathlib import Path
 
@@ -74,12 +73,12 @@ def test_physicochemicalproperties_eq(mol_file1, mol_file2):
             zip(
                 'ca/z1 ca/z123 pca/z1 pca/z123 pc/z1 pc/z123'.split(),
                 [
-                    [-0.0662],
-                    [-0.0663, -1.49, -0.1088],
-                    [-0.5888],
-                    [-0.5888, -1.4906, -0.3768],
-                    [-0.069],
-                    [-0.069, -1.431, -0.1814]]
+                    [-0.066250],
+                    [-0.066250, -1.49, -0.108750],
+                    [-0.588824],
+                    [-0.588824, -1.490588, -0.376765],
+                    [-0.068966],
+                    [-0.068966, -1.431034, -0.181379]]
             )
         )
     )
@@ -117,4 +116,6 @@ def test_get_physicochemicalproperties_from_molecule(filename, column_names, n_a
         assert value.shape[0] == n_atoms[key]
 
         for i, column_name in enumerate(value.columns):
-            assert abs(value[column_name].mean() - centroid[key][i]) < 0.0001
+            print(value[column_name].mean())
+            print(centroid[key][i])
+            assert np.isclose(value[column_name].mean(), centroid[key][i])
