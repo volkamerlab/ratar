@@ -45,8 +45,8 @@ def test_points_eq(mol_file1, mol_file2):
     obj2.get_points_from_molecule(molecule_loader1.get_first_molecule())
     obj3.get_points_from_molecule(molecule_loader2.get_first_molecule())
 
-    assert (obj1 == obj2) is True
-    assert (obj1 == obj3) is False
+    assert (obj1 == obj2)
+    assert not (obj1 == obj3)
 
 
 @pytest.mark.parametrize('filename, keys, n_dimensions', [

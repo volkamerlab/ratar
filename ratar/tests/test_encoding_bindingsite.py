@@ -40,5 +40,5 @@ def test_bindingsites_eq(mol_file1, mol_file2):
     obj2 = BindingSite(molecule_loader1.get_first_molecule())
     obj3 = BindingSite(molecule_loader2.get_first_molecule())
 
-    assert (obj1 == obj2) is True
-    assert (obj1 == obj3) is False
+    assert (obj1 == obj2)
+    assert not (obj1 == obj3)
