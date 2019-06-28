@@ -40,9 +40,9 @@ def test_subsets_eq(mol_file1, mol_file2):
     obj2 = Subsets()
     obj3 = Subsets()
 
-    obj1.get_pseudocenter_subsets_indices_from_pmol(molecule_loader1.get_first_molecule())
-    obj2.get_pseudocenter_subsets_indices_from_pmol(molecule_loader1.get_first_molecule())
-    obj3.get_pseudocenter_subsets_indices_from_pmol(molecule_loader2.get_first_molecule())
+    obj1.get_pseudocenter_subsets_indices_from_molecule(molecule_loader1.get_first_molecule())
+    obj2.get_pseudocenter_subsets_indices_from_molecule(molecule_loader1.get_first_molecule())
+    obj3.get_pseudocenter_subsets_indices_from_molecule(molecule_loader2.get_first_molecule())
 
     assert (obj1 == obj2) is True
     assert (obj1 == obj3) is False
@@ -55,7 +55,7 @@ def test_subsets_eq(mol_file1, mol_file2):
         ('pc', 'HBA', [5, 13, 14, 20, 36, 55, 65, 76, 83, 89])
     )
 ])
-def test_get_pseudocenter_subsets_indices_from_pmol(filename, subsets_names, example_indices):
+def test_get_pseudocenter_subsets_indices_from_molecule(filename, subsets_names, example_indices):
     """
     Test if pseudocenter subset indices are extracted correctly.
 
@@ -73,11 +73,11 @@ def test_get_pseudocenter_subsets_indices_from_pmol(filename, subsets_names, exa
     molecule_path = Path(sys.path[0]) / 'ratar' / 'tests' / 'data' / filename
     molecule_loader = MoleculeLoader()
     molecule_loader.load_molecule(molecule_path)
-    pmol = molecule_loader.get_first_molecule()
+    molecule = molecule_loader.get_first_molecule()
 
     # Set subsets
     subsets = Subsets()
-    subsets.get_pseudocenter_subsets_indices_from_pmol(pmol)
+    subsets.get_pseudocenter_subsets_indices_from_molecule(molecule)
 
     assert list(subsets.pseudocenters.keys()).sort() == subsets_names.sort()
     assert list(subsets.pseudocenter_atoms.keys()).sort() == subsets_names.sort()

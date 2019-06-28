@@ -35,14 +35,13 @@ def test_amino_acid_descriptors(filename, n_atoms, centroid):
     molecule_path = Path(sys.path[0]) / 'ratar' / 'tests' / 'data' / filename
     molecule_loader = MoleculeLoader()
     molecule_loader.load_molecule(molecule_path)
-    pmol = molecule_loader.get_first_molecule()
-    molecule = pmol.df
+    molecule = molecule_loader.get_first_molecule()
 
     # Load amino acid descriptors
     aa_descriptors = AminoAcidDescriptors()
 
     # Get molecule atoms that have Z-scales information available
-    molecule_aa_zscales = aa_descriptors.get_zscales_amino_acids(molecule)
+    molecule_aa_zscales = aa_descriptors.get_zscales_amino_acids(molecule.df)
 
     assert aa_descriptors.zscales.shape == (20, 5)
     assert abs(aa_descriptors.zscales.mean().mean() - 0.028100) < 0.0001

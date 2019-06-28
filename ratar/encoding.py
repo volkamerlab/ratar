@@ -35,7 +35,7 @@ class BindingSite:
 
     Parameters
     ----------
-    pmol : biopandas.mol2.pandas_mol2.PandasMol2 or biopandas.pdb.pandas_pdb.PandasPdb
+    molecule : biopandas.mol2.pandas_mol2.PandasMol2 or biopandas.pdb.pandas_pdb.PandasPdb
         Content of mol2 or pdb file as BioPandas object.
 
     Attributes
@@ -58,15 +58,15 @@ class BindingSite:
 
     >>> molecule_loader = MoleculeLoader()
     >>> molecule_loader.load_molecule(molecule_path, remove_solvent=True)
-    >>> pmol = molecule_loader.get_first_molecule()
+    >>> molecule = molecule_loader.get_first_molecule()
 
-    >>> binding_site = BindingSite(pmol)
+    >>> binding_site = BindingSite(molecule)
     """
 
-    def __init__(self, pmol):
+    def __init__(self, molecule):
 
-        self.molecule_id = pmol.code
-        self.molecule = pmol.df
+        self.molecule_id = molecule.code
+        self.molecule_df = molecule.df
         self.representatives = self.get_representatives()
         self.shapes = self.run()
 
@@ -77,7 +77,7 @@ class BindingSite:
 
         rules = [
             self.molecule_id == other.molecule_id,
-            self.molecule.equals(other.molecule),
+            self.molecule_df.equals(other.molecule_df),
             self.representatives == other.representatives,
             self.shapes == other.shapes
         ]
@@ -85,7 +85,7 @@ class BindingSite:
 
     def get_representatives(self):
         representatives = Representatives(self.molecule_id)
-        representatives.get_representatives(self.molecule)
+        representatives.get_representatives(self.molecule_df)
         return representatives
 
     def get_coordinates(self, representatives):
@@ -146,10 +146,10 @@ class Representatives:
 
     >>> molecule_loader = MoleculeLoader()
     >>> molecule_loader.load_molecule(molecule_path, remove_solvent=True)
-    >>> pmol = molecule_loader.get_first_molecule()
+    >>> molecule = molecule_loader.get_first_molecule()
 
     >>> representatives = Representatives()
-    >>> representatives.get_representatives_from_pmol(pmol)
+    >>> representatives.get_representatives_from_molecule(molecule)
     >>> representatives
     """
 
@@ -193,25 +193,25 @@ class Representatives:
 
         return all(rules)
 
-    def get_representatives_from_pmol(self, pmol):
+    def get_representatives_from_molecule(self, molecule):
         """
-        Convenience class method: Get representatives from pmol object.
+        Convenience class method: Get representatives from molecule object.
 
         Parameters
         ----------
-        pmol : biopandas.mol2.pandas_mol2.PandasMol2 or biopandas.pdb.pandas_pdb.PandasPdb
+        molecule : biopandas.mol2.pandas_mol2.PandasMol2 or biopandas.pdb.pandas_pdb.PandasPdb
         Content of mol2 or pdb file as BioPandas object.
         """
 
-        self.get_representatives(pmol.df)
+        self.get_representatives(molecule.df)
 
-    def get_representatives(self, molecule):
+    def get_representatives(self, molecule_df):
         """
         Extract binding site representatives.
 
         Parameters
         ----------
-        molecule : pandas.DataFrame
+        molecule_df : pandas.DataFrame
             DataFrame containing atom lines from input file.
 
         Returns
@@ -222,24 +222,24 @@ class Representatives:
 
         for key in self.data.keys():
             if key == 'ca':
-                self.data['ca'] = self._get_ca(molecule)
+                self.data['ca'] = self._get_ca(molecule_df)
             elif key == 'pca':
-                self.data['pca'] = self._get_pca(molecule)
+                self.data['pca'] = self._get_pca(molecule_df)
             elif key == 'pc':
-                self.data['pc'] = self._get_pc(molecule)
+                self.data['pc'] = self._get_pc(molecule_df)
             else:
                 raise KeyError(f'Unknown representative key: {key}')
 
         return self.data
 
     @staticmethod
-    def _get_ca(mol):
+    def _get_ca(molecule_df):
         """
         Extract Calpha atoms from binding site.
 
         Parameters
         ----------
-        mol : pandas.DataFrame
+        molecule_df : pandas.DataFrame
             DataFrame containing atom lines from input file.
 
         Returns
@@ -249,18 +249,18 @@ class Representatives:
         """
 
         # Filter for atom name 'CA' (first condition) but exclude calcium (second condition)
-        bs_ca = mol[(mol['atom_name'] == 'CA') & (mol['res_name'] != 'CA')]
+        molecule_ca = molecule_df[(molecule_df['atom_name'] == 'CA') & (molecule_df['res_name'] != 'CA')]
 
-        return bs_ca
+        return molecule_ca
 
     @staticmethod
-    def _get_pca(mol):
+    def _get_pca(molecule_df):
         """
         Extract pseudocenter atoms from molecule.
 
         Parameters
         ----------
-        mol: pandas.DataFrame
+        molecule_df: pandas.DataFrame
             DataFrame containing atom lines from input file.
 
         Returns
@@ -273,9 +273,9 @@ class Representatives:
         pseudocenter_atoms = load_pseudocenters()
 
         # Collect all molecule atoms that belong to pseudocenters
-        mol_pca_subset = []
+        molecule_pca = []
 
-        for index, row in mol.iterrows():
+        for index, row in molecule_df.iterrows():
 
             query = f'{row["res_name"]}_{row["atom_name"]}'
 
@@ -283,7 +283,7 @@ class Representatives:
 
                 pc_ix = pseudocenter_atoms.index[pseudocenter_atoms['pc_atom_pattern'] == query].tolist()[0]
 
-                mol_pca_subset.append(
+                molecule_pca.append(
                     [
                         index,
                         pseudocenter_atoms.iloc[pc_ix]['pc_type'],
@@ -294,7 +294,7 @@ class Representatives:
 
             elif row['atom_name'] == 'O':  # Peptide bond atoms
 
-                mol_pca_subset.append(
+                molecule_pca.append(
                     [
                         index,
                         'HBA',
@@ -305,7 +305,7 @@ class Representatives:
 
             elif row['atom_name'] == 'N':  # Peptide bond atoms
 
-                mol_pca_subset.append(
+                molecule_pca.append(
                     [
                         index,
                         'HBD',
@@ -315,7 +315,7 @@ class Representatives:
 
             elif row['atom_name'] == 'C':  # Peptide bond atoms
 
-                mol_pca_subset.append(
+                molecule_pca.append(
                     [
                         index,
                         'AR',
@@ -325,24 +325,24 @@ class Representatives:
                 )
 
         # Cast list of lists to DataFrame
-        mol_pca_subset_df = pd.DataFrame(mol_pca_subset)
-        mol_pca_subset_df.columns = ['index', 'pc_type', 'pc_id', 'pc_atom_id']
-        mol_pca_subset_df.index = [i[0] for i in mol_pca_subset]
-        mol_pca_subset_df.drop(columns=['index'], inplace=True)
+        molecule_pca_df = pd.DataFrame(molecule_pca)
+        molecule_pca_df.columns = ['index', 'pc_type', 'pc_id', 'pc_atom_id']
+        molecule_pca_df.index = [i[0] for i in molecule_pca]
+        molecule_pca_df.drop(columns=['index'], inplace=True)
 
         # Join molecule with pseudocenter subset
-        mol_pca_subset_df = mol.join(mol_pca_subset_df, how='outer')
-        mol_pca_subset_df.dropna(how='any', inplace=True)
+        molecule_pca_df = molecule_df.join(molecule_pca_df, how='outer')
+        molecule_pca_df.dropna(how='any', inplace=True)
 
-        return mol_pca_subset_df
+        return molecule_pca_df
 
-    def _get_pc(self, mol):
+    def _get_pc(self, molecule_df):
         """
         Extract pseudocenters from molecule.
 
         Parameters
         ----------
-        mol : pandas.DataFrame
+        molecule_df : pandas.DataFrame
             DataFrame containing atom lines from input file.
 
         Returns
@@ -353,19 +353,19 @@ class Representatives:
         """
 
         # Get pseudocenter atoms
-        mol_pca_subset_df = self._get_pca(mol)
+        molecule_pca_df = self._get_pca(molecule_df)
 
         # Calculate pseudocenters
-        mol_pc_subset = []
+        molecule_pc = []
 
-        for key, group in mol_pca_subset_df.groupby(['subst_name', 'pc_id'], sort=False):
+        for key, group in molecule_pca_df.groupby(['subst_name', 'pc_id'], sort=False):
 
             if len(group) == 1:  # If pseudocenter only contains one atom, keep data
                 row = group.iloc[0].copy()
                 row['atom_id'] = [row['atom_id']]
                 row['atom_name'] = [row['atom_name']]
 
-                mol_pc_subset.append(row)
+                molecule_pc.append(row)
 
             else:  # If pseudocenter contains multiple atoms, aggregate data
                 first_row = group.iloc[0].copy()
@@ -376,14 +376,14 @@ class Representatives:
                 first_row['z'] = group['z'].mean()
                 first_row['charge'] = group['charge'].mean()  # TODO Alternatives to mean of a charge?
 
-                mol_pc_subset.append(first_row)
+                molecule_pc.append(first_row)
 
-        mol_pc_subset_df = pd.concat(mol_pc_subset, axis=1).T
+        molecule_pc_df = pd.concat(molecule_pc, axis=1).T
 
         # Change datatype from object to float for selected columns
-        mol_pc_subset_df[['x', 'y', 'z', 'charge']] = mol_pc_subset_df[['x', 'y', 'z', 'charge']].astype(float)
+        molecule_pc_df[['x', 'y', 'z', 'charge']] = molecule_pc_df[['x', 'y', 'z', 'charge']].astype(float)
 
-        return mol_pc_subset_df
+        return molecule_pc_df
 
 
 class Coordinates:
@@ -406,10 +406,10 @@ class Coordinates:
 
     >>> molecule_loader = MoleculeLoader()
     >>> molecule_loader.load_molecule(molecule_path, remove_solvent=True)
-    >>> pmol = molecule_loader.get_first_molecule()
+    >>> molecule = molecule_loader.get_first_molecule()
 
     >>> coordinates = Coordinates()
-    >>> coordinates.get_coordinates_from_pmol(pmol)
+    >>> coordinates.get_coordinates_from_molecule(molecule)
     >>> coordinates
     """
 
@@ -452,18 +452,18 @@ class Coordinates:
 
         return all(rules)
 
-    def get_coordinates_from_pmol(self, pmol):
+    def get_coordinates_from_molecule(self, molecule):
         """
-        Convenience class method: Get coordinates from pmol object.
+        Convenience class method: Get coordinates from molecule object.
 
         Parameters
         ----------
-        pmol : biopandas.mol2.pandas_mol2.PandasMol2 or biopandas.pdb.pandas_pdb.PandasPdb
-        Content of mol2 or pdb file as BioPandas object.
+        molecule : biopandas.mol2.pandas_mol2.PandasMol2 or biopandas.pdb.pandas_pdb.PandasPdb
+            Content of mol2 or pdb file as BioPandas object.
         """
 
         representatives = Representatives()
-        representatives.get_representatives(pmol.df)
+        representatives.get_representatives(molecule.df)
 
         self.get_coordinates(representatives)
 
@@ -517,10 +517,10 @@ class PhysicoChemicalProperties:
 
     >>> molecule_loader = MoleculeLoader()
     >>> molecule_loader.load_molecule(molecule_path, remove_solvent=True)
-    >>> pmol = molecule_loader.get_first_molecule()
+    >>> molecule = molecule_loader.get_first_molecule()
 
     >>> physicochemicalproperties = PhysicoChemicalProperties()
-    >>> physicochemicalproperties.get_physicochemicalproperties_from_pmol(pmol)
+    >>> physicochemicalproperties.get_physicochemicalproperties_from_molecule(molecule)
     >>> physicochemicalproperties
     """
 
@@ -563,18 +563,18 @@ class PhysicoChemicalProperties:
 
         return all(rules)
 
-    def get_physicochemicalproperties_from_pmol(self, pmol):
+    def get_physicochemicalproperties_from_molecule(self, molecule):
         """
-        Convenience class method: Get physicochemical properties from pmol object.
+        Convenience class method: Get physicochemical properties from molecule object.
 
         Parameters
         ----------
-        pmol : biopandas.mol2.pandas_mol2.PandasMol2 or biopandas.pdb.pandas_pdb.PandasPdb
+        molecule : biopandas.mol2.pandas_mol2.PandasMol2 or biopandas.pdb.pandas_pdb.PandasPdb
         Content of mol2 or pdb file as BioPandas object.
         """
 
         representatives = Representatives()
-        representatives.get_representatives(pmol.df)
+        representatives.get_representatives(molecule.df)
 
         self.get_physicochemicalproperties(representatives)
 
@@ -678,10 +678,10 @@ class Subsets:
 
     >>> molecule_loader = MoleculeLoader()
     >>> molecule_loader.load_molecule(molecule_path, remove_solvent=True)
-    >>> pmol = molecule_loader.get_first_molecule()
+    >>> molecule = molecule_loader.get_first_molecule()
 
     >>> subsets = Subsets()
-    >>> subsets.get_pseudocenter_subsets_indices_from_pmol(pmol)
+    >>> subsets.get_pseudocenter_subsets_indices_from_molecule(molecule)
     >>> subsets
     """
 
@@ -719,18 +719,18 @@ class Subsets:
 
         return all(rules)
 
-    def get_pseudocenter_subsets_indices_from_pmol(self, pmol):
+    def get_pseudocenter_subsets_indices_from_molecule(self, molecule):
         """
-        Convenience class method: Get pseudocenter subsets indices from pmol object.
+        Convenience class method: Get pseudocenter subsets indices from molecule object.
 
         Parameters
         ----------
-        pmol : biopandas.mol2.pandas_mol2.PandasMol2 or biopandas.pdb.pandas_pdb.PandasPdb
+        molecule : biopandas.mol2.pandas_mol2.PandasMol2 or biopandas.pdb.pandas_pdb.PandasPdb
         Content of mol2 or pdb file as BioPandas object.
         """
 
         representatives = Representatives()
-        representatives.get_representatives(pmol.df)
+        representatives.get_representatives(molecule.df)
 
         self.get_pseudocenter_subsets_indices(representatives)
 
@@ -802,10 +802,10 @@ class Points:
 
     >>> molecule_loader = MoleculeLoader()
     >>> molecule_loader.load_molecule(molecule_path, remove_solvent=True)
-    >>> pmol = molecule_loader.get_first_molecule()
+    >>> molecule = molecule_loader.get_first_molecule()
 
     >>> points = Points()
-    >>> points.get_points_from_pmol(pmol)
+    >>> points.get_points_from_molecule(molecule)
     >>> points
     """
 
@@ -869,18 +869,18 @@ class Points:
 
         return all(rules)
 
-    def get_points_from_pmol(self, pmol):
+    def get_points_from_molecule(self, molecule):
         """
-        Convenience class method: Get points from pmol object.
+        Convenience class method: Get points from molecule object.
 
         Parameters
         ----------
-        pmol : biopandas.mol2.pandas_mol2.PandasMol2 or biopandas.pdb.pandas_pdb.PandasPdb
+        molecule : biopandas.mol2.pandas_mol2.PandasMol2 or biopandas.pdb.pandas_pdb.PandasPdb
         Content of mol2 or pdb file as BioPandas object.
         """
 
         representatives = Representatives()
-        representatives.get_representatives(pmol.df)
+        representatives.get_representatives(molecule.df)
 
         coordinates = Coordinates()
         coordinates.get_coordinates(representatives)
@@ -1006,10 +1006,10 @@ class Shapes:
 
     >>> molecule_loader = MoleculeLoader()
     >>> molecule_loader.load_molecule(molecule_path, remove_solvent=True)
-    >>> pmol = molecule_loader.get_first_molecule()
+    >>> molecule = molecule_loader.get_first_molecule()
 
     >>> shapes = Shapes()
-    >>> shapes.get_shapes_from_pmol(pmol)
+    >>> shapes.get_shapes_from_molecule(molecule)
     >>> shapes
     """
 
@@ -1073,18 +1073,18 @@ class Shapes:
 
         return all(rules)
 
-    def get_shapes_from_pmol(self, pmol):
+    def get_shapes_from_molecule(self, molecule):
         """
-        Convenience class method: Get shapes from pmol object.
+        Convenience class method: Get shapes from molecule object.
 
         Parameters
         ----------
-        pmol : biopandas.mol2.pandas_mol2.PandasMol2 or biopandas.pdb.pandas_pdb.PandasPdb
+        molecule : biopandas.mol2.pandas_mol2.PandasMol2 or biopandas.pdb.pandas_pdb.PandasPdb
         Content of mol2 or pdb file as BioPandas object.
         """
 
         representatives = Representatives()
-        representatives.get_representatives(pmol.df)
+        representatives.get_representatives(molecule.df)
 
         coordinates = Coordinates()
         coordinates.get_coordinates(representatives)
@@ -1692,7 +1692,7 @@ class Shapes:
         return flat_dict
 
 
-def process_encoding(input_mol_path, output_dir, remove_solvent=False):
+def process_encoding(molecule_path, output_dir, remove_solvent=False):
     """
     Process a list of molecule structure files (retrieved by an input path to one or multiple files) and
     save per binding site multiple output files to an output directory.
@@ -1730,40 +1730,41 @@ def process_encoding(input_mol_path, output_dir, remove_solvent=False):
     """
 
     # Get all molecule structure files
-    input_mol_path_list = glob.glob(input_mol_path)
-    input_mol_path_list = input_mol_path_list
+    molecule_path_list = glob.glob(molecule_path)
+    molecule_path_list = molecule_path_list
 
-    if len(input_mol_path_list) == 0:
-        logger.info(f'Input path matches no molecule files: {input_mol_path}', extra={'molecule_id': 'all'})
+    if len(molecule_path_list) == 0:
+        logger.info(f'Input path matches no molecule files: {molecule_path}', extra={'molecule_id': 'all'})
     else:
-        logger.info(f'Input path matches {len(input_mol_path_list)} molecule file(s): {input_mol_path}',
+        logger.info(f'Input path matches {len(molecule_path_list)} molecule file(s): {molecule_path}',
                     extra={'molecule_id': 'all'})
 
     # Get number of molecule structure files and set molecule structure counter
-    mol_sum = len(input_mol_path_list)
+    mol_sum = len(molecule_path_list)
 
     # Iterate over all binding sites (molecule structure files)
-    for mol_counter, mol_path in enumerate(input_mol_path_list, 1):
+    for mol_counter, mol_path in enumerate(molecule_path_list, 1):
 
         # Load binding site from molecule structure file
-        bs_loader = MoleculeLoader()
-        bs_loader.load_molecule(mol_path, remove_solvent)
-        pmols = bs_loader.pmols
+        molecule_loader = MoleculeLoader()
+        molecule_loader.load_molecule(mol_path, remove_solvent)
+        molecules_list = molecule_loader.molecules_list
 
-        # Get number of pmol objects and set pmol counter
-        pmol_sum = len(pmols)
+        # Get number of molecule objects and set molecule counter
+        molecule_sum = len(molecules_list)
 
         # Iterate over all binding sites in molecule structure file
-        for pmol_counter, pmol in enumerate(pmols, 1):
+        for molecule_counter, molecule in enumerate(molecules_list, 1):
 
             # Get iteration progress
-            logger.info(f'Encoding: {mol_counter}/{mol_sum} molecule structure file - {pmol_counter}/{pmol_sum} molecule',
-                        extra={'molecule_id': pmol.code})
+            logger.info(f'Encoding: {mol_counter}/{mol_sum} molecule structure file - '
+                        f'{molecule_counter}/{molecule_sum} molecule',
+                        extra={'molecule_id': molecule.code})
 
             # Process single binding site:
 
             # Create output folder
-            molecule_id_encoding = Path(output_dir) / 'encoding' / pmol.code
+            molecule_id_encoding = Path(output_dir) / 'encoding' / molecule.code
             create_directory(molecule_id_encoding)
 
             # Get output file paths
@@ -1771,7 +1772,7 @@ def process_encoding(input_mol_path, output_dir, remove_solvent=False):
             output_cgo_path = molecule_id_encoding / 'ref_points_cgo.py'
 
             # Encode binding site
-            binding_site = BindingSite(pmol)
+            binding_site = BindingSite(molecule)
 
             # Save binding site
             save_binding_site(binding_site, str(output_enc_path))
@@ -1800,9 +1801,9 @@ def save_binding_site(binding_site, output_path):
 
     >>> molecule_loader = MoleculeLoader()
     >>> molecule_loader.load_molecule(molecule_path, remove_solvent=True)
-    >>> pmol = molecule_loader.get_first_molecule()
+    >>> molecule = molecule_loader.get_first_molecule()
 
-    >>> binding_site = BindingSite(pmol)
+    >>> binding_site = BindingSite(molecule)
     >>> save_binding_site(binding_site, '/path/to/output/directory')
     """
 
@@ -1836,9 +1837,9 @@ def save_cgo_file(binding_site, output_path):
 
     >>> molecule_loader = MoleculeLoader()
     >>> molecule_loader.load_molecule(molecule_path, remove_solvent=True)
-    >>> pmol = molecule_loader.get_first_molecule()
+    >>> molecule = molecule_loader.get_first_molecule()
 
-    >>> binding_site = BindingSite(pmol)
+    >>> binding_site = BindingSite(molecule)
     >>> save_cgo_file(binding_site, '/path/to/output/directory')
     """
 

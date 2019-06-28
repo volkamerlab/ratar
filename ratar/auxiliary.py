@@ -45,18 +45,18 @@ class MoleculeLoader:
     >>> molecule_loader = MoleculeLoader()
     >>> molecule_loader.load_molecule(molecule_path, remove_solvent=True)
 
-    >>> pmols = molecule_loader.pmols  # Contains one or multiple molecule objects
-    >>> molecule1 = pmols[0].df  # Molecule data
-    >>> molecule1_id = pmols[0].code  # Molecule id
+    >>> molecules_list = molecule_loader.molecules_list  # Contains one or multiple molecule objects
+    >>> molecule1 = molecules_list[0].df  # Molecule data
+    >>> molecule1_id = molecules_list[0].code  # Molecule id
 
-    >>> pmols[0].df == molecule_loader.get_first_molecule()
+    >>> molecules_list[0].df == molecule_loader.get_first_molecule()
     True
     """
 
     def __init__(self):
 
         self.input_path = None
-        self.pmols = None
+        self.molecules_list = None
         self.n_molecules = 0
 
     def load_molecule(self, input_path, remove_solvent=False):
@@ -82,16 +82,14 @@ class MoleculeLoader:
 
         # Load molecule data
         if self.input_path.suffix == '.pdb':
-            self.pmols = self._load_pdb(remove_solvent)
+            self.molecules_list = self._load_pdb(remove_solvent)
         elif self.input_path.suffix == '.mol2':
-            self.pmols = self._load_mol2(remove_solvent)
+            self.molecules_list = self._load_mol2(remove_solvent)
 
         # Set number of loaded molecules
-        self.n_molecules = len(self.pmols)
+        self.n_molecules = len(self.molecules_list)
 
         logger.info('File loaded.', extra={'molecule_id': 'all'})
-
-        return None
 
     def get_first_molecule(self):
         """
@@ -103,10 +101,10 @@ class MoleculeLoader:
             Data for first molecule in MoleculeLoader class.
         """
 
-        if len(self.pmols) > 0:
-            return self.pmols[0]
+        if len(self.molecules_list) > 0:
+            return self.molecules_list[0]
         else:
-            raise IndexError('MoleculeLoader.pmols is empty.')
+            raise IndexError('MoleculeLoader.molecules_list is empty.')
 
     def _load_mol2(self, remove_solvent=False):
         """
@@ -119,7 +117,7 @@ class MoleculeLoader:
         """
 
         # In case of multiple entries in one mol2 file, include iteration step
-        pmols = []
+        molecules_list = []
 
         for mol2 in split_multimol2(str(self.input_path)):
 
@@ -188,9 +186,9 @@ class MoleculeLoader:
                 ix = pmol.df.index[pmol.df['res_name'] == 'HOH']
                 pmol.df.drop(index=ix, inplace=True)
 
-            pmols.append(pmol)
+            molecules_list.append(pmol)
 
-        return pmols
+        return molecules_list
 
     def _load_pdb(self, remove_solvent=False):
         """

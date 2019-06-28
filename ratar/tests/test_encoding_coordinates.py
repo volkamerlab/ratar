@@ -40,9 +40,9 @@ def test_coordinates_eq(mol_file1, mol_file2):
     obj2 = Coordinates()
     obj3 = Coordinates()
 
-    obj1.get_coordinates_from_pmol(molecule_loader1.get_first_molecule())
-    obj2.get_coordinates_from_pmol(molecule_loader1.get_first_molecule())
-    obj3.get_coordinates_from_pmol(molecule_loader2.get_first_molecule())
+    obj1.get_coordinates_from_molecule(molecule_loader1.get_first_molecule())
+    obj2.get_coordinates_from_molecule(molecule_loader1.get_first_molecule())
+    obj3.get_coordinates_from_molecule(molecule_loader2.get_first_molecule())
 
     assert (obj1 == obj2) is True
     assert (obj1 == obj3) is False
@@ -71,7 +71,7 @@ def test_coordinates_eq(mol_file1, mol_file2):
 
     )
 ])
-def test_get_coordinates_from_pmol(filename, column_names, n_atoms, centroid):
+def test_get_coordinates_from_molecule(filename, column_names, n_atoms, centroid):
     """
     Test if coordinates are correctly extracted from representatives of a molecule.
 
@@ -91,11 +91,11 @@ def test_get_coordinates_from_pmol(filename, column_names, n_atoms, centroid):
     molecule_path = Path(sys.path[0]) / 'ratar' / 'tests' / 'data' / filename
     molecule_loader = MoleculeLoader()
     molecule_loader.load_molecule(molecule_path)
-    pmol = molecule_loader.get_first_molecule()
+    molecule = molecule_loader.get_first_molecule()
 
     # Set coordinates
     coordinates = Coordinates()
-    coordinates.get_coordinates_from_pmol(pmol)
+    coordinates.get_coordinates_from_molecule(molecule)
 
     for key, value in coordinates.data.items():
         assert all(value.columns == column_names)

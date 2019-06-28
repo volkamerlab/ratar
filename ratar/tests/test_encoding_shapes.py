@@ -43,9 +43,9 @@ def test_shapes_eq(mol_file1, mol_file2):
     obj2 = Shapes()
     obj3 = Shapes()
 
-    obj1.get_shapes_from_pmol(molecule_loader1.get_first_molecule())
-    obj2.get_shapes_from_pmol(molecule_loader1.get_first_molecule())
-    obj3.get_shapes_from_pmol(molecule_loader2.get_first_molecule())
+    obj1.get_shapes_from_molecule(molecule_loader1.get_first_molecule())
+    obj2.get_shapes_from_molecule(molecule_loader1.get_first_molecule())
+    obj3.get_shapes_from_molecule(molecule_loader2.get_first_molecule())
 
     assert (obj1 == obj2) is True
     assert (obj1 == obj3) is False
@@ -581,7 +581,7 @@ def test_get_shape_by_method(points_df, shape_keys):
             f'pc/no/3Dusr pc/no/3Dcsr pc/z1/4Delectroshape pc/z123/6Dratar1'.split()
     )
 ])
-def test_get_shapes_from_pmol(filename, keys_ref):
+def test_get_shapes_from_molecule(filename, keys_ref):
     """
     Test if points are correctly extracted from representatives of a molecule.
 
@@ -597,11 +597,11 @@ def test_get_shapes_from_pmol(filename, keys_ref):
     molecule_path = Path(sys.path[0]) / 'ratar' / 'tests' / 'data' / filename
     molecule_loader = MoleculeLoader()
     molecule_loader.load_molecule(molecule_path)
-    pmol = molecule_loader.get_first_molecule()
+    molecule = molecule_loader.get_first_molecule()
 
     # Set points
     shapes = Shapes()
-    shapes.get_shapes_from_pmol(pmol)
+    shapes.get_shapes_from_molecule(molecule)
 
     shapes_flat = flatten(shapes.data, reducer='path')
 

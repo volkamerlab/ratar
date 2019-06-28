@@ -57,9 +57,9 @@ def test_molecule_loader(filename, code, n_atoms, centroid):
     molecule_loader = MoleculeLoader()
     molecule_loader.load_molecule(molecule_path)
 
-    assert len(molecule_loader.pmols) == len(code)
+    assert len(molecule_loader.molecules_list) == len(code)
 
-    for c, v in enumerate(molecule_loader.pmols):
+    for c, v in enumerate(molecule_loader.molecules_list):
         assert v.code == code[c]
         assert v.df.shape == (n_atoms[c], 9)
         assert list(v.df.columns) == ['atom_id', 'atom_name', 'res_id', 'res_name', 'subst_name', 'x', 'y', 'z', 'charge']
@@ -91,4 +91,4 @@ def test_molecule_loader_remove_solvent(filename, n_atoms):
     molecule_loader = MoleculeLoader()
     molecule_loader.load_molecule(molecule_path, remove_solvent=True)
 
-    assert molecule_loader.pmols[0].df.shape == (n_atoms, 9)
+    assert molecule_loader.molecules_list[0].df.shape == (n_atoms, 9)

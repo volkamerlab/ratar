@@ -40,9 +40,9 @@ def test_representatives_eq(mol_file1, mol_file2):
     obj2 = Representatives()
     obj3 = Representatives()
 
-    obj1.get_representatives_from_pmol(molecule_loader1.get_first_molecule())
-    obj2.get_representatives_from_pmol(molecule_loader1.get_first_molecule())
-    obj3.get_representatives_from_pmol(molecule_loader2.get_first_molecule())
+    obj1.get_representatives_from_molecule(molecule_loader1.get_first_molecule())
+    obj2.get_representatives_from_molecule(molecule_loader1.get_first_molecule())
+    obj3.get_representatives_from_molecule(molecule_loader2.get_first_molecule())
 
     assert (obj1 == obj2) is True
     assert (obj1 == obj3) is False
@@ -68,7 +68,7 @@ def test_representatives_eq(mol_file1, mol_file2):
         }
     )
 ])
-def test_get_representatives_from_pmol(filename, column_names, n_atoms, centroid):
+def test_get_representatives_from_molecule(filename, column_names, n_atoms, centroid):
     """
     Test if representatives are correctly extracted from representatives of a molecule.
 
@@ -88,11 +88,11 @@ def test_get_representatives_from_pmol(filename, column_names, n_atoms, centroid
     molecule_path = Path(sys.path[0]) / 'ratar' / 'tests' / 'data' / filename
     molecule_loader = MoleculeLoader()
     molecule_loader.load_molecule(molecule_path)
-    pmol = molecule_loader.get_first_molecule()
+    molecule = molecule_loader.get_first_molecule()
 
     # Set representatives
     representatives = Representatives()
-    representatives.get_representatives_from_pmol(pmol)
+    representatives.get_representatives_from_molecule(molecule)
 
     for key, value in representatives.data.items():
         assert all(value.columns == column_names[key])
@@ -113,10 +113,10 @@ def test_get_ca_datatypes(filename):
     molecule_path = Path(sys.path[0]) / 'ratar' / 'tests' / 'data' / filename
     molecule_loader = MoleculeLoader()
     molecule_loader.load_molecule(molecule_path)
-    pmol = molecule_loader.get_first_molecule()
+    molecule = molecule_loader.get_first_molecule()
 
     repres = Representatives()
-    ca = repres._get_ca(pmol.df)
+    ca = repres._get_ca(molecule.df)
 
     datatypes = {
         'atom_id': int,
@@ -145,10 +145,10 @@ def test_get_pca_datatypes(filename):
     molecule_path = Path(sys.path[0]) / 'ratar' / 'tests' / 'data' / filename
     molecule_loader = MoleculeLoader()
     molecule_loader.load_molecule(molecule_path)
-    pmol = molecule_loader.get_first_molecule()
+    molecule = molecule_loader.get_first_molecule()
 
     repres = Representatives()
-    pca = repres._get_pca(pmol.df)
+    pca = repres._get_pca(molecule.df)
 
     datatypes = {
         'atom_id': int,
@@ -180,10 +180,10 @@ def test_get_pca_pc_datatypes(filename):
     molecule_path = Path(sys.path[0]) / 'ratar' / 'tests' / 'data' / filename
     molecule_loader = MoleculeLoader()
     molecule_loader.load_molecule(molecule_path)
-    pmol = molecule_loader.get_first_molecule()
+    molecule = molecule_loader.get_first_molecule()
 
     repres = Representatives()
-    pc = repres._get_pc(pmol.df)
+    pc = repres._get_pc(molecule.df)
 
     datatypes = {
         'atom_id': object,

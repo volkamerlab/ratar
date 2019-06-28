@@ -41,9 +41,9 @@ def test_points_eq(mol_file1, mol_file2):
     obj2 = Points()
     obj3 = Points()
 
-    obj1.get_points_from_pmol(molecule_loader1.get_first_molecule())
-    obj2.get_points_from_pmol(molecule_loader1.get_first_molecule())
-    obj3.get_points_from_pmol(molecule_loader2.get_first_molecule())
+    obj1.get_points_from_molecule(molecule_loader1.get_first_molecule())
+    obj2.get_points_from_molecule(molecule_loader1.get_first_molecule())
+    obj3.get_points_from_molecule(molecule_loader2.get_first_molecule())
 
     assert (obj1 == obj2) is True
     assert (obj1 == obj3) is False
@@ -61,7 +61,7 @@ def test_points_eq(mol_file1, mol_file2):
         )
     )
 ])
-def test_get_points_from_pmol(filename, keys, n_dimensions):
+def test_get_points_from_molecule(filename, keys, n_dimensions):
     """
     Test if points are correctly extracted from representatives of a molecule.
     
@@ -79,11 +79,11 @@ def test_get_points_from_pmol(filename, keys, n_dimensions):
     molecule_path = Path(sys.path[0]) / 'ratar' / 'tests' / 'data' / filename
     molecule_loader = MoleculeLoader()
     molecule_loader.load_molecule(molecule_path)
-    pmol = molecule_loader.get_first_molecule()
+    molecule = molecule_loader.get_first_molecule()
 
     # Set points
     points = Points()
-    points.get_points_from_pmol(pmol)
+    points.get_points_from_molecule(molecule)
 
     points_flat = flatten(points.data, reducer='path')
 
