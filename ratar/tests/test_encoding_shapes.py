@@ -31,11 +31,8 @@ def test_shapes_eq(mol_file1, mol_file2):
     molecule_path1 = Path(__name__).parent / 'ratar' / 'tests' / 'data' / mol_file1
     molecule_path2 = Path(__name__).parent / 'ratar' / 'tests' / 'data' / mol_file2
 
-    molecule_loader1 = MoleculeLoader()
-    molecule_loader2 = MoleculeLoader()
-
-    molecule_loader1.load_molecule(molecule_path1)
-    molecule_loader2.load_molecule(molecule_path2)
+    molecule_loader1 = MoleculeLoader(molecule_path1)
+    molecule_loader2 = MoleculeLoader(molecule_path2)
 
     shapes1 = Shapes()
     shapes2 = Shapes()
@@ -593,8 +590,7 @@ def test_get_shapes_from_molecule(filename, keys_ref):
 
     # Load molecule
     molecule_path = Path(__name__).parent / 'ratar' / 'tests' / 'data' / filename
-    molecule_loader = MoleculeLoader()
-    molecule_loader.load_molecule(molecule_path)
+    molecule_loader = MoleculeLoader(molecule_path)
     molecule = molecule_loader.get_first_molecule()
 
     # Set points

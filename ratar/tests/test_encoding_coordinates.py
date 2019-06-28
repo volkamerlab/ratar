@@ -29,11 +29,8 @@ def test_coordinates_eq(mol_file1, mol_file2):
     molecule_path1 = Path(__name__).parent / 'ratar' / 'tests' / 'data' / mol_file1
     molecule_path2 = Path(__name__).parent / 'ratar' / 'tests' / 'data' / mol_file2
 
-    molecule_loader1 = MoleculeLoader()
-    molecule_loader2 = MoleculeLoader()
-
-    molecule_loader1.load_molecule(molecule_path1)
-    molecule_loader2.load_molecule(molecule_path2)
+    molecule_loader1 = MoleculeLoader(molecule_path1)
+    molecule_loader2 = MoleculeLoader(molecule_path2)
 
     coordinates1 = Coordinates()
     coordinates2 = Coordinates()
@@ -88,8 +85,7 @@ def test_get_coordinates_from_molecule(filename, column_names, n_atoms, centroid
 
     # Load molecule
     molecule_path = Path(__name__).parent / 'ratar' / 'tests' / 'data' / filename
-    molecule_loader = MoleculeLoader()
-    molecule_loader.load_molecule(molecule_path)
+    molecule_loader = MoleculeLoader(molecule_path)
     molecule = molecule_loader.get_first_molecule()
 
     # Set coordinates

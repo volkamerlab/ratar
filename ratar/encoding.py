@@ -56,8 +56,7 @@ class BindingSite:
 
     >>> molecule_path = '/path/to/pdb/or/mol2'
 
-    >>> molecule_loader = MoleculeLoader()
-    >>> molecule_loader.load_molecule(molecule_path, remove_solvent=True)
+    >>> molecule_loader = MoleculeLoader(molecule_path, remove_solvent=True)
     >>> molecule = molecule_loader.get_first_molecule()
 
     >>> binding_site = BindingSite(molecule)
@@ -144,8 +143,7 @@ class Representatives:
 
     >>> molecule_path = '/path/to/pdb/or/mol2'
 
-    >>> molecule_loader = MoleculeLoader()
-    >>> molecule_loader.load_molecule(molecule_path, remove_solvent=True)
+    >>> molecule_loader = MoleculeLoader(molecule_path, remove_solvent=True)
     >>> molecule = molecule_loader.get_first_molecule()
 
     >>> representatives = Representatives()
@@ -404,8 +402,7 @@ class Coordinates:
 
     >>> molecule_path = '/path/to/pdb/or/mol2'
 
-    >>> molecule_loader = MoleculeLoader()
-    >>> molecule_loader.load_molecule(molecule_path, remove_solvent=True)
+    >>> molecule_loader = MoleculeLoader(molecule_path, remove_solvent=True)
     >>> molecule = molecule_loader.get_first_molecule()
 
     >>> coordinates = Coordinates()
@@ -515,8 +512,7 @@ class PhysicoChemicalProperties:
 
     >>> molecule_path = '/path/to/pdb/or/mol2'
 
-    >>> molecule_loader = MoleculeLoader()
-    >>> molecule_loader.load_molecule(molecule_path, remove_solvent=True)
+    >>> molecule_loader = MoleculeLoader(molecule_path, remove_solvent=True)
     >>> molecule = molecule_loader.get_first_molecule()
 
     >>> physicochemicalproperties = PhysicoChemicalProperties()
@@ -676,8 +672,7 @@ class Subsets:
 
     >>> molecule_path = '/path/to/pdb/or/mol2'
 
-    >>> molecule_loader = MoleculeLoader()
-    >>> molecule_loader.load_molecule(molecule_path, remove_solvent=True)
+    >>> molecule_loader = MoleculeLoader(molecule_path, remove_solvent=True)
     >>> molecule = molecule_loader.get_first_molecule()
 
     >>> subsets = Subsets()
@@ -800,8 +795,7 @@ class Points:
 
     >>> molecule_path = '/path/to/pdb/or/mol2'
 
-    >>> molecule_loader = MoleculeLoader()
-    >>> molecule_loader.load_molecule(molecule_path, remove_solvent=True)
+    >>> molecule_loader = MoleculeLoader(molecule_path, remove_solvent=True)
     >>> molecule = molecule_loader.get_first_molecule()
 
     >>> points = Points()
@@ -1004,8 +998,7 @@ class Shapes:
 
     >>> molecule_path = '/path/to/pdb/or/mol2'
 
-    >>> molecule_loader = MoleculeLoader()
-    >>> molecule_loader.load_molecule(molecule_path, remove_solvent=True)
+    >>> molecule_loader = MoleculeLoader(molecule_path, remove_solvent=True)
     >>> molecule = molecule_loader.get_first_molecule()
 
     >>> shapes = Shapes()
@@ -1746,8 +1739,7 @@ def process_encoding(molecule_path, output_dir, remove_solvent=False):
     for mol_counter, mol_path in enumerate(molecule_path_list, 1):
 
         # Load binding site from molecule structure file
-        molecule_loader = MoleculeLoader()
-        molecule_loader.load_molecule(mol_path, remove_solvent)
+        molecule_loader = MoleculeLoader(mol_path, remove_solvent)
         molecules_list = molecule_loader.molecules_list
 
         # Get number of molecule objects and set molecule counter
@@ -1799,8 +1791,7 @@ def save_binding_site(binding_site, output_path):
 
     >>> molecule_path = '/path/to/pdb/or/mol2'
 
-    >>> molecule_loader = MoleculeLoader()
-    >>> molecule_loader.load_molecule(molecule_path, remove_solvent=True)
+    >>> molecule_loader = MoleculeLoader(molecule_path, remove_solvent=True)
     >>> molecule = molecule_loader.get_first_molecule()
 
     >>> binding_site = BindingSite(molecule)
@@ -1835,8 +1826,7 @@ def save_cgo_file(binding_site, output_path):
 
     >>> molecule_path = '/path/to/pdb/or/mol2'
 
-    >>> molecule_loader = MoleculeLoader()
-    >>> molecule_loader.load_molecule(molecule_path, remove_solvent=True)
+    >>> molecule_loader = MoleculeLoader(molecule_path, remove_solvent=True)
     >>> molecule = molecule_loader.get_first_molecule()
 
     >>> binding_site = BindingSite(molecule)

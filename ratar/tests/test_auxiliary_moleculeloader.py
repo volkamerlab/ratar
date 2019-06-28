@@ -53,8 +53,7 @@ def test_molecule_loader(filename, code, n_atoms, centroid):
 
     # Load molecule
     molecule_path = Path(__name__).parent / 'ratar' / 'tests' / 'data' / filename
-    molecule_loader = MoleculeLoader()
-    molecule_loader.load_molecule(molecule_path)
+    molecule_loader = MoleculeLoader(molecule_path)
 
     assert len(molecule_loader.molecules_list) == len(code)
 
@@ -87,7 +86,6 @@ def test_molecule_loader_remove_solvent(filename, n_atoms):
 
     # Load molecule
     molecule_path = Path(__name__).parent / 'ratar' / 'tests' / 'data' / filename
-    molecule_loader = MoleculeLoader()
-    molecule_loader.load_molecule(molecule_path, remove_solvent=True)
+    molecule_loader = MoleculeLoader(molecule_path, remove_solvent=True)
 
     assert molecule_loader.molecules_list[0].df.shape == (n_atoms, 9)

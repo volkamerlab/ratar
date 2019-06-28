@@ -32,7 +32,9 @@ class MoleculeLoader:
     ----------
     input_path : str or pathlib.PosixPath
         Absolute path to a mol2 (can contain multiple entries) or pdb file.
-    pmols : list of biopandas.mol2.pandas_mol2.PandasMol2 or biopandas.pdb.pandas_pdb.PandasPdb
+    remove_solvent : bool
+        Set True to remove solvent molecules (default: False).
+    molecules_list : list of biopandas.mol2.pandas_mol2.PandasMol2 or biopandas.pdb.pandas_pdb.PandasPdb
         List of molecule data in the form of BioPandas objects.
     n_molecules : int
         Number of molecules loaded.
@@ -53,26 +55,21 @@ class MoleculeLoader:
     True
     """
 
-    def __init__(self):
+    def __init__(self, input_path, remove_solvent=False):
 
-        self.input_path = None
-        self.molecules_list = None
-        self.n_molecules = 0
+        self.input_path = Path(input_path)
+        self.remove_solvent = remove_solvent
+        self.molecules_list = self.load_molecule()
+        self.n_molecules = len(self.molecules_list)
 
-    def load_molecule(self, input_path, remove_solvent=False):
+    def load_molecule(self):
         """
         Load one or multiple molecules from pdb or mol2 file.
 
         Parameters
         ----------
-        input_path : str or pathlib.PosixPath
-            Absolute path to a mol2 (can contain multiple entries) or pdb file.
-        remove_solvent : bool
-            Set True to remove solvent molecules (default: False).
-        """
 
-        # Set input path
-        self.input_path = Path(input_path)
+        """
 
         if self.input_path.exists():
             logger.info(f'File to be loaded: {self.input_path}', extra={'molecule_id': 'all'})
@@ -82,16 +79,15 @@ class MoleculeLoader:
 
         # Load molecule data
         if self.input_path.suffix == '.pdb':
-            self.molecules_list = self._load_pdb(remove_solvent)
+            molecules_list = self._load_pdb(self.remove_solvent)
         elif self.input_path.suffix == '.mol2':
-            self.molecules_list = self._load_mol2(remove_solvent)
+            molecules_list = self._load_mol2(self.remove_solvent)
         else:
             raise IOError(f'Unsupported file format {self.input_path.suffix}, only pdb and mol2 are supported.')
 
-        # Set number of loaded molecules
-        self.n_molecules = len(self.molecules_list)
-
         logger.info('File loaded.', extra={'molecule_id': 'all'})
+
+        return molecules_list
 
     def get_first_molecule(self):
         """
