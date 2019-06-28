@@ -1716,7 +1716,7 @@ def process_encoding(molecule_path, output_dir, remove_solvent=False):
 
     Parameters
     ----------
-    input_mol_path : str
+    molecule_path : str
         Path to molecule structure file(s), can include a wildcard to match multiple files.
     output_dir : str
         Output directory.
