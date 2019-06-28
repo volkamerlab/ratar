@@ -36,16 +36,16 @@ def test_representatives_eq(mol_file1, mol_file2):
     molecule_loader1.load_molecule(molecule_path1)
     molecule_loader2.load_molecule(molecule_path2)
 
-    obj1 = Representatives()
-    obj2 = Representatives()
-    obj3 = Representatives()
+    representatives1 = Representatives()
+    representatives2 = Representatives()
+    representatives3 = Representatives()
 
-    obj1.get_representatives_from_molecule(molecule_loader1.get_first_molecule())
-    obj2.get_representatives_from_molecule(molecule_loader1.get_first_molecule())
-    obj3.get_representatives_from_molecule(molecule_loader2.get_first_molecule())
+    representatives1.get_representatives_from_molecule(molecule_loader1.get_first_molecule())
+    representatives2.get_representatives_from_molecule(molecule_loader1.get_first_molecule())
+    representatives3.get_representatives_from_molecule(molecule_loader2.get_first_molecule())
 
-    assert (obj1 == obj2)
-    assert not (obj1 == obj3)
+    assert (representatives1 == representatives2)
+    assert not (representatives1 == representatives3)
 
 
 @pytest.mark.parametrize('filename, column_names, n_atoms, centroid', [

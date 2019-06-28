@@ -37,16 +37,16 @@ def test_physicochemicalproperties_eq(mol_file1, mol_file2):
     molecule_loader1.load_molecule(molecule_path1)
     molecule_loader2.load_molecule(molecule_path2)
 
-    obj1 = PhysicoChemicalProperties()
-    obj2 = PhysicoChemicalProperties()
-    obj3 = PhysicoChemicalProperties()
+    physicochemicalproperties1 = PhysicoChemicalProperties()
+    physicochemicalproperties2 = PhysicoChemicalProperties()
+    physicochemicalproperties3 = PhysicoChemicalProperties()
 
-    obj1.get_physicochemicalproperties_from_molecule(molecule_loader1.get_first_molecule())
-    obj2.get_physicochemicalproperties_from_molecule(molecule_loader1.get_first_molecule())
-    obj3.get_physicochemicalproperties_from_molecule(molecule_loader2.get_first_molecule())
+    physicochemicalproperties1.get_physicochemicalproperties_from_molecule(molecule_loader1.get_first_molecule())
+    physicochemicalproperties2.get_physicochemicalproperties_from_molecule(molecule_loader1.get_first_molecule())
+    physicochemicalproperties3.get_physicochemicalproperties_from_molecule(molecule_loader2.get_first_molecule())
 
-    assert (obj1 == obj2)
-    assert not (obj1 == obj3)
+    assert (physicochemicalproperties1 == physicochemicalproperties2)
+    assert not (physicochemicalproperties1 == physicochemicalproperties3)
 
 
 @pytest.mark.parametrize('filename, column_names, n_atoms, centroid', [

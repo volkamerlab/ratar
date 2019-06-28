@@ -39,16 +39,16 @@ def test_shapes_eq(mol_file1, mol_file2):
     molecule_loader1.load_molecule(molecule_path1)
     molecule_loader2.load_molecule(molecule_path2)
 
-    obj1 = Shapes()
-    obj2 = Shapes()
-    obj3 = Shapes()
+    shapes1 = Shapes()
+    shapes2 = Shapes()
+    shapes3 = Shapes()
 
-    obj1.get_shapes_from_molecule(molecule_loader1.get_first_molecule())
-    obj2.get_shapes_from_molecule(molecule_loader1.get_first_molecule())
-    obj3.get_shapes_from_molecule(molecule_loader2.get_first_molecule())
+    shapes1.get_shapes_from_molecule(molecule_loader1.get_first_molecule())
+    shapes2.get_shapes_from_molecule(molecule_loader1.get_first_molecule())
+    shapes3.get_shapes_from_molecule(molecule_loader2.get_first_molecule())
 
-    assert (obj1 == obj2)
-    assert not (obj1 == obj3)
+    assert (shapes1 == shapes2)
+    assert not (shapes1 == shapes3)
 
 
 @pytest.mark.parametrize('distances, moment1, moment2, moment3', [

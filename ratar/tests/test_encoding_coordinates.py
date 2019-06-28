@@ -36,16 +36,16 @@ def test_coordinates_eq(mol_file1, mol_file2):
     molecule_loader1.load_molecule(molecule_path1)
     molecule_loader2.load_molecule(molecule_path2)
 
-    obj1 = Coordinates()
-    obj2 = Coordinates()
-    obj3 = Coordinates()
+    coordinates1 = Coordinates()
+    coordinates2 = Coordinates()
+    coordinates3 = Coordinates()
 
-    obj1.get_coordinates_from_molecule(molecule_loader1.get_first_molecule())
-    obj2.get_coordinates_from_molecule(molecule_loader1.get_first_molecule())
-    obj3.get_coordinates_from_molecule(molecule_loader2.get_first_molecule())
+    coordinates1.get_coordinates_from_molecule(molecule_loader1.get_first_molecule())
+    coordinates2.get_coordinates_from_molecule(molecule_loader1.get_first_molecule())
+    coordinates3.get_coordinates_from_molecule(molecule_loader2.get_first_molecule())
 
-    assert (obj1 == obj2)
-    assert not (obj1 == obj3)
+    assert (coordinates1 == coordinates2)
+    assert not (coordinates1 == coordinates3)
 
 
 @pytest.mark.parametrize('filename, column_names, n_atoms, centroid', [
