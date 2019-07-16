@@ -1869,7 +1869,7 @@ def save_cgo_file(binding_site, output_path):
             ref_points = bs_flat[key]
 
             # Set descriptive name for reference points (PDB ID, representatives, dimensions, encoding method)
-            obj_name = f'{key.replace("/", "_").replace("_ref_points", "")}__{binding_site.molecule_id}'
+            obj_name = f'{key.replace("/", "_").replace("_ref_points", "")}__{binding_site.molecule.code}'
             obj_names.append(obj_name)
 
             # Set size for PyMol spheres
@@ -1905,7 +1905,7 @@ def save_cgo_file(binding_site, output_path):
             )
 
     # Group all objects to one group
-    lines.append(f'cmd.group("{binding_site.molecule_id[:4]}_ref_points", "{" ".join(obj_names)}")')
+    lines.append(f'cmd.group("{binding_site.molecule.code[:4]}_ref_points", "{" ".join(obj_names)}")')
 
     with open(output_path, 'w') as f:
         f.write('\n'.join(lines))
