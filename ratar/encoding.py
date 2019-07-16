@@ -153,7 +153,7 @@ class Representatives:
 
     def __init__(self):
 
-        self.molecule_id = ""
+        self.molecule_id = ''
         self.data = {
             'ca':  pd.DataFrame(),
             'pca':  pd.DataFrame(),
@@ -395,7 +395,7 @@ class Coordinates:
 
     def __init__(self):
 
-        self.molecule_id = ""
+        self.molecule_id = ''
         self.data = {
             'ca': None,
             'pca': None,
@@ -507,7 +507,7 @@ class PhysicoChemicalProperties:
 
     def __init__(self):
 
-        self.molecule_id = ""
+        self.molecule_id = ''
         self.data = {
             'ca': {},
             'pca': {},
@@ -669,7 +669,7 @@ class Subsets:
 
     def __init__(self):
 
-        self.molecule_id = ""
+        self.molecule_id = ''
         self.data_pseudocenter_subsets = {
             'pca': {},
             'pc': {}
@@ -794,7 +794,7 @@ class Points:
 
     def __init__(self):
 
-        self.molecule_id = ""
+        self.molecule_id = ''
         self.data = {
             'ca': {},
             'pca': {},
@@ -1000,7 +1000,7 @@ class Shapes:
 
     def __init__(self):
 
-        self.molecule_id = ""
+        self.molecule_id = ''
         self.data = {
             'ca': {},
             'pca': {},
