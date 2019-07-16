@@ -1733,8 +1733,7 @@ def process_encoding(molecule_path, output_dir, remove_solvent=False):
     """
 
     # Get all molecule structure files
-    molecule_path_list = glob.glob(molecule_path)
-    molecule_path_list = molecule_path_list
+    molecule_path_list = glob.glob(str(molecule_path))
 
     if len(molecule_path_list) == 0:
         logger.info(f'Input path matches no molecule files: {molecule_path}', extra={'molecule_id': 'all'})
@@ -1750,13 +1749,13 @@ def process_encoding(molecule_path, output_dir, remove_solvent=False):
 
         # Load binding site from molecule structure file
         molecule_loader = MoleculeLoader(mol_path, remove_solvent)
-        molecules_list = molecule_loader.molecules_list
 
         # Get number of molecule objects and set molecule counter
-        molecule_sum = len(molecules_list)
+        molecule_sum = len(molecule_loader.molecules_list)
 
         # Iterate over all binding sites in molecule structure file
-        for molecule_counter, molecule in enumerate(molecules_list, 1):
+        for molecule_counter, molecule in enumerate(molecule_loader.molecules_list, 1):
+            print(molecule_counter)
 
             # Get iteration progress
             logger.info(f'Encoding: {mol_counter}/{mol_sum} molecule structure file - '
@@ -1767,20 +1766,16 @@ def process_encoding(molecule_path, output_dir, remove_solvent=False):
 
             # Create output folder
             molecule_id_encoding = Path(output_dir) / 'encoding' / molecule.code
-            create_directory(molecule_id_encoding)
-
-            # Get output file paths
-            output_enc_path = molecule_id_encoding / 'ratar_encoding.p'
-            output_cgo_path = molecule_id_encoding / 'ref_points_cgo.py'
+            molecule_id_encoding.mkdir(parents=True, exist_ok=True)
 
             # Encode binding site
             binding_site = BindingSite(molecule)
 
             # Save binding site
-            save_binding_site(binding_site, str(output_enc_path))
+            save_binding_site(binding_site, molecule_id_encoding / 'ratar_encoding.p')
 
             # Save binding site reference points as cgo file
-            save_cgo_file(binding_site, str(output_cgo_path))
+            save_cgo_file(binding_site, molecule_id_encoding / 'ref_points_cgo.py')
 
 
 def save_binding_site(binding_site, output_path):
