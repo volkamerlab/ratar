@@ -455,6 +455,11 @@ class Coordinates:
         ----------
         representatives : ratar.encoding.Representatives
             Representatives class instance.
+
+        Returns
+        -------
+        dict of DataFrames
+            Dictionary (representatives types, e.g. 'pc') of DataFrames containing molecule coordinates.
         """
 
         self.molecule_id = representatives.molecule_id
@@ -468,6 +473,8 @@ class Coordinates:
                 self.data[k1] = {k2: v2[['x', 'y', 'z']] for (k2, v2) in v1.items()}
             else:
                 raise TypeError(f'Expected dict or pandas.DataFrame but got {type(v1)}')
+
+        return self.data  # Return not necessary here, keep for clarity.
 
 
 class PhysicoChemicalProperties:
@@ -585,7 +592,7 @@ class PhysicoChemicalProperties:
                     raise KeyError(f'Unknown representatives key: {k2}. '
                                    f'Select: {", ".join(physicochemicalproperties_keys)}')
 
-        return self.data
+        return self.data   # Return not necessary here, keep for clarity.
 
     def _get_zscales(self, representatives_df, z_number):
         """
@@ -711,13 +718,18 @@ class Subsets:
 
     def from_representatives(self, representatives):
         """
-        Extract feature subsets from pseudocenters (pseudocenter atoms) in the form of a list of DataFrame indices
-        in a dictionary (representatives types, e.g. 'pc') of dictionaries (pseudocenter subset types, e.g. 'HBA').
+        Extract feature subsets from e.g. pseudocenters (pseudocenter atoms).
 
         Parameters
         ----------
         representatives : ratar.encoding.Representatives
             Representatives class instance.
+
+        Returns
+        -------
+        dict of dict of list of int
+            List of DataFrame indices in a dictionary (representatives types, e.g. 'pc') of dictionaries (pseudocenter
+            subset types, e.g. 'HBA').
         """
 
         self.molecule_id = representatives.molecule_id
@@ -741,6 +753,8 @@ class Subsets:
                     self.data_pseudocenter_subsets[k1][k2] = list(repres[repres['pc_type'] == k2].index)
                 else:
                     self.data_pseudocenter_subsets[k1][k2] = []
+
+        return self.data_pseudocenter_subsets   # Return not necessary here, keep for clarity.
 
 
 class Points:
@@ -868,15 +882,18 @@ class Points:
         Concatenate spatial (3-dimensional) and physicochemical (N-dimensional) properties
         to an 3+N-dimensional vector for each point in dataset (i.e. representative atoms in a binding site).
 
-        Set points in the form of a dictionary (representatives types, e.g. 'pc') of dictionaries
-        (physicochemical properties types, e.g. 'z1') of DataFrames containing coordinates and physicochemical properties.
-
         Parameters
         ----------
         coordinates : ratar.encoding.Coordinates
             Coordinates class instance.
         physicochemicalproperties : ratar.PhysicoChemicalProperties
             PhysicoChemicalProperties class instance.
+
+        Returns
+        -------
+        dict of dict of pandas.DataFrames
+             Dictionary (representatives types, e.g. 'pc') of dictionaries (physicochemical properties types, e.g. 'z1')
+             of DataFrames containing coordinates and physicochemical properties.
         """
 
         self.molecule_id = coordinates.molecule_id
@@ -906,18 +923,21 @@ class Points:
                 # Drop rows (atoms) with empty entries (e.g. atoms without Z-scales assignment)
                 self.data[k1][k2].dropna(inplace=True)
 
+        return self.data   # Return not necessary here, keep for clarity.
+
     def from_subsets(self, subsets):
         """
         Group points into subsets, e.g. subsets by pseudocenter types.
-
-        Set points in the form of a dictionary (representatives types, e.g. 'pc') of dictionaries
-        (physicochemical properties, e.g. 'pc_z123') of dictionaries (subset types, e.g. 'HBA') containing each a
-        DataFrame describing the subsetted atoms.
 
         Parameters
         ----------
         subsets : ratar.encoding.Subsets
             Subsets class instance.
+
+        Returns
+        -------
+        dict of dict of dict of pandas.DataFrames
+            Dictionary (representatives types, e.g. 'pc') of dictionaries (physicochemical properties, e.g. 'pc_z123')
         """
 
         # Subsets can only be generated if points are already created, so make check:
@@ -940,6 +960,8 @@ class Points:
                         # In points, e.g.amino acid atoms with missing Z-scales are discarded
                         labels = v2.index.intersection(v3)
                         self.data_pseudocenter_subsets[k1][k2][k3] = v2.loc[labels, :]
+
+        return self.data_pseudocenter_subsets   # Return not necessary here, keep for clarity.
 
 
 class Shapes:
@@ -972,7 +994,7 @@ class Shapes:
     >>> molecule = molecule_loader.get_first_molecule()
 
     >>> shapes = Shapes()
-    >>> shapes.get_shapes_from_molecule(molecule)
+    >>> shapes.from_molecule(molecule)
     >>> shapes
     """
 
@@ -1094,7 +1116,7 @@ class Shapes:
         # Unflatten dictionary back to nested dictionary
         self.data = unflatten(self.data, splitter='path')
 
-        return self.data
+        return self.data   # Return not necessary here, keep for clarity.
 
     def get_shapes_pseudocenter_subsets(self, points):
         """
@@ -1111,10 +1133,7 @@ class Shapes:
             of dictionaries (encoding method, e.g. '3Dusr') of dictionaries (subsets types, e.g. 'HBA') of dictionaries
             containing DataFrames for the encoding: 'ref_points' (the reference points), 'distances' (the distances from
             reference points to representatives), and 'moments' (the first three moments for the distance distribution).
-
         """
-
-        self.data_pseudocenter_subsets = {}
 
         # Flatten nested dictionary
         points_flat = flatten(points.data_pseudocenter_subsets, reducer='path')
@@ -1129,7 +1148,7 @@ class Shapes:
         # Unflatten dictionary back to nested dictionary
         self.data_pseudocenter_subsets = unflatten(self.data_pseudocenter_subsets, splitter='path')
 
-        return self.data_pseudocenter_subsets
+        return self.data_pseudocenter_subsets   # Return not necessary here, keep for clarity.
 
     def _get_shape_by_method(self, points_df):
         """
