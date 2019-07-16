@@ -51,7 +51,7 @@ class MoleculeLoader:
     >>> molecule1 = molecules_list[0].df  # Molecule data
     >>> molecule1_id = molecules_list[0].code  # Molecule id
 
-    >>> molecules_list[0].df == molecule_loader.get_first_molecule()
+    >>> molecules_list[0].df == molecule_loader.molecules_list[0]
     True
     """
 
@@ -264,7 +264,7 @@ class AminoAcidDescriptors:
     >>> molecule_path = '/path/to/pdb/or/mol2'
     >>> molecule_loader = MoleculeLoader()
     >>> molecule_loader.load_molecule(molecule_path, remove_solvent=True)
-    >>> molecule1 == molecule_loader.get_first_molecule()
+    >>> molecule1 == molecule_loader.molecules_list[0]
 
     >>> molecule1_zscales = amino_acid_descriptors.get_zscales_amino_acids(molecule1)
 
