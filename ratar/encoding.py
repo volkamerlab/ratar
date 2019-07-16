@@ -103,9 +103,9 @@ class BindingSite:
         return subsets
 
     def get_points(self, coordinates, physicochemicalproperties, subsets):
-        points = Points(self.molecule.code)
-        points.get_points(coordinates, physicochemicalproperties)
-        points.get_points_pseudocenter_subsets(subsets)
+        points = Points()
+        points.from_properties(coordinates, physicochemicalproperties)
+        points.from_subsets(subsets)
         return points
 
     def get_shapes(self, points):
@@ -774,13 +774,13 @@ class Points:
     >>> molecule = molecule_loader.get_first_molecule()
 
     >>> points = Points()
-    >>> points.get_points_from_molecule(molecule)
+    >>> points.from_molecule(molecule)
     >>> points
     """
 
-    def __init__(self, molecule_id=None):
+    def __init__(self):
 
-        self.molecule_id = molecule_id
+        self.molecule_id = ""
         self.data = {
             'ca': {},
             'pca': {},
@@ -838,14 +838,14 @@ class Points:
 
         return all(rules)
 
-    def get_points_from_molecule(self, molecule):
+    def from_molecule(self, molecule):
         """
         Convenience class method: Get points from molecule object.
 
         Parameters
         ----------
         molecule : biopandas.mol2.pandas_mol2.PandasMol2 or biopandas.pdb.pandas_pdb.PandasPdb
-        Content of mol2 or pdb file as BioPandas object.
+            Content of mol2 or pdb file as BioPandas object.
         """
 
         representatives = Representatives()
@@ -860,13 +860,16 @@ class Points:
         subsets = Subsets()
         subsets.from_representatives(representatives)
 
-        self.get_points(coordinates, physicochemicalproperties)
-        self.get_points_pseudocenter_subsets(subsets)
+        self.from_properties(coordinates, physicochemicalproperties)
+        self.from_subsets(subsets)
 
-    def get_points(self, coordinates, physicochemicalproperties):
+    def from_properties(self, coordinates, physicochemicalproperties):
         """
         Concatenate spatial (3-dimensional) and physicochemical (N-dimensional) properties
         to an 3+N-dimensional vector for each point in dataset (i.e. representative atoms in a binding site).
+
+        Set points in the form of a dictionary (representatives types, e.g. 'pc') of dictionaries
+        (physicochemical properties types, e.g. 'z1') of DataFrames containing coordinates and physicochemical properties.
 
         Parameters
         ----------
@@ -874,15 +877,9 @@ class Points:
             Coordinates class instance.
         physicochemicalproperties : ratar.PhysicoChemicalProperties
             PhysicoChemicalProperties class instance.
-
-        Returns
-        -------
-        dict of dict of pandas.DataFrames
-             Dictionary (representatives types, e.g. 'pc') of dictionaries (physicochemical properties types, e.g. 'z1')
-             of DataFrames containing coordinates and physicochemical properties.
         """
 
-        self.data = {}
+        self.molecule_id = coordinates.molecule_id
 
         # Get physicochemical properties
         physicochemicalproperties_keys = physicochemicalproperties.data['ca'].keys()
@@ -909,26 +906,26 @@ class Points:
                 # Drop rows (atoms) with empty entries (e.g. atoms without Z-scales assignment)
                 self.data[k1][k2].dropna(inplace=True)
 
-        return self.data
-
-    def get_points_pseudocenter_subsets(self, subsets):
+    def from_subsets(self, subsets):
         """
-        Get
+        Group points into subsets, e.g. subsets by pseudocenter types.
+
+        Set points in the form of a dictionary (representatives types, e.g. 'pc') of dictionaries
+        (physicochemical properties, e.g. 'pc_z123') of dictionaries (subset types, e.g. 'HBA') containing each a
+        DataFrame describing the subsetted atoms.
 
         Parameters
         ----------
         subsets : ratar.encoding.Subsets
             Subsets class instance.
-
-        Returns
-        -------
-        dict of dict of dict of pandas.DataFrames
-            Dictionary (representatives types, e.g. 'pc') of dictionaries (physicochemical properties, e.g. 'pc_z123')
-            of dictionaries (subset types, e.g. 'HBA') containing each a DataFrame describing the subsetted atoms.
         """
 
-        self.data_pseudocenter_subsets = {}
+        # Subsets can only be generated if points are already created, so make check:
+        if not self.data["ca"]:
+            raise TypeError("Attribute data of Points class is empty. Before you can generate subsets, you need to set "
+                            "the points to be subset. Use Points.from_properties() class method.")
 
+        # Subset: pseudocenter atoms
         for k1, v1 in self.data.items():  # Representatives
 
             # Select points keys that we want to subset, e.g. we want to subset pseudocenters but not Calpha atoms
@@ -943,8 +940,6 @@ class Points:
                         # In points, e.g.amino acid atoms with missing Z-scales are discarded
                         labels = v2.index.intersection(v3)
                         self.data_pseudocenter_subsets[k1][k2][k3] = v2.loc[labels, :]
-
-        return self.data_pseudocenter_subsets
 
 
 class Shapes:
@@ -1064,8 +1059,8 @@ class Shapes:
         subsets.from_representatives(representatives)
 
         points = Points()
-        points.get_points(coordinates, physicochemicalproperties)
-        points.get_points_pseudocenter_subsets(subsets)
+        points.from_properties(coordinates, physicochemicalproperties)
+        points.from_subsets(subsets)
 
         self.get_shapes(points)
 

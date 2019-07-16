@@ -36,9 +36,9 @@ def test_points_eq(mol_file1, mol_file2):
     points2 = Points()
     points3 = Points()
 
-    points1.get_points_from_molecule(molecule_loader1.get_first_molecule())
-    points2.get_points_from_molecule(molecule_loader1.get_first_molecule())
-    points3.get_points_from_molecule(molecule_loader2.get_first_molecule())
+    points1.from_molecule(molecule_loader1.get_first_molecule())
+    points2.from_molecule(molecule_loader1.get_first_molecule())
+    points3.from_molecule(molecule_loader2.get_first_molecule())
 
     assert (points1 == points2)
     assert not (points1 == points3)
@@ -56,7 +56,7 @@ def test_points_eq(mol_file1, mol_file2):
         )
     )
 ])
-def test_get_points_from_molecule(filename, keys, n_dimensions):
+def test_from_molecule(filename, keys, n_dimensions):
     """
     Test if points are correctly extracted from representatives of a molecule.
     
@@ -77,7 +77,7 @@ def test_get_points_from_molecule(filename, keys, n_dimensions):
 
     # Set points
     points = Points()
-    points.get_points_from_molecule(molecule)
+    points.from_molecule(molecule)
 
     points_flat = flatten(points.data, reducer='path')
 
