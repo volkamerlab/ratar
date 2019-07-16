@@ -84,19 +84,22 @@ class BindingSite:
         representatives.from_molecule(self.molecule)
         return representatives
 
-    def get_coordinates(self, representatives):
+    @staticmethod
+    def get_coordinates(representatives):
         coordinates = Coordinates()
         coordinates.from_representatives(representatives)
         return coordinates
 
-    def get_physicochemicalproperties(self, representatives):
-        physicochemicalproperties = PhysicoChemicalProperties(self.molecule.code)
+    @staticmethod
+    def get_physicochemicalproperties(representatives):
+        physicochemicalproperties = PhysicoChemicalProperties()
         physicochemicalproperties.from_representatives(representatives)
         return physicochemicalproperties
 
-    def get_subsets(self, representatives):
-        subsets = Subsets(self.molecule.code)
-        subsets.get_pseudocenter_subsets_indices(representatives)
+    @staticmethod
+    def get_subsets(representatives):
+        subsets = Subsets()
+        subsets.from_representatives(representatives)
         return subsets
 
     def get_points(self, coordinates, physicochemicalproperties, subsets):
@@ -541,7 +544,7 @@ class PhysicoChemicalProperties:
         Parameters
         ----------
         molecule : biopandas.mol2.pandas_mol2.PandasMol2 or biopandas.pdb.pandas_pdb.PandasPdb
-        Content of mol2 or pdb file as BioPandas object.
+            Content of mol2 or pdb file as BioPandas object.
         """
 
         representatives = Representatives()
@@ -653,13 +656,13 @@ class Subsets:
     >>> molecule = molecule_loader.get_first_molecule()
 
     >>> subsets = Subsets()
-    >>> subsets.get_pseudocenter_subsets_indices_from_molecule(molecule)
+    >>> subsets.from_molecule(molecule)
     >>> subsets
     """
 
-    def __init__(self, molecule_id=None):
+    def __init__(self):
 
-        self.molecule_id = molecule_id
+        self.molecule_id = ""
         self.data_pseudocenter_subsets = {
             'pca': {},
             'pc': {}
@@ -691,38 +694,35 @@ class Subsets:
 
         return all(rules)
 
-    def get_pseudocenter_subsets_indices_from_molecule(self, molecule):
+    def from_molecule(self, molecule):
         """
-        Convenience class method: Get pseudocenter subsets indices from molecule object.
+        Convenience class method: Get subset indices from molecule object.
 
         Parameters
         ----------
         molecule : biopandas.mol2.pandas_mol2.PandasMol2 or biopandas.pdb.pandas_pdb.PandasPdb
-        Content of mol2 or pdb file as BioPandas object.
+            Content of mol2 or pdb file as BioPandas object.
         """
 
         representatives = Representatives()
         representatives.from_molecule(molecule)
 
-        self.get_pseudocenter_subsets_indices(representatives)
+        self.from_representatives(representatives)
 
-    def get_pseudocenter_subsets_indices(self, representatives):
+    def from_representatives(self, representatives):
         """
-        Extract feature subsets from pseudocenters (pseudocenter atoms).
+        Extract feature subsets from pseudocenters (pseudocenter atoms) in the form of a list of DataFrame indices
+        in a dictionary (representatives types, e.g. 'pc') of dictionaries (pseudocenter subset types, e.g. 'HBA').
 
         Parameters
         ----------
         representatives : ratar.encoding.Representatives
             Representatives class instance.
-
-        Returns
-        -------
-        dict of dict of list of int
-            List of DataFrame indices in a dictionary (representatives types, e.g. 'pc') of dictionaries (pseudocenter
-            subset types, e.g. 'HBA').
         """
 
-        # Load pseudocenter atoms
+        self.molecule_id = representatives.molecule_id
+
+        # Subset: pseudocenter atoms
         pseudocenter_atoms = load_pseudocenters(remove_hbda=True)
 
         self.data_pseudocenter_subsets = {}
@@ -741,8 +741,6 @@ class Subsets:
                     self.data_pseudocenter_subsets[k1][k2] = list(repres[repres['pc_type'] == k2].index)
                 else:
                     self.data_pseudocenter_subsets[k1][k2] = []
-
-        return self.data_pseudocenter_subsets
 
 
 class Points:
@@ -860,7 +858,7 @@ class Points:
         physicochemicalproperties.from_representatives(representatives)
 
         subsets = Subsets()
-        subsets.get_pseudocenter_subsets_indices(representatives)
+        subsets.from_representatives(representatives)
 
         self.get_points(coordinates, physicochemicalproperties)
         self.get_points_pseudocenter_subsets(subsets)
@@ -1063,7 +1061,7 @@ class Shapes:
         physicochemicalproperties.from_representatives(representatives)
 
         subsets = Subsets()
-        subsets.get_pseudocenter_subsets_indices(representatives)
+        subsets.from_representatives(representatives)
 
         points = Points()
         points.get_points(coordinates, physicochemicalproperties)

@@ -35,9 +35,9 @@ def test_subsets_eq(mol_file1, mol_file2):
     subsets2 = Subsets()
     subsets3 = Subsets()
 
-    subsets1.get_pseudocenter_subsets_indices_from_molecule(molecule_loader1.get_first_molecule())
-    subsets2.get_pseudocenter_subsets_indices_from_molecule(molecule_loader1.get_first_molecule())
-    subsets3.get_pseudocenter_subsets_indices_from_molecule(molecule_loader2.get_first_molecule())
+    subsets1.from_molecule(molecule_loader1.get_first_molecule())
+    subsets2.from_molecule(molecule_loader1.get_first_molecule())
+    subsets3.from_molecule(molecule_loader2.get_first_molecule())
 
     assert (subsets1 == subsets2)
     assert not (subsets1 == subsets3)
@@ -50,7 +50,7 @@ def test_subsets_eq(mol_file1, mol_file2):
         ('pc', 'HBA', [5, 13, 14, 20, 36, 55, 65, 76, 83, 89])
     )
 ])
-def test_get_pseudocenter_subsets_indices_from_molecule(filename, subsets_names, example_indices):
+def test_from_molecule(filename, subsets_names, example_indices):
     """
     Test if pseudocenter subset indices are extracted correctly.
 
@@ -71,7 +71,7 @@ def test_get_pseudocenter_subsets_indices_from_molecule(filename, subsets_names,
 
     # Set subsets
     subsets = Subsets()
-    subsets.get_pseudocenter_subsets_indices_from_molecule(molecule)
+    subsets.from_molecule(molecule)
 
     assert list(subsets.pseudocenters.keys()).sort() == subsets_names.sort()
     assert list(subsets.pseudocenter_atoms.keys()).sort() == subsets_names.sort()
