@@ -52,7 +52,7 @@ class BindingSite:
     >>> from ratar.auxiliary import MoleculeLoader
     >>> from ratar.encoding import Representatives, Coordinates
 
-    >>> molecule_path = '/path/to/pdb/or/mol2'
+     >>> molecule_path = Path(__name__).parent / 'ratar' / 'tests' / 'data' /'AAK1_4wsq_altA_chainA.mol2'
 
     >>> molecule_loader = MoleculeLoader(molecule_path, remove_solvent=True)
     >>> molecule = molecule_loader.molecules_list[0]
@@ -141,7 +141,7 @@ class Representatives:
     >>> from ratar.auxiliary import MoleculeLoader
     >>> from ratar.encoding import Representatives
 
-    >>> molecule_path = '/path/to/pdb/or/mol2'
+    >>> molecule_path = Path(__name__).parent / 'ratar' / 'tests' / 'data' /'AAK1_4wsq_altA_chainA.mol2'
 
     >>> molecule_loader = MoleculeLoader(molecule_path, remove_solvent=True)
     >>> molecule = molecule_loader.molecules_list[0]
@@ -383,7 +383,7 @@ class Coordinates:
     >>> from ratar.auxiliary import MoleculeLoader
     >>> from ratar.encoding import Coordinates
 
-    >>> molecule_path = '/path/to/pdb/or/mol2'
+     >>> molecule_path = Path(__name__).parent / 'ratar' / 'tests' / 'data' /'AAK1_4wsq_altA_chainA.mol2'
 
     >>> molecule_loader = MoleculeLoader(molecule_path, remove_solvent=True)
     >>> molecule = molecule_loader.molecules_list[0]
@@ -495,7 +495,7 @@ class PhysicoChemicalProperties:
     >>> from ratar.auxiliary import MoleculeLoader
     >>> from ratar.encoding import PhysicoChemicalProperties
 
-    >>> molecule_path = '/path/to/pdb/or/mol2'
+     >>> molecule_path = Path(__name__).parent / 'ratar' / 'tests' / 'data' /'AAK1_4wsq_altA_chainA.mol2'
 
     >>> molecule_loader = MoleculeLoader(molecule_path, remove_solvent=True)
     >>> molecule = molecule_loader.molecules_list[0]
@@ -657,7 +657,7 @@ class Subsets:
     >>> from ratar.auxiliary import MoleculeLoader
     >>> from ratar.encoding import Subsets
 
-    >>> molecule_path = '/path/to/pdb/or/mol2'
+     >>> molecule_path = Path(__name__).parent / 'ratar' / 'tests' / 'data' /'AAK1_4wsq_altA_chainA.mol2'
 
     >>> molecule_loader = MoleculeLoader(molecule_path, remove_solvent=True)
     >>> molecule = molecule_loader.molecules_list[0]
@@ -782,7 +782,7 @@ class Points:
     >>> from ratar.auxiliary import MoleculeLoader
     >>> from ratar.encoding import Points
 
-    >>> molecule_path = '/path/to/pdb/or/mol2'
+     >>> molecule_path = Path(__name__).parent / 'ratar' / 'tests' / 'data' /'AAK1_4wsq_altA_chainA.mol2'
 
     >>> molecule_loader = MoleculeLoader(molecule_path, remove_solvent=True)
     >>> molecule = molecule_loader.molecules_list[0]
@@ -988,7 +988,7 @@ class Shapes:
     >>> from ratar.auxiliary import MoleculeLoader
     >>> from ratar.encoding import Shapes
 
-    >>> molecule_path = '/path/to/pdb/or/mol2'
+     >>> molecule_path = Path(__name__).parent / 'ratar' / 'tests' / 'data' /'AAK1_4wsq_altA_chainA.mol2'
 
     >>> molecule_loader = MoleculeLoader(molecule_path, remove_solvent=True)
     >>> molecule = molecule_loader.molecules_list[0]
@@ -1832,7 +1832,7 @@ def save_cgo_file(binding_site, output_path):
     >>> from ratar.auxiliary import MoleculeLoader
     >>> from ratar.encoding import BindingSite, save_cgo_file
 
-    >>> molecule_path = '/path/to/pdb/or/mol2'
+     >>> molecule_path = Path(__name__).parent / 'ratar' / 'tests' / 'data' /'AAK1_4wsq_altA_chainA.mol2'
 
     >>> molecule_loader = MoleculeLoader(molecule_path, remove_solvent=True)
     >>> molecule = molecule_loader.molecules_list[0]
