@@ -109,9 +109,9 @@ class BindingSite:
         return points
 
     def get_shapes(self, points):
-        shapes = Shapes(self.molecule.code)
-        shapes.get_shapes(points)
-        shapes.get_shapes_pseudocenter_subsets(points)
+        shapes = Shapes()
+        shapes.from_points(points)
+        shapes.from_subset_points(points)
         return shapes
 
     def run(self):
@@ -998,9 +998,9 @@ class Shapes:
     >>> shapes
     """
 
-    def __init__(self, molecule_id=None):
+    def __init__(self):
 
-        self.molecule_id = molecule_id
+        self.molecule_id = ""
         self.data = {
             'ca': {},
             'pca': {},
@@ -1058,7 +1058,7 @@ class Shapes:
 
         return all(rules)
 
-    def get_shapes_from_molecule(self, molecule):
+    def from_molecule(self, molecule):
         """
         Convenience class method: Get shapes from molecule object.
 
@@ -1084,9 +1084,10 @@ class Shapes:
         points.from_properties(coordinates, physicochemicalproperties)
         points.from_subsets(subsets)
 
-        self.get_shapes(points)
+        self.from_points(points)
+        self.from_subset_points(points)
 
-    def get_shapes(self, points):
+    def from_points(self, points):
         """
         Get the encoding of a molecule for different types of representatives, physicochemical properties, and encoding
         methods.
@@ -1105,8 +1106,6 @@ class Shapes:
             and 'moments' (the first three moments for the distance distribution).
         """
 
-        self.data = {}
-
         # Flatten nested dictionary
         points_flat = flatten(points.data, reducer='path')
 
@@ -1118,8 +1117,10 @@ class Shapes:
 
         return self.data   # Return not necessary here, keep for clarity.
 
-    def get_shapes_pseudocenter_subsets(self, points):
+    def from_subset_points(self, points):
         """
+        Get the encoding of a subset molecule for different types of representatives, physicochemical properties, and encoding
+        methods.
 
         Parameters
         ----------

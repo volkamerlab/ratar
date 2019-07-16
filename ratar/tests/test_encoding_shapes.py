@@ -38,9 +38,9 @@ def test_shapes_eq(mol_file1, mol_file2):
     shapes2 = Shapes()
     shapes3 = Shapes()
 
-    shapes1.get_shapes_from_molecule(molecule_loader1.get_first_molecule())
-    shapes2.get_shapes_from_molecule(molecule_loader1.get_first_molecule())
-    shapes3.get_shapes_from_molecule(molecule_loader2.get_first_molecule())
+    shapes1.from_molecule(molecule_loader1.get_first_molecule())
+    shapes2.from_molecule(molecule_loader1.get_first_molecule())
+    shapes3.from_molecule(molecule_loader2.get_first_molecule())
 
     assert (shapes1 == shapes2)
     assert not (shapes1 == shapes3)
@@ -519,7 +519,7 @@ def test_calc_shape_6dim_ratar1(points, ref_points):
             ])
     )  # Too many dimensions
 ])
-def test_get_shape_by_method_exceptions(points_df):
+def ttest_get_shape_by_method_exceptions(points_df):
 
     shapes = Shapes()
 
@@ -576,7 +576,7 @@ def test_get_shape_by_method(points_df, shape_keys):
             f'pc/no/3Dusr pc/no/3Dcsr pc/z1/4Delectroshape pc/z123/6Dratar1'.split()
     )
 ])
-def test_get_shapes_from_molecule(filename, keys_ref):
+def test_from_molecule(filename, keys_ref):
     """
     Test if points are correctly extracted from representatives of a molecule.
 
@@ -595,7 +595,7 @@ def test_get_shapes_from_molecule(filename, keys_ref):
 
     # Set points
     shapes = Shapes()
-    shapes.get_shapes_from_molecule(molecule)
+    shapes.from_molecule(molecule)
 
     shapes_flat = flatten(shapes.data, reducer='path')
 
