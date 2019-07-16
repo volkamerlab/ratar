@@ -1140,7 +1140,7 @@ class Shapes:
         points_flat = flatten(points.data_pseudocenter_subsets, reducer='path')
 
         for k, v in points_flat.items():
-            self.data_pseudocenter_subsets[k] = self._get_shape_by_method(v)
+            self.data_pseudocenter_subsets[k] = self._get_shape_by_method(v, k)
 
         # Change key order of (flattened) nested dictionary (reverse subset type and encoding type)
         # Example: 'pc/z123/H/6Dratar1/moments' is changed to 'pc/z123/6Dratar1/H/moments'.
@@ -1151,7 +1151,7 @@ class Shapes:
 
         return self.data_pseudocenter_subsets   # Return not necessary here, keep for clarity.
 
-    def _get_shape_by_method(self, points_df):
+    def _get_shape_by_method(self, points_df, points_key=None):
         """
         Apply encoding method on points depending on points dimensions and return encoding.
 
@@ -1159,6 +1159,9 @@ class Shapes:
         ----------
         points_df : pandas.DataFrame
             DataFrame containing points which can have different dimensions.
+        points_key : str
+            String describing the type of representatives, physicochemical properties, and subsets that the points are
+            based on.
 
         Returns
         -------
@@ -1180,15 +1183,30 @@ class Shapes:
         elif n_dimensions == 6 and n_points > 6:
             return {'6Dratar1': self._calc_shape_6dim_ratar1(points_df)}
         elif n_dimensions < 3:
-            raise ValueError(f'Unexpected points dimension: {points_df.shape[1]}. Not implemented.')
+            logger.warning(f'{points_key}: Unexpected points dimension: {points_df.shape[1]}. Not implemented.')
+            return {'encoding_failed': {'dist': None, 'ref_points': None, 'moments': None}}
+            # raise ValueError(f'Unexpected points dimension: {points_df.shape[1]}. Not implemented.')
         elif n_dimensions == 3 and n_points <= 3:
-            raise ValueError(f'Number of points in 3D must be at least 4. Number of input points: {points_df.shape[0]}.')
+            logger.warning(f'{points_key}: Number of points in 3D must be at least 4. Number of input points: '
+                           f'{points_df.shape[0]}.')
+            return {'encoding_failed': {'dist': None, 'ref_points': None, 'moments': None}}
+            # raise ValueError(f'Number of points in 3D must be at least 4. Number of input points:
+            # {points_df.shape[0]}.')
         elif n_dimensions == 4 and n_points <= 4:
-            raise ValueError(f'Number of points in 4D must be at least 5. Number of input points: {points_df.shape[0]}.')
+            logger.warning(f'{points_key}: Number of points in 4D must be at least 5. Number of input points: '
+                           f'{points_df.shape[0]}.')
+            return {'encoding_failed': {'dist': None, 'ref_points': None, 'moments': None}}
+            # raise ValueError(f'Number of points in 4D must be at least 5. Number of input points:
+            # {points_df.shape[0]}.')
         elif n_dimensions == 6 and n_points <= 6:
-            raise ValueError(f'Number of points in 6D must be at least 7. Number of input points: {points_df.shape[0]}.')
+            logger.warning(f'{points_key}: Number of points in 6D must be at least 7. Number of input points: '
+                           f'{points_df.shape[0]}.')
+            return {'encoding_failed': {'dist': None, 'ref_points': None, 'moments': None}}
+            # raise ValueError(f'Number of points in 6D must be at least 7. Number of input points:
+            # {points_df.shape[0]}.')
         elif n_dimensions > 6:
-            raise ValueError(f'Unexpected points dimension: {points_df.shape[1]}. Not implemented.')
+            logger.warning(f'{points_key}: Unexpected points dimension: {points_df.shape[1]}. Not implemented.')
+            # raise ValueError(f'Unexpected points dimension: {points_df.shape[1]}. Not implemented.')
 
     def _calc_shape_3dim_usr(self, points):
         """
