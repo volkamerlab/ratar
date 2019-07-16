@@ -36,9 +36,9 @@ def test_coordinates_eq(mol_file1, mol_file2):
     coordinates2 = Coordinates()
     coordinates3 = Coordinates()
 
-    coordinates1.get_coordinates_from_molecule(molecule_loader1.get_first_molecule())
-    coordinates2.get_coordinates_from_molecule(molecule_loader1.get_first_molecule())
-    coordinates3.get_coordinates_from_molecule(molecule_loader2.get_first_molecule())
+    coordinates1.from_molecule(molecule_loader1.get_first_molecule())
+    coordinates2.from_molecule(molecule_loader1.get_first_molecule())
+    coordinates3.from_molecule(molecule_loader2.get_first_molecule())
 
     assert (coordinates1 == coordinates2)
     assert not (coordinates1 == coordinates3)
@@ -67,7 +67,7 @@ def test_coordinates_eq(mol_file1, mol_file2):
 
     )
 ])
-def test_get_coordinates_from_molecule(filename, column_names, n_atoms, centroid):
+def test_from_molecule(filename, column_names, n_atoms, centroid):
     """
     Test if coordinates are correctly extracted from representatives of a molecule.
 
@@ -90,7 +90,7 @@ def test_get_coordinates_from_molecule(filename, column_names, n_atoms, centroid
 
     # Set coordinates
     coordinates = Coordinates()
-    coordinates.get_coordinates_from_molecule(molecule)
+    coordinates.from_molecule(molecule)
 
     for key, value in coordinates.data.items():
         assert all(value.columns == column_names)

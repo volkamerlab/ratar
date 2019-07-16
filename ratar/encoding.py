@@ -85,8 +85,8 @@ class BindingSite:
         return representatives
 
     def get_coordinates(self, representatives):
-        coordinates = Coordinates(self.molecule.code)
-        coordinates.get_coordinates(representatives)
+        coordinates = Coordinates()
+        coordinates.from_representatives(representatives)
         return coordinates
 
     def get_physicochemicalproperties(self, representatives):
@@ -386,13 +386,13 @@ class Coordinates:
     >>> molecule = molecule_loader.get_first_molecule()
 
     >>> coordinates = Coordinates()
-    >>> coordinates.get_coordinates_from_molecule(molecule)
+    >>> coordinates.from_molecule(molecule)
     >>> coordinates
     """
 
-    def __init__(self, molecule_id=None):
+    def __init__(self):
 
-        self.molecule_id = molecule_id
+        self.molecule_id = ""
         self.data = {
             'ca': None,
             'pca': None,
@@ -429,7 +429,7 @@ class Coordinates:
 
         return all(rules)
 
-    def get_coordinates_from_molecule(self, molecule):
+    def from_molecule(self, molecule):
         """
         Convenience class method: Get coordinates from molecule object.
 
@@ -442,22 +442,19 @@ class Coordinates:
         representatives = Representatives()
         representatives.from_molecule(molecule)
 
-        self.get_coordinates(representatives)
+        self.from_representatives(representatives)
 
-    def get_coordinates(self, representatives):
+    def from_representatives(self, representatives):
         """
-        Get coordinates (x, y, z) for molecule reprentatives.
+        Get coordinates (x, y, z) for molecule representatives.
 
         Parameters
         ----------
         representatives : ratar.encoding.Representatives
             Representatives class instance.
-
-        Returns
-        -------
-        dict of DataFrames
-            Dictionary (representatives types, e.g. 'pc') of DataFrames containing molecule coordinates.
         """
+
+        self.molecule_id = representatives.molecule_id
 
         self.data = {}
 
@@ -468,8 +465,6 @@ class Coordinates:
                 self.data[k1] = {k2: v2[['x', 'y', 'z']] for (k2, v2) in v1.items()}
             else:
                 raise TypeError(f'Expected dict or pandas.DataFrame but got {type(v1)}')
-
-        return self.data
 
 
 class PhysicoChemicalProperties:
@@ -857,7 +852,7 @@ class Points:
         representatives.from_molecule(molecule)
 
         coordinates = Coordinates()
-        coordinates.get_coordinates(representatives)
+        coordinates.from_representatives(representatives)
 
         physicochemicalproperties = PhysicoChemicalProperties()
         physicochemicalproperties.get_physicochemicalproperties(representatives)
@@ -1060,7 +1055,7 @@ class Shapes:
         representatives.from_molecule(molecule)
 
         coordinates = Coordinates()
-        coordinates.get_coordinates(representatives)
+        coordinates.from_representatives(representatives)
 
         physicochemicalproperties = PhysicoChemicalProperties()
         physicochemicalproperties.get_physicochemicalproperties(representatives)
