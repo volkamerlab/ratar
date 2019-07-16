@@ -64,8 +64,7 @@ class BindingSite:
 
     def __init__(self, molecule):
 
-        self.molecule_id = molecule.code
-        self.molecule_df = molecule.df
+        self.molecule = molecule
         self.representatives = self.get_representatives()
         self.shapes = self.run()
 
@@ -147,13 +146,13 @@ class Representatives:
     >>> molecule = molecule_loader.get_first_molecule()
 
     >>> representatives = Representatives()
-    >>> representatives.get_representatives_from_molecule(molecule)
+    >>> representatives.from_molecule(molecule)
     >>> representatives
     """
 
-    def __init__(self, molecule_id=None):
+    def __init__(self):
 
-        self.molecule_id = molecule_id
+        self.molecule_id = ""
         self.data = {
             'ca':  pd.DataFrame(),
             'pca':  pd.DataFrame(),
@@ -191,44 +190,27 @@ class Representatives:
 
         return all(rules)
 
-    def get_representatives_from_molecule(self, molecule):
+    def from_molecule(self, molecule):
         """
-        Convenience class method: Get representatives from molecule object.
+        Set molecule ID and extract binding site representatives.
 
         Parameters
         ----------
         molecule : biopandas.mol2.pandas_mol2.PandasMol2 or biopandas.pdb.pandas_pdb.PandasPdb
-        Content of mol2 or pdb file as BioPandas object.
+            Content of mol2 or pdb file as BioPandas object.
         """
 
-        self.get_representatives(molecule.df)
-
-    def get_representatives(self, molecule_df):
-        """
-        Extract binding site representatives.
-
-        Parameters
-        ----------
-        molecule_df : pandas.DataFrame
-            DataFrame containing atom lines from input file.
-
-        Returns
-        -------
-        pandas.DataFrame
-            DataFrame containing atom lines from input file described by Z-scales.
-        """
+        self.molecule_id = molecule.code
 
         for key in self.data.keys():
             if key == 'ca':
-                self.data['ca'] = self._get_ca(molecule_df)
+                self.data['ca'] = self._get_ca(molecule.df)
             elif key == 'pca':
-                self.data['pca'] = self._get_pca(molecule_df)
+                self.data['pca'] = self._get_pca(molecule.df)
             elif key == 'pc':
-                self.data['pc'] = self._get_pc(molecule_df)
+                self.data['pc'] = self._get_pc(molecule.df)
             else:
                 raise KeyError(f'Unknown representative key: {key}')
-
-        return self.data
 
     @staticmethod
     def _get_ca(molecule_df):
@@ -460,7 +442,7 @@ class Coordinates:
         """
 
         representatives = Representatives()
-        representatives.get_representatives(molecule.df)
+        representatives.from_molecule(molecule)
 
         self.get_coordinates(representatives)
 
@@ -570,7 +552,7 @@ class PhysicoChemicalProperties:
         """
 
         representatives = Representatives()
-        representatives.get_representatives(molecule.df)
+        representatives.from_molecule(molecule)
 
         self.get_physicochemicalproperties(representatives)
 
@@ -725,7 +707,7 @@ class Subsets:
         """
 
         representatives = Representatives()
-        representatives.get_representatives(molecule.df)
+        representatives.from_molecule(molecule)
 
         self.get_pseudocenter_subsets_indices(representatives)
 
@@ -874,7 +856,7 @@ class Points:
         """
 
         representatives = Representatives()
-        representatives.get_representatives(molecule.df)
+        representatives.from_molecule(molecule)
 
         coordinates = Coordinates()
         coordinates.get_coordinates(representatives)
@@ -1077,7 +1059,7 @@ class Shapes:
         """
 
         representatives = Representatives()
-        representatives.get_representatives(molecule.df)
+        representatives.from_molecule(molecule)
 
         coordinates = Coordinates()
         coordinates.get_coordinates(representatives)

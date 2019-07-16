@@ -36,9 +36,9 @@ def test_representatives_eq(mol_file1, mol_file2):
     representatives2 = Representatives()
     representatives3 = Representatives()
 
-    representatives1.get_representatives_from_molecule(molecule_loader1.get_first_molecule())
-    representatives2.get_representatives_from_molecule(molecule_loader1.get_first_molecule())
-    representatives3.get_representatives_from_molecule(molecule_loader2.get_first_molecule())
+    representatives1.from_molecule(molecule_loader1.get_first_molecule())
+    representatives2.from_molecule(molecule_loader1.get_first_molecule())
+    representatives3.from_molecule(molecule_loader2.get_first_molecule())
 
     assert (representatives1 == representatives2)
     assert not (representatives1 == representatives3)
@@ -64,7 +64,7 @@ def test_representatives_eq(mol_file1, mol_file2):
         }
     )
 ])
-def test_get_representatives_from_molecule(filename, column_names, n_atoms, centroid):
+def test_from_molecule(filename, column_names, n_atoms, centroid):
     """
     Test if representatives are correctly extracted from representatives of a molecule.
 
@@ -87,7 +87,7 @@ def test_get_representatives_from_molecule(filename, column_names, n_atoms, cent
 
     # Set representatives
     representatives = Representatives()
-    representatives.get_representatives_from_molecule(molecule)
+    representatives.from_molecule(molecule)
 
     for key, value in representatives.data.items():
         assert all(value.columns == column_names[key])
