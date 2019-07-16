@@ -40,10 +40,8 @@ class BindingSite:
 
     Attributes
     ----------
-    molecule_id : str
-        Molecule ID (e.g. PDB ID).
-    molecule : DataFrame
-        Data extracted from e.g. mol2 or pdb file.
+    molecule : biopandas.mol2.pandas_mol2.PandasMol2 or biopandas.pdb.pandas_pdb.PandasPdb
+            Content of mol2 or pdb file as BioPandas object.
     representatives : ratar.encoding.Representatives
         Representative atoms of binding site for different representation methods.
     shapes : Shapes
@@ -74,41 +72,41 @@ class BindingSite:
         """
 
         rules = [
-            self.molecule_id == other.molecule_id,
-            self.molecule_df.equals(other.molecule_df),
+            self.molecule.code == other.molecule.code,
+            self.molecule.df.equals(other.molecule.df),
             self.representatives == other.representatives,
             self.shapes == other.shapes
         ]
         return all(rules)
 
     def get_representatives(self):
-        representatives = Representatives(self.molecule_id)
-        representatives.get_representatives(self.molecule_df)
+        representatives = Representatives()
+        representatives.from_molecule(self.molecule)
         return representatives
 
     def get_coordinates(self, representatives):
-        coordinates = Coordinates(self.molecule_id)
+        coordinates = Coordinates(self.molecule.code)
         coordinates.get_coordinates(representatives)
         return coordinates
 
     def get_physicochemicalproperties(self, representatives):
-        physicochemicalproperties = PhysicoChemicalProperties(self.molecule_id)
+        physicochemicalproperties = PhysicoChemicalProperties(self.molecule.code)
         physicochemicalproperties.get_physicochemicalproperties(representatives)
         return physicochemicalproperties
 
     def get_subsets(self, representatives):
-        subsets = Subsets(self.molecule_id)
+        subsets = Subsets(self.molecule.code)
         subsets.get_pseudocenter_subsets_indices(representatives)
         return subsets
 
     def get_points(self, coordinates, physicochemicalproperties, subsets):
-        points = Points(self.molecule_id)
+        points = Points(self.molecule.code)
         points.get_points(coordinates, physicochemicalproperties)
         points.get_points_pseudocenter_subsets(subsets)
         return points
 
     def get_shapes(self, points):
-        shapes = Shapes(self.molecule_id)
+        shapes = Shapes(self.molecule.code)
         shapes.get_shapes(points)
         shapes.get_shapes_pseudocenter_subsets(points)
         return shapes
