@@ -36,9 +36,9 @@ def test_coordinates_eq(mol_file1, mol_file2):
     coordinates2 = Coordinates()
     coordinates3 = Coordinates()
 
-    coordinates1.from_molecule(molecule_loader1.get_first_molecule())
-    coordinates2.from_molecule(molecule_loader1.get_first_molecule())
-    coordinates3.from_molecule(molecule_loader2.get_first_molecule())
+    coordinates1.from_molecule(molecule_loader1.molecules_list[0])
+    coordinates2.from_molecule(molecule_loader1.molecules_list[0])
+    coordinates3.from_molecule(molecule_loader2.molecules_list[0])
 
     assert (coordinates1 == coordinates2)
     assert not (coordinates1 == coordinates3)
@@ -86,7 +86,7 @@ def test_from_molecule(filename, column_names, n_atoms, centroid):
     # Load molecule
     molecule_path = Path(__name__).parent / 'ratar' / 'tests' / 'data' / filename
     molecule_loader = MoleculeLoader(molecule_path)
-    molecule = molecule_loader.get_first_molecule()
+    molecule = molecule_loader.molecules_list[0]
 
     # Set coordinates
     coordinates = Coordinates()

@@ -36,9 +36,9 @@ def test_representatives_eq(mol_file1, mol_file2):
     representatives2 = Representatives()
     representatives3 = Representatives()
 
-    representatives1.from_molecule(molecule_loader1.get_first_molecule())
-    representatives2.from_molecule(molecule_loader1.get_first_molecule())
-    representatives3.from_molecule(molecule_loader2.get_first_molecule())
+    representatives1.from_molecule(molecule_loader1.molecules_list[0])
+    representatives2.from_molecule(molecule_loader1.molecules_list[0])
+    representatives3.from_molecule(molecule_loader2.molecules_list[0])
 
     assert (representatives1 == representatives2)
     assert not (representatives1 == representatives3)
@@ -83,7 +83,7 @@ def test_from_molecule(filename, column_names, n_atoms, centroid):
     # Load molecule
     molecule_path = Path(__name__).parent / 'ratar' / 'tests' / 'data' / filename
     molecule_loader = MoleculeLoader(molecule_path)
-    molecule = molecule_loader.get_first_molecule()
+    molecule = molecule_loader.molecules_list[0]
 
     # Set representatives
     representatives = Representatives()
@@ -107,7 +107,7 @@ def test_get_ca_datatypes(filename):
     # Load molecule
     molecule_path = Path(__name__).parent / 'ratar' / 'tests' / 'data' / filename
     molecule_loader = MoleculeLoader(molecule_path)
-    molecule = molecule_loader.get_first_molecule()
+    molecule = molecule_loader.molecules_list[0]
 
     repres = Representatives()
     ca = repres._get_ca(molecule.df)
@@ -138,7 +138,7 @@ def test_get_pca_datatypes(filename):
     # Load molecule
     molecule_path = Path(__name__).parent / 'ratar' / 'tests' / 'data' / filename
     molecule_loader = MoleculeLoader(molecule_path)
-    molecule = molecule_loader.get_first_molecule()
+    molecule = molecule_loader.molecules_list[0]
 
     repres = Representatives()
     pca = repres._get_pca(molecule.df)
@@ -172,7 +172,7 @@ def test_get_pca_pc_datatypes(filename):
     # Load molecule
     molecule_path = Path(__name__).parent / 'ratar' / 'tests' / 'data' / filename
     molecule_loader = MoleculeLoader(molecule_path)
-    molecule = molecule_loader.get_first_molecule()
+    molecule = molecule_loader.molecules_list[0]
 
     repres = Representatives()
     pc = repres._get_pc(molecule.df)

@@ -37,9 +37,9 @@ def test_physicochemicalproperties_eq(mol_file1, mol_file2):
     physicochemicalproperties2 = PhysicoChemicalProperties()
     physicochemicalproperties3 = PhysicoChemicalProperties()
 
-    physicochemicalproperties1.from_molecule(molecule_loader1.get_first_molecule())
-    physicochemicalproperties2.from_molecule(molecule_loader1.get_first_molecule())
-    physicochemicalproperties3.from_molecule(molecule_loader2.get_first_molecule())
+    physicochemicalproperties1.from_molecule(molecule_loader1.molecules_list[0])
+    physicochemicalproperties2.from_molecule(molecule_loader1.molecules_list[0])
+    physicochemicalproperties3.from_molecule(molecule_loader2.molecules_list[0])
 
     assert (physicochemicalproperties1 == physicochemicalproperties2)
     assert not (physicochemicalproperties1 == physicochemicalproperties3)
@@ -99,7 +99,7 @@ def test_from_molecule(filename, column_names, n_atoms, centroid):
     # Load molecule
     molecule_path = Path(__name__).parent / 'ratar' / 'tests' / 'data' / filename
     molecule_loader = MoleculeLoader(molecule_path)
-    molecule = molecule_loader.get_first_molecule()
+    molecule = molecule_loader.molecules_list[0]
 
     # Set physicochemical properties
     physicochemicalproperties = PhysicoChemicalProperties()

@@ -36,9 +36,9 @@ def test_points_eq(mol_file1, mol_file2):
     points2 = Points()
     points3 = Points()
 
-    points1.from_molecule(molecule_loader1.get_first_molecule())
-    points2.from_molecule(molecule_loader1.get_first_molecule())
-    points3.from_molecule(molecule_loader2.get_first_molecule())
+    points1.from_molecule(molecule_loader1.molecules_list[0])
+    points2.from_molecule(molecule_loader1.molecules_list[0])
+    points3.from_molecule(molecule_loader2.molecules_list[0])
 
     assert (points1 == points2)
     assert not (points1 == points3)
@@ -73,7 +73,7 @@ def test_from_molecule(filename, keys, n_dimensions):
     # Load molecule
     molecule_path = Path(__name__).parent / 'ratar' / 'tests' / 'data' / filename
     molecule_loader = MoleculeLoader(molecule_path)
-    molecule = molecule_loader.get_first_molecule()
+    molecule = molecule_loader.molecules_list[0]
 
     # Set points
     points = Points()
