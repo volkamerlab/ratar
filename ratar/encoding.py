@@ -91,7 +91,7 @@ class BindingSite:
 
     def get_physicochemicalproperties(self, representatives):
         physicochemicalproperties = PhysicoChemicalProperties(self.molecule.code)
-        physicochemicalproperties.get_physicochemicalproperties(representatives)
+        physicochemicalproperties.from_representatives(representatives)
         return physicochemicalproperties
 
     def get_subsets(self, representatives):
@@ -491,13 +491,13 @@ class PhysicoChemicalProperties:
     >>> molecule = molecule_loader.get_first_molecule()
 
     >>> physicochemicalproperties = PhysicoChemicalProperties()
-    >>> physicochemicalproperties.get_physicochemicalproperties_from_molecule(molecule)
+    >>> physicochemicalproperties.from_molecule(molecule)
     >>> physicochemicalproperties
     """
 
-    def __init__(self, molecule_id=None):
+    def __init__(self):
 
-        self.molecule_id = molecule_id
+        self.molecule_id = ""
         self.data = {
             'ca': {},
             'pca': {},
@@ -534,7 +534,7 @@ class PhysicoChemicalProperties:
 
         return all(rules)
 
-    def get_physicochemicalproperties_from_molecule(self, molecule):
+    def from_molecule(self, molecule):
         """
         Convenience class method: Get physicochemical properties from molecule object.
 
@@ -547,9 +547,9 @@ class PhysicoChemicalProperties:
         representatives = Representatives()
         representatives.from_molecule(molecule)
 
-        self.get_physicochemicalproperties(representatives)
+        self.from_representatives(representatives)
 
-    def get_physicochemicalproperties(self, representatives):
+    def from_representatives(self, representatives):
         """
         Extract physicochemical properties (main function).
 
@@ -563,6 +563,8 @@ class PhysicoChemicalProperties:
         pandas.DataFrame
             DataFrame containing physicochemical properties.
         """
+
+        self.molecule_id = representatives.molecule_id
 
         self.data = {}
 
@@ -855,7 +857,7 @@ class Points:
         coordinates.from_representatives(representatives)
 
         physicochemicalproperties = PhysicoChemicalProperties()
-        physicochemicalproperties.get_physicochemicalproperties(representatives)
+        physicochemicalproperties.from_representatives(representatives)
 
         subsets = Subsets()
         subsets.get_pseudocenter_subsets_indices(representatives)
@@ -1058,7 +1060,7 @@ class Shapes:
         coordinates.from_representatives(representatives)
 
         physicochemicalproperties = PhysicoChemicalProperties()
-        physicochemicalproperties.get_physicochemicalproperties(representatives)
+        physicochemicalproperties.from_representatives(representatives)
 
         subsets = Subsets()
         subsets.get_pseudocenter_subsets_indices(representatives)

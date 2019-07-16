@@ -37,9 +37,9 @@ def test_physicochemicalproperties_eq(mol_file1, mol_file2):
     physicochemicalproperties2 = PhysicoChemicalProperties()
     physicochemicalproperties3 = PhysicoChemicalProperties()
 
-    physicochemicalproperties1.get_physicochemicalproperties_from_molecule(molecule_loader1.get_first_molecule())
-    physicochemicalproperties2.get_physicochemicalproperties_from_molecule(molecule_loader1.get_first_molecule())
-    physicochemicalproperties3.get_physicochemicalproperties_from_molecule(molecule_loader2.get_first_molecule())
+    physicochemicalproperties1.from_molecule(molecule_loader1.get_first_molecule())
+    physicochemicalproperties2.from_molecule(molecule_loader1.get_first_molecule())
+    physicochemicalproperties3.from_molecule(molecule_loader2.get_first_molecule())
 
     assert (physicochemicalproperties1 == physicochemicalproperties2)
     assert not (physicochemicalproperties1 == physicochemicalproperties3)
@@ -80,7 +80,7 @@ def test_physicochemicalproperties_eq(mol_file1, mol_file2):
         )
     )
 ])
-def test_get_physicochemicalproperties_from_molecule(filename, column_names, n_atoms, centroid):
+def test_from_molecule(filename, column_names, n_atoms, centroid):
     """
     Test if coordinates are correctly extracted from representatives of a molecule.
 
@@ -103,7 +103,7 @@ def test_get_physicochemicalproperties_from_molecule(filename, column_names, n_a
 
     # Set physicochemical properties
     physicochemicalproperties = PhysicoChemicalProperties()
-    physicochemicalproperties.get_physicochemicalproperties_from_molecule(molecule)
+    physicochemicalproperties.from_molecule(molecule)
 
     pcp_flat = flatten(physicochemicalproperties.data, reducer='path')
 
