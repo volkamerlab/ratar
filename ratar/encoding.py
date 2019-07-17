@@ -318,7 +318,7 @@ class Representatives:
         try:
             rules = [
                 obj1.keys() == obj2.keys(),
-                all([v.equals(obj2[k]) for k, v in obj1.items()])
+                all([value.equals(obj2[key]) for key, value in obj1.items()])
             ]
         except KeyError:
             rules = False
@@ -591,7 +591,7 @@ class Coordinates:
         try:
             rules = [
                 obj1.keys() == obj2.keys(),
-                all([v.equals(obj2[k]) for k, v in obj1.items()])
+                all([value.equals(obj2[key]) for key, value in obj1.items()])
             ]
         except KeyError:
             rules = False
@@ -735,7 +735,7 @@ class PhysicoChemicalProperties:
         try:
             rules = [
                 obj1.keys() == obj2.keys(),
-                all([v.equals(obj2[k]) for k, v in obj1.items()])
+                all([value.equals(obj2[key]) for key, value in obj1.items()])
             ]
         except KeyError:
             rules = False
@@ -915,7 +915,7 @@ class Subsets:
         try:
             rules = [
                 obj1.keys() == obj2.keys(),
-                all([v == obj2[k] for k, v in obj1.items()])
+                all([value == obj2[key] for key, value in obj1.items()])
             ]
         except KeyError:
             rules = False
@@ -1123,8 +1123,8 @@ class Points:
             rules = [
                 obj1[0].keys() == obj2[0].keys(),
                 obj1[1].keys() == obj2[1].keys(),
-                all([v.equals(obj2[0][k]) for k, v in obj1[0].items()]),
-                all([v.equals(obj2[1][k]) for k, v in obj1[1].items()])
+                all([value.equals(obj2[0][key]) for key, value in obj1[0].items()]),
+                all([value.equals(obj2[1][key]) for key, value in obj1[1].items()])
             ]
         except KeyError:
             rules = False
@@ -1382,8 +1382,8 @@ class Shapes:
             rules = [
                 obj1[0].keys() == obj2[0].keys(),
                 obj1[1].keys() == obj2[1].keys(),
-                all([v.equals(obj2[0][k]) for k, v in obj1[0].items()]),
-                all([v.equals(obj2[1][k]) for k, v in obj1[1].items()])
+                all([value.equals(obj2[0][key]) for key, value in obj1[0].items()]),
+                all([value.equals(obj2[1][key]) for key, value in obj1[1].items()])
             ]
         except KeyError:
             rules = False
