@@ -55,7 +55,7 @@ class BindingSite:
      >>> molecule_path = Path(__name__).parent / 'ratar' / 'tests' / 'data' / 'AAK1_4wsq_altA_chainA.mol2'
 
     >>> molecule_loader = MoleculeLoader(molecule_path, remove_solvent=True)
-    >>> molecule = molecule_loader.molecules_list[0]
+    >>> molecule = molecule_loader.molecules[0]
 
     >>> binding_site = BindingSite(molecule)
     """
@@ -144,7 +144,7 @@ class Representatives:
     >>> molecule_path = Path(__name__).parent / 'ratar' / 'tests' / 'data' / 'AAK1_4wsq_altA_chainA.mol2'
 
     >>> molecule_loader = MoleculeLoader(molecule_path, remove_solvent=True)
-    >>> molecule = molecule_loader.molecules_list[0]
+    >>> molecule = molecule_loader.molecules[0]
 
     >>> representatives = Representatives()
     >>> representatives.from_molecule(molecule)
@@ -386,7 +386,7 @@ class Coordinates:
      >>> molecule_path = Path(__name__).parent / 'ratar' / 'tests' / 'data' / 'AAK1_4wsq_altA_chainA.mol2'
 
     >>> molecule_loader = MoleculeLoader(molecule_path, remove_solvent=True)
-    >>> molecule = molecule_loader.molecules_list[0]
+    >>> molecule = molecule_loader.molecules[0]
 
     >>> coordinates = Coordinates()
     >>> coordinates.from_molecule(molecule)
@@ -498,7 +498,7 @@ class PhysicoChemicalProperties:
      >>> molecule_path = Path(__name__).parent / 'ratar' / 'tests' / 'data' / 'AAK1_4wsq_altA_chainA.mol2'
 
     >>> molecule_loader = MoleculeLoader(molecule_path, remove_solvent=True)
-    >>> molecule = molecule_loader.molecules_list[0]
+    >>> molecule = molecule_loader.molecules[0]
 
     >>> physicochemicalproperties = PhysicoChemicalProperties()
     >>> physicochemicalproperties.from_molecule(molecule)
@@ -660,7 +660,7 @@ class Subsets:
      >>> molecule_path = Path(__name__).parent / 'ratar' / 'tests' / 'data' / 'AAK1_4wsq_altA_chainA.mol2'
 
     >>> molecule_loader = MoleculeLoader(molecule_path, remove_solvent=True)
-    >>> molecule = molecule_loader.molecules_list[0]
+    >>> molecule = molecule_loader.molecules[0]
 
     >>> subsets = Subsets()
     >>> subsets.from_molecule(molecule)
@@ -785,7 +785,7 @@ class Points:
      >>> molecule_path = Path(__name__).parent / 'ratar' / 'tests' / 'data' / 'AAK1_4wsq_altA_chainA.mol2'
 
     >>> molecule_loader = MoleculeLoader(molecule_path, remove_solvent=True)
-    >>> molecule = molecule_loader.molecules_list[0]
+    >>> molecule = molecule_loader.molecules[0]
 
     >>> points = Points()
     >>> points.from_molecule(molecule)
@@ -991,7 +991,7 @@ class Shapes:
      >>> molecule_path = Path(__name__).parent / 'ratar' / 'tests' / 'data' / 'AAK1_4wsq_altA_chainA.mol2'
 
     >>> molecule_loader = MoleculeLoader(molecule_path, remove_solvent=True)
-    >>> molecule = molecule_loader.molecules_list[0]
+    >>> molecule = molecule_loader.molecules[0]
 
     >>> shapes = Shapes()
     >>> shapes.from_molecule(molecule)
@@ -1751,10 +1751,10 @@ def process_encoding(molecule_path, output_dir, remove_solvent=False):
         molecule_loader = MoleculeLoader(mol_path, remove_solvent)
 
         # Get number of molecule objects and set molecule counter
-        molecule_sum = len(molecule_loader.molecules_list)
+        molecule_sum = len(molecule_loader.molecules)
 
         # Iterate over all binding sites in molecule structure file
-        for molecule_counter, molecule in enumerate(molecule_loader.molecules_list, 1):
+        for molecule_counter, molecule in enumerate(molecule_loader.molecules, 1):
             print(molecule_counter)
 
             # Get iteration progress
@@ -1797,7 +1797,7 @@ def save_binding_site(binding_site, output_path):
      >>> molecule_path = Path(__name__).parent / 'ratar' / 'tests' / 'data' / 'AAK1_4wsq_altA_chainA.mol2'
 
     >>> molecule_loader = MoleculeLoader(molecule_path, remove_solvent=True)
-    >>> molecule = molecule_loader.molecules_list[0]
+    >>> molecule = molecule_loader.molecules[0]
 
     >>> binding_site = BindingSite(molecule)
     >>> save_binding_site(binding_site, Path(__name__).parent / 'ratar' / 'tests' / 'data' / 'tmp' / 'bindingsite.p')
@@ -1833,7 +1833,7 @@ def save_cgo_file(binding_site, output_path):
      >>> molecule_path = Path(__name__).parent / 'ratar' / 'tests' / 'data' / 'AAK1_4wsq_altA_chainA.mol2'
 
     >>> molecule_loader = MoleculeLoader(molecule_path, remove_solvent=True)
-    >>> molecule = molecule_loader.molecules_list[0]
+    >>> molecule = molecule_loader.molecules[0]
 
     >>> binding_site = BindingSite(molecule)
     >>> save_cgo_file(binding_site, '/path/to/output/directory')

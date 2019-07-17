@@ -34,7 +34,7 @@ class MoleculeLoader:
         Absolute path to a mol2 (can contain multiple entries) or pdb file.
     remove_solvent : bool
         Set True to remove solvent molecules (default: False).
-    molecules_list : list of biopandas.mol2.pandas_mol2.PandasMol2 or biopandas.pdb.pandas_pdb.PandasPdb
+    molecules : list of biopandas.mol2.pandas_mol2.PandasMol2 or biopandas.pdb.pandas_pdb.PandasPdb
         List of molecule data in the form of BioPandas objects.
     n_molecules : int
         Number of molecules loaded.
@@ -47,11 +47,11 @@ class MoleculeLoader:
     >>> molecule_loader = MoleculeLoader()
     >>> molecule_loader.load_molecule(molecule_path, remove_solvent=True)
 
-    >>> molecules_list = molecule_loader.molecules_list  # Contains one or multiple molecule objects
-    >>> molecule1 = molecules_list[0].df  # Molecule data
-    >>> molecule1_id = molecules_list[0].code  # Molecule id
+    >>> molecules = molecule_loader.molecules  # Contains one or multiple molecule objects
+    >>> molecule1 = molecules[0].df  # Molecule data
+    >>> molecule1_id = molecules[0].code  # Molecule id
 
-    >>> molecules_list[0].df == molecule_loader.molecules_list[0]
+    >>> molecules[0].df == molecule_loader.molecules[0]
     True
     """
 
@@ -59,8 +59,8 @@ class MoleculeLoader:
 
         self.input_path = Path(input_path)
         self.remove_solvent = remove_solvent
-        self.molecules_list = self.load_molecule()
-        self.n_molecules = len(self.molecules_list)
+        self.molecules = self.load_molecule()
+        self.n_molecules = len(self.molecules)
 
     def load_molecule(self):
         """
@@ -79,15 +79,15 @@ class MoleculeLoader:
 
         # Load molecule data
         if self.input_path.suffix == '.pdb':
-            molecules_list = self._load_pdb(self.remove_solvent)
+            molecules = self._load_pdb(self.remove_solvent)
         elif self.input_path.suffix == '.mol2':
-            molecules_list = self._load_mol2(self.remove_solvent)
+            molecules = self._load_mol2(self.remove_solvent)
         else:
             raise IOError(f'Unsupported file format {self.input_path.suffix}, only pdb and mol2 are supported.')
 
         logger.info('File loaded.', extra={'molecule_id': 'all'})
 
-        return molecules_list
+        return molecules
 
     def get_first_molecule(self):
         """
@@ -99,10 +99,10 @@ class MoleculeLoader:
             Data for first molecule in MoleculeLoader class.
         """
 
-        if len(self.molecules_list) > 0:
-            return self.molecules_list[0]
+        if len(self.molecules) > 0:
+            return self.molecules[0]
         else:
-            raise IndexError('MoleculeLoader.molecules_list is empty.')
+            raise IndexError('MoleculeLoader.molecules is empty.')
 
     def _load_mol2(self, remove_solvent=False):
         """
@@ -115,7 +115,7 @@ class MoleculeLoader:
         """
 
         # In case of multiple entries in one mol2 file, include iteration step
-        molecules_list = []
+        molecules = []
 
         for mol2 in split_multimol2(str(self.input_path)):
 
@@ -184,9 +184,9 @@ class MoleculeLoader:
                 ix = pmol.df.index[pmol.df['res_name'] == 'HOH']
                 pmol.df.drop(index=ix, inplace=True)
 
-            molecules_list.append(pmol)
+            molecules.append(pmol)
 
-        return molecules_list
+        return molecules
 
     def _load_pdb(self, remove_solvent=False):
         """
@@ -264,7 +264,7 @@ class AminoAcidDescriptors:
     >>> molecule_path = '/path/to/pdb/or/mol2'
     >>> molecule_loader = MoleculeLoader()
     >>> molecule_loader.load_molecule(molecule_path, remove_solvent=True)
-    >>> molecule1 == molecule_loader.molecules_list[0]
+    >>> molecule1 == molecule_loader.molecules[0]
 
     >>> molecule1_zscales = amino_acid_descriptors.get_zscales_amino_acids(molecule1)
 

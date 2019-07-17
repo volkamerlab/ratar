@@ -31,9 +31,9 @@ def test_bindingsites_eq(mol_file1, mol_file2):
     molecule_loader1 = MoleculeLoader(molecule_path1)
     molecule_loader2 = MoleculeLoader(molecule_path2)
 
-    bindingsite1 = BindingSite(molecule_loader1.molecules_list[0])
-    bindingsite2 = BindingSite(molecule_loader1.molecules_list[0])
-    bindingsite3 = BindingSite(molecule_loader2.molecules_list[0])
+    bindingsite1 = BindingSite(molecule_loader1.molecules[0])
+    bindingsite2 = BindingSite(molecule_loader1.molecules[0])
+    bindingsite3 = BindingSite(molecule_loader2.molecules[0])
 
     assert (bindingsite1 == bindingsite2)
     assert not (bindingsite1 == bindingsite3)

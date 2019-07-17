@@ -38,9 +38,9 @@ def test_shapes_eq(mol_file1, mol_file2):
     shapes2 = Shapes()
     shapes3 = Shapes()
 
-    shapes1.from_molecule(molecule_loader1.molecules_list[0])
-    shapes2.from_molecule(molecule_loader1.molecules_list[0])
-    shapes3.from_molecule(molecule_loader2.molecules_list[0])
+    shapes1.from_molecule(molecule_loader1.molecules[0])
+    shapes2.from_molecule(molecule_loader1.molecules[0])
+    shapes3.from_molecule(molecule_loader2.molecules[0])
 
     assert (shapes1 == shapes2)
     assert not (shapes1 == shapes3)
@@ -591,7 +591,7 @@ def test_from_molecule(filename, keys_ref):
     # Load molecule
     molecule_path = Path(__name__).parent / 'ratar' / 'tests' / 'data' / filename
     molecule_loader = MoleculeLoader(molecule_path)
-    molecule = molecule_loader.molecules_list[0]
+    molecule = molecule_loader.molecules[0]
 
     # Set points
     shapes = Shapes()

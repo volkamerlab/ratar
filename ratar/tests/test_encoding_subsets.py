@@ -35,9 +35,9 @@ def test_subsets_eq(mol_file1, mol_file2):
     subsets2 = Subsets()
     subsets3 = Subsets()
 
-    subsets1.from_molecule(molecule_loader1.molecules_list[0])
-    subsets2.from_molecule(molecule_loader1.molecules_list[0])
-    subsets3.from_molecule(molecule_loader2.molecules_list[0])
+    subsets1.from_molecule(molecule_loader1.molecules[0])
+    subsets2.from_molecule(molecule_loader1.molecules[0])
+    subsets3.from_molecule(molecule_loader2.molecules[0])
 
     assert (subsets1 == subsets2)
     assert not (subsets1 == subsets3)
@@ -67,7 +67,7 @@ def test_from_molecule(filename, subsets_names, example_indices):
     # Load molecule
     molecule_path = Path(__name__).parent / 'ratar' / 'tests' / 'data' / filename
     molecule_loader = MoleculeLoader(molecule_path)
-    molecule = molecule_loader.molecules_list[0]
+    molecule = molecule_loader.molecules[0]
 
     # Set subsets
     subsets = Subsets()
