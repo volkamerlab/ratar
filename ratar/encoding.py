@@ -1249,6 +1249,11 @@ class Shapes:
     """
     Class used to store the encoded molecule representatives, which were defined by the Representatives class.
 
+    Encoding is based on the distances between the molecule atoms to predefined reference points in the molecule.
+    Encoding methods range from calculating distances in 3D (considering only the spatial properties of atoms) to
+    distances in more than 3D (considering spatial and physicochemical properties).
+    The first three moments of the resulting distance histograms form the fingerprint, i.e. the encoded molecule.
+
     Attributes
     ----------
     molecule_id : str
