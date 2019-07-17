@@ -1733,7 +1733,7 @@ def process_encoding(molecule_path, output_dir, remove_solvent=False):
     """
 
     # Get all molecule structure files
-    molecule_path_list = glob.glob(str(molecule_path))
+    molecule_path_list = glob.glob(str(molecule_path))  # Path.glob(<pattern>) not as convenient, glob.glob needs str
 
     if len(molecule_path_list) == 0:
         logger.info(f'Input path matches no molecule files: {molecule_path}', extra={'molecule_id': 'all'})

@@ -117,7 +117,7 @@ class MoleculeLoader:
         # In case of multiple entries in one mol2 file, include iteration step
         molecules = []
 
-        for mol2 in split_multimol2(str(self.input_path)):
+        for mol2 in split_multimol2(str(self.input_path)):  # biopandas not compatible with pathlib
 
             # Mol2 files can have 9 or 10 columns.
             try:  # Try 9 columns.
@@ -203,7 +203,7 @@ class MoleculeLoader:
             List of BioPandas objects containing metadata and structural data of molecule(s) in pdb file.
         """
 
-        pmol = PandasPdb().read_pdb(str(self.input_path))
+        pmol = PandasPdb().read_pdb(str(self.input_path))  # biopandas not compatible with pathlib
 
         # If object has no code, set string from file stem and its folder name
         if pmol.code == "":
@@ -275,7 +275,7 @@ class AminoAcidDescriptors:
 
     def __init__(self):
         zscales_path = ratar_path / 'data' / 'zscales.csv'
-        self.zscales = pd.read_csv(str(zscales_path), index_col='aa3')
+        self.zscales = pd.read_csv(zscales_path, index_col='aa3')
 
     def get_zscales_amino_acids(self, molecule):
         """
