@@ -1,0 +1,1 @@
+This `scripts` folder contains script files using the `ratar` package.
