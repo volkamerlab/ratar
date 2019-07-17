@@ -2,10 +2,11 @@
 Unit and regression test for the Shapes class in the ratar.encoding module of the ratar package.
 """
 
+from pathlib import Path
+
 from flatten_dict import flatten
 import numpy as np
 import pandas as pd
-from pathlib import Path
 import pytest
 
 from ratar.auxiliary import MoleculeLoader

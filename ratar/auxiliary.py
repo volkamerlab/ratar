@@ -9,8 +9,8 @@ Handles the helper functions.
 """
 
 import logging
-
 from pathlib import Path
+
 from biopandas.mol2 import PandasMol2, split_multimol2
 from biopandas.pdb import PandasPdb
 import pandas as pd

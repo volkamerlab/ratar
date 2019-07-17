@@ -2,8 +2,9 @@
 Unit and regression test for functions the ratar.encoding module of the ratar package.
 """
 
-import pytest
 from pathlib import Path
+
+import pytest
 
 from ratar.auxiliary import MoleculeLoader
 from ratar.encoding import BindingSite, save_binding_site, save_cgo_file, process_encoding

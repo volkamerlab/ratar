@@ -2,9 +2,10 @@
 Unit and regression test for the Coordinates class in the ratar.encoding module of the ratar package.
 """
 
+from pathlib import Path
+
 import numpy as np
 import pytest
-from pathlib import Path
 
 from ratar.auxiliary import MoleculeLoader
 from ratar.encoding import Coordinates

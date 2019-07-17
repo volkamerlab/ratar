@@ -16,7 +16,7 @@ Handles the primary functions for comparing binding sites.
 import glob
 import pickle
 
-from ratar.encoding import *
+import pandas as pd
 
 
 ########################################################################################
@@ -109,7 +109,7 @@ def get_similarity_all_against_all(output_path):
             with open(file_list[i], 'rb') as f:
                 bs1 = pickle.load(f)
             with open(file_list[j], 'rb') as f:
-                bs2 = pickle.load()
+                bs2 = pickle.load(f)
 
             for repres in bs1.shapes.shapes_dict.keys():
                 for method in bs1.shapes.shapes_dict[repres].keys():

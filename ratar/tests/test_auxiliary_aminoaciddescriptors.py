@@ -2,9 +2,10 @@
 Unit and regression test for the AminoAcidDescriptor class in the ratar.auxiliary module of the ratar package.
 """
 
+from pathlib import Path
+
 import numpy as np
 import pytest
-from pathlib import Path
 
 from ratar.auxiliary import MoleculeLoader, AminoAcidDescriptors
 

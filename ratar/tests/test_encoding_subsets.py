@@ -3,6 +3,7 @@ Unit and regression test for the Subsets class in the ratar.encoding module of t
 """
 
 from pathlib import Path
+
 import pytest
 
 from ratar.auxiliary import MoleculeLoader

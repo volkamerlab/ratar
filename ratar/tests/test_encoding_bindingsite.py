@@ -2,8 +2,9 @@
 Unit and regression test for the BindingSite class in the ratar.encoding module of the ratar package.
 """
 
-import pytest
 from pathlib import Path
+
+import pytest
 
 from ratar.auxiliary import MoleculeLoader
 from ratar.encoding import BindingSite

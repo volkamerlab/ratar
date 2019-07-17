@@ -12,6 +12,7 @@ import glob
 import logging
 from pathlib import Path
 import pickle
+import warnings
 
 from flatten_dict import flatten, unflatten
 import numpy as np
@@ -19,7 +20,6 @@ import pandas as pd
 import seaborn as sns
 from scipy.special import cbrt
 from scipy.stats.stats import moment
-import warnings
 
 from ratar.auxiliary import MoleculeLoader, AminoAcidDescriptors
 from ratar.auxiliary import create_directory, load_pseudocenters
