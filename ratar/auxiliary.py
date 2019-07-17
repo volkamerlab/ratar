@@ -41,7 +41,6 @@ class MoleculeLoader:
 
     Examples
     --------
-
     >>> from ratar.auxiliary import MoleculeLoader
     >>> molecule_path = '/path/to/pdb/or/mol2'
     >>> molecule_loader = MoleculeLoader()
@@ -66,9 +65,10 @@ class MoleculeLoader:
         """
         Load one or multiple molecules from pdb or mol2 file.
 
-        Parameters
-        ----------
-
+        Returns
+        -------
+        list of biopandas.mol2.pandas_mol2.PandasMol2 or biopandas.pdb.pandas_pdb.PandasPdb
+            List of BioPandas objects containing metadata and structural data of molecule(s) in mol2 file.
         """
 
         if self.input_path.exists():
@@ -274,6 +274,7 @@ class AminoAcidDescriptors:
     """
 
     def __init__(self):
+
         zscales_path = ratar_path / 'data' / 'zscales.csv'
         self.zscales = pd.read_csv(zscales_path, index_col='aa3')
 
