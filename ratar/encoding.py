@@ -80,41 +80,139 @@ class BindingSite:
         return all(rules)
 
     def get_representatives(self):
+        """
+        Get representatives of a molecule.
+
+        Returns
+        -------
+        ratar.encoding.Representatives
+            Different representatives (representative atoms) of a molecule.
+        """
+
         representatives = Representatives()
         representatives.from_molecule(self.molecule)
         return representatives
 
     @staticmethod
     def get_coordinates(representatives):
+        """
+        Get coordinates for different representatives of a molecule.
+
+        Parameters
+        ----------
+        representatives : ratar.encoding.Representatives
+            Different representatives (representative atoms) of a molecule.
+
+        Returns
+        -------
+        ratar.encoding.Coordinates
+            Coordinates for different representatives of a molecule.
+        """
+
         coordinates = Coordinates()
         coordinates.from_representatives(representatives)
         return coordinates
 
     @staticmethod
     def get_physicochemicalproperties(representatives):
+        """
+        Get different physicochemical properties for different representatives of a molecule.
+
+        Parameters
+        ----------
+        representatives : ratar.encoding.Representatives
+            Different representatives (representative atoms) of a molecule.
+
+        Returns
+        -------
+        ratar.encoding.PhysicochemicalProperties
+            Different physicochemical properties for different representatives of a molecule.
+        """
+
         physicochemicalproperties = PhysicoChemicalProperties()
         physicochemicalproperties.from_representatives(representatives)
         return physicochemicalproperties
 
     @staticmethod
     def get_subsets(representatives):
+        """
+        Get subsets (atom indices) for different representatives of a molecule.
+
+        Parameters
+        ----------
+        representatives : ratar.encoding.Representatives
+            Different representatives (representative atoms) of a molecule.
+
+        Returns
+        -------
+        ratar.encoding.Subsets
+            Subsets (atom indices) for different representatives of a molecule.
+        """
+
         subsets = Subsets()
         subsets.from_representatives(representatives)
         return subsets
 
     def get_points(self, coordinates, physicochemicalproperties, subsets):
+        """
+        Get multidimensional points for different representatives of a molecule, which contain information on
+        coordinates (spatial dimensions) and physicochemical properties (physicochemical dimensions).
+        Additionally, group points into subsets.
+
+        Parameters
+        ----------
+        coordinates : ratar.encoding.Coordinates
+            Coordinates for different representatives of a molecule.
+        physicochemicalproperties : ratar.encoding.PhysicochemicalProperties
+            Different physicochemical properties for different representatives of a molecule.
+        subsets : ratar.encoding.Subsets
+            Subsets (atom indices) for different representatives of a molecule.
+
+        Returns
+        -------
+        ratar.encoding.Points
+            Multidimensional points for different representatives of a molecule, which contain information on
+            coordinates (spatial dimensions) and physicochemical properties (physicochemical dimensions).
+            Additionally, points are grouped into subsets.
+        """
+
         points = Points()
         points.from_properties(coordinates, physicochemicalproperties)
         points.from_subsets(subsets)
         return points
 
     def get_shapes(self, points):
+        """
+        Get different shape encodings for points representing a molecule.
+
+        Parameters
+        ----------
+        points : ratar.encoding.Points
+            Multidimensional points for different representatives of a molecule, which contain information on
+            coordinates (spatial dimensions) and physicochemical properties (physicochemical dimensions).
+            Additionally, points are grouped into subsets.
+
+        Returns
+        -------
+        ratar.encoding.Shapes
+            Different shape encodings for different points representing a molecule.
+        """
+
         shapes = Shapes()
         shapes.from_points(points)
         shapes.from_subset_points(points)
         return shapes
 
     def run(self):
+        """
+        Run shape encoding procedure for a molecule.
+
+        Returns
+        -------
+        ratar.encoding.Shapes
+            Different shape encodings for different points representing a molecule.
+        """
+
         representatives = self.get_representatives()
         coordinates = self.get_coordinates(representatives)
         physicochemicalproperties = self.get_physicochemicalproperties(representatives)
@@ -175,7 +273,11 @@ class Representatives:
     def __eq__(self, other):
         """
         Check if two Representatives objects are equal.
-        Return True if dictionary keys (strings) and dictionary values (DataFrames) are equal, else return False.
+
+        Returns
+        -------
+        bool
+            True if dictionary keys (strings) and dictionary values (DataFrames) are equal, else False.
         """
 
         obj1 = flatten(self.data, reducer='path')
