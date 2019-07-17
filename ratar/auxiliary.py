@@ -122,34 +122,34 @@ class MoleculeLoader:
             # Mol2 files can have 9 or 10 columns.
             try:  # Try 9 columns.
                 molecule = PandasMol2().read_mol2_from_list(
-                                                        mol2_code=mol2[0],
-                                                        mol2_lines=mol2[1],
-                                                        columns={0: ('atom_id', int),
-                                                                 1: ('atom_name', str),
-                                                                 2: ('x', float),
-                                                                 3: ('y', float),
-                                                                 4: ('z', float),
-                                                                 5: ('atom_type', str),
-                                                                 6: ('subst_id', str),
-                                                                 7: ('subst_name', str),
-                                                                 8: ('charge', float)}
-                                                        )
+                                                            mol2_code=mol2[0],
+                                                            mol2_lines=mol2[1],
+                                                            columns={0: ('atom_id', int),
+                                                                     1: ('atom_name', str),
+                                                                     2: ('x', float),
+                                                                     3: ('y', float),
+                                                                     4: ('z', float),
+                                                                     5: ('atom_type', str),
+                                                                     6: ('subst_id', str),
+                                                                     7: ('subst_name', str),
+                                                                     8: ('charge', float)}
+                                                            )
 
             except AssertionError:  # If 9 columns did not work, try 10 columns.
                 molecule = PandasMol2().read_mol2_from_list(
-                                                        mol2_code=mol2[0],
-                                                        mol2_lines=mol2[1],
-                                                        columns={0: ('atom_id', int),
-                                                                 1: ('atom_name', str),
-                                                                 2: ('x', float),
-                                                                 3: ('y', float),
-                                                                 4: ('z', float),
-                                                                 5: ('atom_type', str),
-                                                                 6: ('subst_id', str),
-                                                                 7: ('subst_name', str),
-                                                                 8: ('charge', float),
-                                                                 9: ('status_bit', str)}
-                                                        )
+                                                            mol2_code=mol2[0],
+                                                            mol2_lines=mol2[1],
+                                                            columns={0: ('atom_id', int),
+                                                                     1: ('atom_name', str),
+                                                                     2: ('x', float),
+                                                                     3: ('y', float),
+                                                                     4: ('z', float),
+                                                                     5: ('atom_type', str),
+                                                                     6: ('subst_id', str),
+                                                                     7: ('subst_name', str),
+                                                                     8: ('charge', float),
+                                                                     9: ('status_bit', str)}
+                                                            )
 
             # Insert additional columns (split ASN22 to ASN and 22)
             res_id_list = []
@@ -170,14 +170,14 @@ class MoleculeLoader:
 
             # Select columns of interest
             molecule._df = molecule.df.loc[:, ['atom_id',
-                                       'atom_name',
-                                       'res_id',
-                                       'res_name',
-                                       'subst_name',
-                                       'x',
-                                       'y',
-                                       'z',
-                                       'charge']]
+                                               'atom_name',
+                                               'res_id',
+                                               'res_name',
+                                               'subst_name',
+                                               'x',
+                                               'y',
+                                               'z',
+                                               'charge']]
 
             # Remove solvent if parameter remove_solvent=True
             if remove_solvent:
@@ -207,7 +207,7 @@ class MoleculeLoader:
 
         # If object has no code, set string from file stem and its folder name
         # E.g. "/mydir/pdb/3w32.mol2" will generate the code "pdb_3w32".
-        if molecule.code == "":
+        if not (molecule.code or molecule.code.strip()):
             molecule.code = f'{self.input_path.parts[-2]}_{self.input_path.stem}'
 
         # Get both ATOM and HETATM lines of PDB file
@@ -215,26 +215,26 @@ class MoleculeLoader:
 
         # Select columns of interest
         molecule._df = molecule.df.loc[:, ['atom_number',
-                                   'atom_name',
-                                   'residue_number',
-                                   'residue_name',
-                                   'x_coord',
-                                   'y_coord',
-                                   'z_coord',
-                                   'charge']]
+                                           'atom_name',
+                                           'residue_number',
+                                           'residue_name',
+                                           'x_coord',
+                                           'y_coord',
+                                           'z_coord',
+                                           'charge']]
 
         # Insert additional columns
         molecule.df.insert(loc=4,
-                       column='subst_name',
-                       value=[f'{i}{j}' for i, j in zip(molecule.df['residue_name'], molecule.df['residue_number'])])
+                           column='subst_name',
+                           value=[f'{i}{j}' for i, j in zip(molecule.df['residue_name'], molecule.df['residue_number'])])
 
         # Rename columns
         molecule.df.rename(index=str, inplace=True, columns={'atom_number': 'atom_id',
-                                                         'residue_number': 'res_id',
-                                                         'residue_name': 'res_name',
-                                                         'x_coord': 'x',
-                                                         'y_coord': 'y',
-                                                         'z_coord': 'z'})
+                                                             'residue_number': 'res_id',
+                                                             'residue_name': 'res_name',
+                                                             'x_coord': 'x',
+                                                             'y_coord': 'y',
+                                                             'z_coord': 'z'})
 
         # Remove solvent if parameter remove_solvent=True
         if remove_solvent:
