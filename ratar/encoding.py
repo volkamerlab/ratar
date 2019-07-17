@@ -1267,22 +1267,70 @@ class Shapes:
 
     @property
     def ca(self):
+        """
+        Get different shape encodings for representatives: Calpha.
+
+        Returns
+        -------
+        dict of dict of dict of pandas.DataFrame
+            Different shape encodings for representatives for different physicochemical properties: Calpha.
+        """
+
         return self.data['ca']
 
     @property
     def pca(self):
+        """
+        Get different shape encodings for representatives: pseudocenter atoms.
+
+        Returns
+        -------
+        dict of dict of dict of pandas.DataFrame
+            Different shape encodings for representatives for different physicochemical properties: pseudocenter atoms.
+        """
+
         return self.data['pca']
 
     @property
     def pc(self):
+        """
+        Get different shape encodings for representatives: pseudocenters (consisting of pseudocenter atoms).
+
+        Returns
+        -------
+        dict of dict of dict of pandas.DataFrame
+            Different shape encodings for representatives for different physicochemical properties: pseudocenters
+            (consisting of pseudocenter atoms).
+        """
+
         return self.data['pc']
 
     @property
     def pca_subsets(self):
+        """
+        Get shape encodings for representatives: subsets of pseudocenters (consisting of pseudocenter atoms).
+
+        Returns
+        -------
+        dict of dict of dict of pandas.DataFrame
+            Different shape encodings for different physicochemical properties and for different
+            subsets: pseudocenter atoms.
+        """
+
         return self.data_pseudocenter_subsets['pca']
 
     @property
     def pc_subsets(self):
+        """
+        Get shape encodings for representatives: subsets of pseudocenters (consisting of pseudocenter atoms).
+
+        Returns
+        -------
+        dict of dict of dict of pandas.DataFrame
+            Different shape encodings for different physicochemical properties and for different
+            subsets: pseudocenters (consisting of pseudocenter atoms).
+        """
+        
         return self.data_pseudocenter_subsets['pc']
 
     def __eq__(self, other):
