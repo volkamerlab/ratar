@@ -260,14 +260,41 @@ class Representatives:
 
     @property
     def ca(self):
+        """
+        Get data (as listed in structural file) for representatives: Calpha.
+
+        Returns
+        -------
+        pandas.DataFrame
+            Data (as listed in structural file) for representatives: Calpha.
+        """
+
         return self.data['ca']
 
     @property
     def pca(self):
+        """
+        Get data (as listed in structural file) for representatives: pseudocenter atoms.
+
+        Returns
+        -------
+        pandas.DataFrame
+            Data (as listed in structural file) for representatives: pseudocenter atoms.
+        """
+
         return self.data['pca']
 
     @property
     def pc(self):
+        """
+        Get data (as listed in structural file) for representatives: pseudocenters (consisting of pseudocenter atoms).
+
+        Returns
+        -------
+        pandas.DataFrame
+            Data (as listed in structural file) for representatives: pseudocenters (consisting of pseudocenter atoms).
+        """
+
         return self.data['pc']
 
     def __eq__(self, other):
@@ -506,14 +533,41 @@ class Coordinates:
 
     @property
     def ca(self):
+        """
+        Get coordinates for representatives: Calpha.
+
+        Returns
+        -------
+        pandas.DataFrame
+            Coordinates for representatives: Calpha.
+        """
+
         return self.data['ca']
 
     @property
     def pca(self):
+        """
+        Get coordinates for representatives: pseudocenter atoms.
+
+        Returns
+        -------
+        pandas.DataFrame
+            Coordinates for representatives: pseudocenter atoms.
+        """
+
         return self.data['pca']
 
     @property
     def pc(self):
+        """
+        Get coordinates for representatives: pseudocenters (consisting of pseudocenter atoms).
+
+        Returns
+        -------
+        pandas.DataFrame
+            Coordinates for representatives: pseudocenters (consisting of pseudocenter atoms).
+        """
+
         return self.data['pc']
 
     def __eq__(self, other):
@@ -618,14 +672,41 @@ class PhysicoChemicalProperties:
 
     @property
     def ca(self):
+        """
+        Get physicochemical properties for representatives: Calpha.
+
+        Returns
+        -------
+        dict of pandas.DataFrame
+            Different physicochemical properties for representatives: Calpha.
+        """
+
         return self.data['ca']
 
     @property
     def pca(self):
+        """
+        Get physicochemical properties for representatives: pseudocenter atoms.
+
+        Returns
+        -------
+        dict of pandas.DataFrame
+            Different physicochemical properties for representatives: pseudocenter atoms.
+        """
+
         return self.data['pca']
 
     @property
     def pc(self):
+        """
+        Get physicochemical properties for representatives: pseudocenters (consisting of pseudocenter atoms).
+
+        Returns
+        -------
+        dict of pandas.DataFrame
+            Different physicochemical properties for representatives: pseudocenters (consisting of pseudocenter atoms).
+        """
+
         return self.data['pc']
 
     def __eq__(self, other):
@@ -779,10 +860,28 @@ class Subsets:
 
     @property
     def pseudocenters(self):
+        """
+        Get subset indices for different subsets based on pseudocenters (consisting of pseudocenter atoms).
+
+        Returns
+        -------
+        Dict of lists
+            Subset indices for different subsets based on pseudocenters (consisting of pseudocenter atoms).
+        """
+
         return self.data_pseudocenter_subsets['pc']
 
     @property
     def pseudocenter_atoms(self):
+        """
+        Get subset indices for different subsets based on pseudocenter atoms.
+
+        Returns
+        -------
+        Dict of lists
+            Subset indices for different subsets based on pseudocenter atoms.
+        """
+
         return self.data_pseudocenter_subsets['pca']
 
     def __eq__(self, other):
@@ -909,22 +1008,75 @@ class Points:
 
     @property
     def ca(self):
+        """
+        Get multidimensional points, consisting of coordinates and physicochemical properties, for representatives:
+        Calpha.
+
+        Returns
+        -------
+        dict of pandas.DataFrame
+            Multidimensional points for representatives for different physicochemical properties: Calpha.
+        """
+
         return self.data['ca']
 
     @property
     def pca(self):
+        """
+        Get multidimensional points, consisting of coordinates and physicochemical properties, for representatives:
+        pseudocenter atoms.
+
+        Returns
+        -------
+        dict of pandas.DataFrame
+            Multidimensional points for representatives for different physicochemical properties: pseudocenter atoms.
+        """
+
         return self.data['pca']
 
     @property
     def pc(self):
+        """
+        Get multidimensional points, consisting of coordinates and physicochemical properties, for representatives:
+        pseudocenters (consisting of pseudocenter atoms).
+
+        Returns
+        -------
+        dict of dict of pandas.DataFrame
+            Multidimensional points for representatives for different physicochemical properties: pseudocenters
+            (consisting of pseudocenter atoms).
+        """
+
         return self.data['pc']
 
     @property
     def pca_subsets(self):
+        """
+        Get multidimensional points, consisting of coordinates and physicochemical properties, for representatives:
+        subsets of pseudocenters (consisting of pseudocenter atoms).
+
+        Returns
+        -------
+        dict of dict of pandas.DataFrame
+            Multidimensional points for representatives for different physicochemical properties and for different
+            subsets: pseudocenters (consisting of pseudocenter atoms).
+        """
+
         return self.data_pseudocenter_subsets['pca']
 
     @property
     def pc_subsets(self):
+        """
+        Get multidimensional points, consisting of coordinates and physicochemical properties, for representatives:
+        subsets of pseudocenter atoms.
+
+        Returns
+        -------
+        dict of dict of pandas.DataFrame
+            Multidimensional points for representatives for different physicochemical properties and for different
+            subsets: pseudocenter atoms.
+        """
+
         return self.data_pseudocenter_subsets['pc']
 
     def __eq__(self, other):
