@@ -600,7 +600,7 @@ class Coordinates:
 
     def from_molecule(self, molecule):
         """
-        Convenience class method: Get coordinates from molecule object.
+        Get coordinates from molecule object.
 
         Parameters
         ----------
@@ -744,7 +744,7 @@ class PhysicoChemicalProperties:
 
     def from_molecule(self, molecule):
         """
-        Convenience class method: Get physicochemical properties from molecule object.
+        Get physicochemical properties from molecule object.
 
         Parameters
         ----------
@@ -924,7 +924,7 @@ class Subsets:
 
     def from_molecule(self, molecule):
         """
-        Convenience class method: Get subset indices from molecule object.
+        Get subset indices from molecule object.
 
         Parameters
         ----------
@@ -1133,7 +1133,7 @@ class Points:
 
     def from_molecule(self, molecule):
         """
-        Convenience class method: Get points from molecule object.
+        Get points from molecule object.
 
         Parameters
         ----------
@@ -1392,7 +1392,7 @@ class Shapes:
 
     def from_molecule(self, molecule):
         """
-        Convenience class method: Get shapes from molecule object.
+        Get shape encoding from molecule object.
 
         Parameters
         ----------
