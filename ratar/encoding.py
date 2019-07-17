@@ -1928,7 +1928,7 @@ class Shapes:
             Distances from reference point to representatives.
         """
 
-        distances = np.sqrt(((points - ref_point) ** 2).sum(axis=1))
+        distances = (points - ref_point).apply(lambda vector: np.linalg.norm(vector), axis=1)
 
         return distances
 
