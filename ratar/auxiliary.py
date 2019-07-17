@@ -121,7 +121,7 @@ class MoleculeLoader:
 
             # Mol2 files can have 9 or 10 columns.
             try:  # Try 9 columns.
-                pmol = PandasMol2().read_mol2_from_list(
+                molecule = PandasMol2().read_mol2_from_list(
                                                         mol2_code=mol2[0],
                                                         mol2_lines=mol2[1],
                                                         columns={0: ('atom_id', int),
@@ -136,7 +136,7 @@ class MoleculeLoader:
                                                         )
 
             except AssertionError:  # If 9 columns did not work, try 10 columns.
-                pmol = PandasMol2().read_mol2_from_list(
+                molecule = PandasMol2().read_mol2_from_list(
                                                         mol2_code=mol2[0],
                                                         mol2_lines=mol2[1],
                                                         columns={0: ('atom_id', int),
@@ -155,7 +155,7 @@ class MoleculeLoader:
             res_id_list = []
             res_name_list = []
 
-            for i, j in zip(pmol.df['subst_name'], pmol.df['atom_type']):
+            for i, j in zip(molecule.df['subst_name'], molecule.df['atom_type']):
                 if i[:2] == j.upper():
                     # These are ions such as CA or MG
                     res_id_list.append(i[2:])
@@ -165,11 +165,11 @@ class MoleculeLoader:
                     res_id_list.append(i[3:])
                     res_name_list.append(i[:3])
 
-            pmol.df.insert(loc=2, column='res_id', value=res_id_list)
-            pmol.df.insert(loc=2, column='res_name', value=res_name_list)
+            molecule.df.insert(loc=2, column='res_id', value=res_id_list)
+            molecule.df.insert(loc=2, column='res_name', value=res_name_list)
 
             # Select columns of interest
-            pmol._df = pmol.df.loc[:, ['atom_id',
+            molecule._df = molecule.df.loc[:, ['atom_id',
                                        'atom_name',
                                        'res_id',
                                        'res_name',
@@ -181,10 +181,10 @@ class MoleculeLoader:
 
             # Remove solvent if parameter remove_solvent=True
             if remove_solvent:
-                ix = pmol.df.index[pmol.df['res_name'] == 'HOH']
-                pmol.df.drop(index=ix, inplace=True)
+                ix = molecule.df.index[molecule.df['res_name'] == 'HOH']
+                molecule.df.drop(index=ix, inplace=True)
 
-            molecules.append(pmol)
+            molecules.append(molecule)
 
         return molecules
 
@@ -203,17 +203,18 @@ class MoleculeLoader:
             List of BioPandas objects containing metadata and structural data of molecule(s) in pdb file.
         """
 
-        pmol = PandasPdb().read_pdb(str(self.input_path))  # biopandas not compatible with pathlib
+        molecule = PandasPdb().read_pdb(str(self.input_path))  # biopandas not compatible with pathlib
 
         # If object has no code, set string from file stem and its folder name
-        if pmol.code == "":
-            pmol.code = '_'.join([self.input_path.parts[-2], self.input_path.stem]).replace('/', '_')
+        # E.g. "/mydir/pdb/3w32.mol2" will generate the code "pdb_3w32".
+        if molecule.code == "":
+            molecule.code = f'{self.input_path.parts[-2]}_{self.input_path.stem}'
 
         # Get both ATOM and HETATM lines of PDB file
-        pmol._df = pd.concat([pmol.df['ATOM'], pmol.df['HETATM']])
+        molecule._df = pd.concat([molecule.df['ATOM'], molecule.df['HETATM']])
 
         # Select columns of interest
-        pmol._df = pmol.df.loc[:, ['atom_number',
+        molecule._df = molecule.df.loc[:, ['atom_number',
                                    'atom_name',
                                    'residue_number',
                                    'residue_name',
@@ -223,12 +224,12 @@ class MoleculeLoader:
                                    'charge']]
 
         # Insert additional columns
-        pmol.df.insert(loc=4,
+        molecule.df.insert(loc=4,
                        column='subst_name',
-                       value=[f'{i}{j}' for i, j in zip(pmol.df['residue_name'], pmol.df['residue_number'])])
+                       value=[f'{i}{j}' for i, j in zip(molecule.df['residue_name'], molecule.df['residue_number'])])
 
         # Rename columns
-        pmol.df.rename(index=str, inplace=True, columns={'atom_number': 'atom_id',
+        molecule.df.rename(index=str, inplace=True, columns={'atom_number': 'atom_id',
                                                          'residue_number': 'res_id',
                                                          'residue_name': 'res_name',
                                                          'x_coord': 'x',
@@ -237,13 +238,13 @@ class MoleculeLoader:
 
         # Remove solvent if parameter remove_solvent=True
         if remove_solvent:
-            ix = pmol.df.index[pmol.df['res_name'] == 'HOH']
-            pmol.df.drop(index=ix, inplace=True)
+            ix = molecule.df.index[molecule.df['res_name'] == 'HOH']
+            molecule.df.drop(index=ix, inplace=True)
 
         # Cast to list only for homogeneity with reading mol2 files that can have multiple entries
-        pmols = [pmol]
+        molecules = [molecule]
 
-        return pmols
+        return molecules
 
 
 class AminoAcidDescriptors:
