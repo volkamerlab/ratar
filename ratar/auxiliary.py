@@ -30,7 +30,7 @@ class MoleculeLoader:
 
     Attributes
     ----------
-    input_path : str or pathlib.PosixPath
+    input_path : str or pathlib.Path
         Absolute path to a mol2 (can contain multiple entries) or pdb file.
     remove_solvent : bool
         Set True to remove solvent molecules (default: False).
