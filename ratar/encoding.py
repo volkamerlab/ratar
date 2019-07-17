@@ -69,6 +69,11 @@ class BindingSite:
     def __eq__(self, other):
         """
         Check if two BindingSite objects are equal.
+
+        Returns
+        -------
+        bool
+            True if molecule ID, molecule DataFrames, Representative object, and Shapes object are equal, else False.
         """
 
         rules = [
@@ -573,6 +578,11 @@ class Coordinates:
     def __eq__(self, other):
         """
         Check if two Coordinates objects are equal.
+
+        Returns
+        -------
+        bool
+            True if dictionary keys (strings) and dictionary values (DataFrames) are equal, else False.
         """
 
         obj1 = flatten(self.data, reducer='path')
@@ -712,6 +722,11 @@ class PhysicoChemicalProperties:
     def __eq__(self, other):
         """
         Check if two PhysicoChemicalProperties objects are equal.
+
+        Returns
+        -------
+        bool
+            True if dictionary keys (strings) and dictionary values (DataFrames) are equal, else False.
         """
 
         obj1 = flatten(self.data, reducer='path')
@@ -887,6 +902,11 @@ class Subsets:
     def __eq__(self, other):
         """
         Check if two Subsets objects are equal.
+
+        Returns
+        -------
+        bool
+            True if dictionary keys (strings) and dictionary values (DataFrames) are equal, else False.
         """
 
         obj1 = flatten(self.data_pseudocenter_subsets, reducer='path')
@@ -1082,6 +1102,11 @@ class Points:
     def __eq__(self, other):
         """
         Check if two Points objects are equal.
+
+        Returns
+        -------
+        bool
+            True if dictionary keys (strings) and dictionary values (DataFrames) are equal, else False.
         """
 
         obj1 = (
@@ -1330,12 +1355,17 @@ class Shapes:
             Different shape encodings for different physicochemical properties and for different
             subsets: pseudocenters (consisting of pseudocenter atoms).
         """
-        
+
         return self.data_pseudocenter_subsets['pc']
 
     def __eq__(self, other):
         """
         Check if two Shapes objects are equal.
+
+        Returns
+        -------
+        bool
+            True if dictionary keys (strings) and dictionary values (DataFrames) are equal, else False.
         """
 
         obj1 = (
