@@ -776,6 +776,8 @@ class PhysicoChemicalProperties:
 
         self.data = {}
 
+        # Types of physicochemical properties considered for encoding
+        # z1 and z123 refer to Z-scales with one and three components
         physicochemicalproperties_keys = ['z1', 'z123']
 
         for k1, v1 in representatives.data.items():
