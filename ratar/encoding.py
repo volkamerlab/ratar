@@ -1397,7 +1397,7 @@ class Shapes:
         Parameters
         ----------
         molecule : biopandas.mol2.pandas_mol2.PandasMol2 or biopandas.pdb.pandas_pdb.PandasPdb
-        Content of mol2 or pdb file as BioPandas object.
+            Content of mol2 or pdb file as BioPandas object.
         """
 
         representatives = Representatives()

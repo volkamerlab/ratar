@@ -66,7 +66,6 @@ def get_similarity_all_against_all(output_path):
     -------
     dict of pandas.DataFrame
         All-against-all similarity matrix (DataFrame) for each encoding method (dictionary).
-
     """
 
     # Get list of all encoded binding site files
@@ -154,7 +153,6 @@ def get_similarity_pairs(benchmarkset):
     -----
     For a given benchmark dataset, return a dictionary of DataFrames that contains each different similarity measures
     for pairs of binding sites.
-
     """
 
     benchmarksets = ['fuzcav', 'tough-m1']
@@ -253,7 +251,6 @@ def calculate_similarity_pairs(pairs, struc_path_template):
                     encoding_method1    encoding_method2
         p11_p12     0.5                 0.55
         p21_p22     0.9                 0.94
-
     """
 
     # Initialise objects to be filled while iterating over pairs
