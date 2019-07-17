@@ -4,25 +4,22 @@ encoding.py
 Read-across the targetome -
 An integrated structure- and ligand-based workbench for computational target prediction and novel tool compound design
 
-Handles the primary functions for encoding a single binding site.
+Handles the primary functions for encoding one or multiple binding site (s).
 """
 
-# Import packages
 
 import glob
 import logging
 from pathlib import Path
 import pickle
-import re
-import sys
+import warnings
 
 from flatten_dict import flatten, unflatten
 import numpy as np
 import pandas as pd
 import seaborn as sns
 from scipy.special import cbrt
-from scipy.stats.stats import skew
-import warnings
+from scipy.stats.stats import moment
 
 from ratar.auxiliary import MoleculeLoader, AminoAcidDescriptors
 from ratar.auxiliary import create_directory, load_pseudocenters
@@ -38,25 +35,34 @@ class BindingSite:
 
     Parameters
     ----------
-    pmol : biopandas.mol2.pandas_mol2.PandasMol2 or biopandas.pdb.pandas_pdb.PandasPdb
+    molecule : biopandas.mol2.pandas_mol2.PandasMol2 or biopandas.pdb.pandas_pdb.PandasPdb
         Content of mol2 or pdb file as BioPandas object.
 
     Attributes
     ----------
-    molecule_id : str
-        Molecule ID (e.g. PDB ID).
-    molecule : DataFrame
-        Data extracted from e.g. mol2 or pdb file.
+    molecule : biopandas.mol2.pandas_mol2.PandasMol2 or biopandas.pdb.pandas_pdb.PandasPdb
+            Content of mol2 or pdb file as BioPandas object.
     representatives : ratar.encoding.Representatives
         Representative atoms of binding site for different representation methods.
     shapes : Shapes
         Encoded binding site (reference points, distance distribution and distribution moments).
+
+    Examples
+    --------
+    >>> from ratar.auxiliary import MoleculeLoader
+    >>> from ratar.encoding import Representatives, Coordinates
+
+     >>> molecule_path = Path(__name__).parent / 'ratar' / 'tests' / 'data' / 'AAK1_4wsq_altA_chainA.mol2'
+
+    >>> molecule_loader = MoleculeLoader(molecule_path, remove_solvent=True)
+    >>> molecule = molecule_loader.molecules[0]
+
+    >>> binding_site = BindingSite(molecule)
     """
 
-    def __init__(self, pmol):
+    def __init__(self, molecule):
 
-        self.molecule_id = pmol.code
-        self.molecule = pmol.df
+        self.molecule = molecule
         self.representatives = self.get_representatives()
         self.shapes = self.run()
 
@@ -66,46 +72,147 @@ class BindingSite:
         """
 
         rules = [
-            self.molecule_id == other.molecule_id,
-            self.molecule.equals(other.molecule),
+            self.molecule.code == other.molecule.code,
+            self.molecule.df.equals(other.molecule.df),
             self.representatives == other.representatives,
             self.shapes == other.shapes
         ]
         return all(rules)
 
     def get_representatives(self):
-        representatives = Representatives(self.molecule_id)
-        representatives.get_representatives(self.molecule)
+        """
+        Get representatives of a molecule.
+
+        Returns
+        -------
+        ratar.encoding.Representatives
+            Different representatives (representative atoms) of a molecule.
+        """
+
+        representatives = Representatives()
+        representatives.from_molecule(self.molecule)
         return representatives
 
-    def get_coordinates(self, representatives):
-        coordinates = Coordinates(self.molecule_id)
-        coordinates.get_coordinates(representatives)
+    @staticmethod
+    def get_coordinates(representatives):
+        """
+        Get coordinates for different representatives of a molecule.
+
+        Parameters
+        ----------
+        representatives : ratar.encoding.Representatives
+            Different representatives (representative atoms) of a molecule.
+
+        Returns
+        -------
+        ratar.encoding.Coordinates
+            Coordinates for different representatives of a molecule.
+        """
+
+        coordinates = Coordinates()
+        coordinates.from_representatives(representatives)
         return coordinates
 
-    def get_physicochemicalproperties(self, representatives):
-        physicochemicalproperties = PhysicoChemicalProperties(self.molecule_id)
-        physicochemicalproperties.get_physicochemicalproperties(representatives)
+    @staticmethod
+    def get_physicochemicalproperties(representatives):
+        """
+        Get different physicochemical properties for different representatives of a molecule.
+
+        Parameters
+        ----------
+        representatives : ratar.encoding.Representatives
+            Different representatives (representative atoms) of a molecule.
+
+        Returns
+        -------
+        ratar.encoding.PhysicochemicalProperties
+            Different physicochemical properties for different representatives of a molecule.
+        """
+
+        physicochemicalproperties = PhysicoChemicalProperties()
+        physicochemicalproperties.from_representatives(representatives)
         return physicochemicalproperties
 
-    def get_subsets(self, representatives):
-        subsets = Subsets(self.molecule_id)
-        subsets.get_pseudocenter_subsets_indices(representatives)
+    @staticmethod
+    def get_subsets(representatives):
+        """
+        Get subsets (atom indices) for different representatives of a molecule.
+
+        Parameters
+        ----------
+        representatives : ratar.encoding.Representatives
+            Different representatives (representative atoms) of a molecule.
+
+        Returns
+        -------
+        ratar.encoding.Subsets
+            Subsets (atom indices) for different representatives of a molecule.
+        """
+
+        subsets = Subsets()
+        subsets.from_representatives(representatives)
         return subsets
 
     def get_points(self, coordinates, physicochemicalproperties, subsets):
-        points = Points(self.molecule_id)
-        points.get_points(coordinates, physicochemicalproperties)
-        points.get_points_pseudocenter_subsets(subsets)
+        """
+        Get multidimensional points for different representatives of a molecule, which contain information on
+        coordinates (spatial dimensions) and physicochemical properties (physicochemical dimensions).
+        Additionally, group points into subsets.
+
+        Parameters
+        ----------
+        coordinates : ratar.encoding.Coordinates
+            Coordinates for different representatives of a molecule.
+        physicochemicalproperties : ratar.encoding.PhysicochemicalProperties
+            Different physicochemical properties for different representatives of a molecule.
+        subsets : ratar.encoding.Subsets
+            Subsets (atom indices) for different representatives of a molecule.
+
+        Returns
+        -------
+        ratar.encoding.Points
+            Multidimensional points for different representatives of a molecule, which contain information on
+            coordinates (spatial dimensions) and physicochemical properties (physicochemical dimensions).
+            Additionally, points are grouped into subsets.
+        """
+
+        points = Points()
+        points.from_properties(coordinates, physicochemicalproperties)
+        points.from_subsets(subsets)
         return points
 
     def get_shapes(self, points):
-        shapes = Shapes(self.molecule_id)
-        shapes.get_shapes(points)
-        shapes.get_shapes_pseudocenter_subsets(points)
+        """
+        Get different shape encodings for points representing a molecule.
+
+        Parameters
+        ----------
+        points : ratar.encoding.Points
+            Multidimensional points for different representatives of a molecule, which contain information on
+            coordinates (spatial dimensions) and physicochemical properties (physicochemical dimensions).
+            Additionally, points are grouped into subsets.
+
+        Returns
+        -------
+        ratar.encoding.Shapes
+            Different shape encodings for different points representing a molecule.
+        """
+
+        shapes = Shapes()
+        shapes.from_points(points)
+        shapes.from_subset_points(points)
         return shapes
 
     def run(self):
+        """
+        Run shape encoding procedure for a molecule.
+
+        Returns
+        -------
+        ratar.encoding.Shapes
+            Different shape encodings for different points representing a molecule.
+        """
+
         representatives = self.get_representatives()
         coordinates = self.get_coordinates(representatives)
         physicochemicalproperties = self.get_physicochemicalproperties(representatives)
@@ -126,11 +233,25 @@ class Representatives:
         Molecule ID (e.g. PDB ID).
     data : dict of pandas.DataFrames
         Dictionary (representatives types, e.g. 'pc') of DataFrames containing molecule structural data.
+
+    Examples
+    --------
+    >>> from ratar.auxiliary import MoleculeLoader
+    >>> from ratar.encoding import Representatives
+
+    >>> molecule_path = Path(__name__).parent / 'ratar' / 'tests' / 'data' / 'AAK1_4wsq_altA_chainA.mol2'
+
+    >>> molecule_loader = MoleculeLoader(molecule_path, remove_solvent=True)
+    >>> molecule = molecule_loader.molecules[0]
+
+    >>> representatives = Representatives()
+    >>> representatives.from_molecule(molecule)
+    >>> representatives
     """
 
-    def __init__(self, molecule_id):
+    def __init__(self):
 
-        self.molecule_id = molecule_id
+        self.molecule_id = ''
         self.data = {
             'ca':  pd.DataFrame(),
             'pca':  pd.DataFrame(),
@@ -152,7 +273,11 @@ class Representatives:
     def __eq__(self, other):
         """
         Check if two Representatives objects are equal.
-        Return True if dictionary keys (strings) and dictionary values (DataFrames) are equal, else return False.
+
+        Returns
+        -------
+        bool
+            True if dictionary keys (strings) and dictionary values (DataFrames) are equal, else False.
         """
 
         obj1 = flatten(self.data, reducer='path')
@@ -168,41 +293,36 @@ class Representatives:
 
         return all(rules)
 
-    def get_representatives(self, molecule):
+    def from_molecule(self, molecule):
         """
-        Extract binding site representatives.
+        Set molecule ID and extract binding site representatives.
 
         Parameters
         ----------
-        molecule : pandas.DataFrame
-            DataFrame containing atom lines from input file.
-
-        Returns
-        -------
-        pandas.DataFrame
-            DataFrame containing atom lines from input file described by Z-scales.
+        molecule : biopandas.mol2.pandas_mol2.PandasMol2 or biopandas.pdb.pandas_pdb.PandasPdb
+            Content of mol2 or pdb file as BioPandas object.
         """
+
+        self.molecule_id = molecule.code
 
         for key in self.data.keys():
             if key == 'ca':
-                self.data['ca'] = self._get_ca(molecule)
+                self.data['ca'] = self._get_ca(molecule.df)
             elif key == 'pca':
-                self.data['pca'] = self._get_pca(molecule)
+                self.data['pca'] = self._get_pca(molecule.df)
             elif key == 'pc':
-                self.data['pc'] = self._get_pc(molecule)
+                self.data['pc'] = self._get_pc(molecule.df)
             else:
                 raise KeyError(f'Unknown representative key: {key}')
 
-        return self.data
-
     @staticmethod
-    def _get_ca(mol):
+    def _get_ca(molecule_df):
         """
         Extract Calpha atoms from binding site.
 
         Parameters
         ----------
-        mol : pandas.DataFrame
+        molecule_df : pandas.DataFrame
             DataFrame containing atom lines from input file.
 
         Returns
@@ -212,117 +332,141 @@ class Representatives:
         """
 
         # Filter for atom name 'CA' (first condition) but exclude calcium (second condition)
-        bs_ca = mol[(mol['atom_name'] == 'CA') & (mol['res_name'] != 'CA')]
+        molecule_ca = molecule_df[(molecule_df['atom_name'] == 'CA') & (molecule_df['res_name'] != 'CA')]
 
-        return bs_ca
+        return molecule_ca
 
     @staticmethod
-    def _get_pca(mol):
+    def _get_pca(molecule_df):
         """
-        Extract pseudocenter atoms from binding site.
+        Extract pseudocenter atoms from molecule.
 
         Parameters
         ----------
-        mol: pandas.DataFrame
+        molecule_df: pandas.DataFrame
             DataFrame containing atom lines from input file.
 
         Returns
         -------
         pandas.DataFrame
-            DataFrame containing atom lines from input file described by Z-scales.
+            DataFrame containing atom lines from input file that belong to pseudocenters.
         """
 
         # Load pseudocenter atoms
         pseudocenter_atoms = load_pseudocenters()
 
-        # Add column containing amino acid names
-        mol['amino_acid'] = [i.split('_')[0][:3] for i in mol['subst_name']]
+        # Collect all molecule atoms that belong to pseudocenters
+        molecule_pca = []
 
-        # Per atom in binding site: get atoms that belong to pseudocenters
-        matches = []  # Matching atoms
-        pc_types = []  # Pc type of matching atoms
-        pc_ids = []  # Pc ids of matching atoms
-        pc_atom_ids = []  # Pc atom ids of matching atoms
+        for index, row in molecule_df.iterrows():
 
-        # TODO: review because it is very old code
-        # Iterate over all atoms (lines) in binding site
-        for i in mol.index:
-            line = mol.loc[i]  # Atom in binding site
+            query = f'{row["res_name"]}_{row["atom_name"]}'
 
-            # Get atoms that belong to peptide bond
-            if re.search(r'^[NOC]$', line['atom_name']):
-                matches.append(True)
-                if line['atom_name'] == 'O':
-                    pc_types.append('HBA')
-                    pc_ids.append('PEP_HBA_1')
-                    pc_atom_ids.append('PEP_HBA_1_0')
-                elif line['atom_name'] == 'N':
-                    pc_types.append('HBD')
-                    pc_ids.append('PEP_HBD_1')
-                    pc_atom_ids.append('PEP_HBD_1_N')
-                elif line['atom_name'] == 'C':
-                    pc_types.append('AR')
-                    pc_ids.append('PEP_AR_1')
-                    pc_atom_ids.append('PEP_AR_1_C')
+            if query in list(pseudocenter_atoms['pc_atom_pattern']):  # Non-peptide bond atoms
 
-            # Get other defined atoms
-            else:
-                query = (line['amino_acid'] + '_' + line['atom_name'])
-                matches.append(query in list(pseudocenter_atoms['pattern']))
-                if query in list(pseudocenter_atoms['pattern']):
-                    ix = pseudocenter_atoms.index[pseudocenter_atoms['pattern'] == query].tolist()[
-                        0]  # FIXME tolist needed and why [0]?
-                    pc_types.append(pseudocenter_atoms.iloc[ix]['type'])
-                    pc_ids.append(pseudocenter_atoms.iloc[ix]['pc_id'])
-                    pc_atom_ids.append(pseudocenter_atoms.iloc[ix]['pc_atom_id'])
+                pc_ix = pseudocenter_atoms.index[pseudocenter_atoms['pc_atom_pattern'] == query].tolist()[0]
 
-        bs_pc_atoms = mol[matches].copy()
-        bs_pc_atoms['pc_types'] = pd.Series(pc_types, index=bs_pc_atoms.index)
-        bs_pc_atoms['pc_id'] = pd.Series(pc_ids, index=bs_pc_atoms.index)
-        bs_pc_atoms['pc_atom_id'] = pd.Series(pc_atom_ids, index=bs_pc_atoms.index)
+                molecule_pca.append(
+                    [
+                        index,
+                        pseudocenter_atoms.iloc[pc_ix]['pc_type'],
+                        pseudocenter_atoms.iloc[pc_ix]['pc_id'],
+                        pseudocenter_atoms.iloc[pc_ix]['pc_atom_id']
+                    ]
+                )
 
-        return bs_pc_atoms
+            elif row['atom_name'] == 'O':  # Peptide bond atoms
 
-    def _get_pc(self, mol):
+                molecule_pca.append(
+                    [
+                        index,
+                        'HBA',
+                        'PEP_HBA_1',
+                        'PEP_HBA_1_0'
+                    ]
+                )
+
+            elif row['atom_name'] == 'N':  # Peptide bond atoms
+
+                molecule_pca.append(
+                    [
+                        index,
+                        'HBD',
+                        'PEP_HBD_1',
+                        'PEP_HBD_1_N']
+                )
+
+            elif row['atom_name'] == 'C':  # Peptide bond atoms
+
+                molecule_pca.append(
+                    [
+                        index,
+                        'AR',
+                        'PEP_AR_1',
+                        'PEP_AR_1_C'
+                    ]
+                )
+
+        # Cast list of lists to DataFrame
+        molecule_pca_df = pd.DataFrame(molecule_pca)
+        molecule_pca_df.columns = ['index', 'pc_type', 'pc_id', 'pc_atom_id']
+        molecule_pca_df.index = [i[0] for i in molecule_pca]
+        molecule_pca_df.drop(columns=['index'], inplace=True)
+
+        # Join molecule with pseudocenter subset
+        molecule_pca_df = molecule_df.join(molecule_pca_df, how='outer')
+        molecule_pca_df.dropna(how='any', inplace=True)
+
+        return molecule_pca_df
+
+    def _get_pc(self, molecule_df):
         """
-        Extract pseudocenters from binding site.
+        Extract pseudocenters from molecule.
 
         Parameters
         ----------
-        mol : pandas.DataFrame
+        molecule_df : pandas.DataFrame
             DataFrame containing atom lines from input file.
 
         Returns
         -------
         pandas.DataFrame
-            DataFrame containing atom lines from input file described by Z-scales.
+            DataFrame containing atom lines for (aggregated) pseudocenters, i.e. aggregate multiple atoms belonging to
+            one pseudocenter.
         """
 
         # Get pseudocenter atoms
-        bs_pc = self._get_pca(mol)
+        molecule_pca_df = self._get_pca(molecule_df)
 
-        # Loop over binding site amino acids
-        for subst_name_id in set(bs_pc['subst_name']):  # FIXME use pandas groupby
+        # Calculate pseudocenters
+        molecule_pc = []
 
-            # Loop over pseudocenters of that amino acids
-            for pc_id in set(bs_pc[bs_pc['subst_name'] == subst_name_id]['pc_id']):
+        for key, group in molecule_pca_df.groupby(['subst_name', 'pc_id'], sort=False):
 
-                # Get all rows (row indices) of binding site atoms that share the same amino acid and pseudocenter
-                ix = bs_pc[(bs_pc['subst_name'] == subst_name_id) & (bs_pc['pc_id'] == pc_id)].index
-                # If there is more than one atom for this pseudocenter...
+            if len(group) == 1:  # If pseudocenter only contains one atom, keep data
+                row = group.iloc[0].copy()
+                row['atom_id'] = [row['atom_id']]
+                row['atom_name'] = [row['atom_name']]
 
-                if len(ix) != 1:
-                    # ... calculate the mean of the corresponding atom coordinates
-                    bs_pc.at[ix[0], ['x', 'y', 'z']] = bs_pc.loc[ix][['x', 'y', 'z']].mean()
-                    # ... join all atom names to on string and add to dataframe in first row
-                    bs_pc.at[ix[0], ['atom_name']] = ','.join(list(bs_pc.loc[ix]['atom_name']))
-                    # ... remove all rows except the first (i.e. merged atoms)
-                    bs_pc.drop(list(ix[1:]), axis=0, inplace=True)
+                molecule_pc.append(row)
 
-        # Drop pc atom ID column
-        bs_pc.drop('pc_atom_id', axis=1, inplace=True)
+            else:  # If pseudocenter contains multiple atoms, aggregate data
+                first_row = group.iloc[0].copy()
+                first_row['atom_id'] = list(group['atom_id'])
+                first_row['atom_name'] = list(group['atom_name'])
+                first_row['x'] = group['x'].mean()
+                first_row['y'] = group['y'].mean()
+                first_row['z'] = group['z'].mean()
+                first_row['charge'] = group['charge'].mean()  # TODO Alternatives to mean of a charge?
 
-        return bs_pc
+                molecule_pc.append(first_row)
+
+        molecule_pc_df = pd.concat(molecule_pc, axis=1).T
+
+        # Change datatype from object to float for selected columns
+        molecule_pc_df[['x', 'y', 'z', 'charge']] = molecule_pc_df[['x', 'y', 'z', 'charge']].astype(float)
+
+        return molecule_pc_df
 
 
 class Coordinates:
@@ -335,11 +479,25 @@ class Coordinates:
         Molecule ID (e.g. PDB ID).
     data : dict of pandas.DataFrames
         Dictionary (representatives types, e.g. 'pc') of DataFrames containing coordinates.
+
+    Examples
+    --------
+    >>> from ratar.auxiliary import MoleculeLoader
+    >>> from ratar.encoding import Coordinates
+
+     >>> molecule_path = Path(__name__).parent / 'ratar' / 'tests' / 'data' / 'AAK1_4wsq_altA_chainA.mol2'
+
+    >>> molecule_loader = MoleculeLoader(molecule_path, remove_solvent=True)
+    >>> molecule = molecule_loader.molecules[0]
+
+    >>> coordinates = Coordinates()
+    >>> coordinates.from_molecule(molecule)
+    >>> coordinates
     """
 
-    def __init__(self, molecule_id):
+    def __init__(self):
 
-        self.molecule_id = molecule_id
+        self.molecule_id = ''
         self.data = {
             'ca': None,
             'pca': None,
@@ -364,7 +522,7 @@ class Coordinates:
         """
 
         obj1 = flatten(self.data, reducer='path')
-        obj2 = flatten(other.coord_dict, reducer='path')
+        obj2 = flatten(other.data, reducer='path')
 
         try:
             rules = [
@@ -376,9 +534,24 @@ class Coordinates:
 
         return all(rules)
 
-    def get_coordinates(self, representatives):
+    def from_molecule(self, molecule):
         """
-        Get coordinates (x, y, z) for molecule reprentatives.
+        Convenience class method: Get coordinates from molecule object.
+
+        Parameters
+        ----------
+        molecule : biopandas.mol2.pandas_mol2.PandasMol2 or biopandas.pdb.pandas_pdb.PandasPdb
+            Content of mol2 or pdb file as BioPandas object.
+        """
+
+        representatives = Representatives()
+        representatives.from_molecule(molecule)
+
+        self.from_representatives(representatives)
+
+    def from_representatives(self, representatives):
+        """
+        Get coordinates (x, y, z) for molecule representatives.
 
         Parameters
         ----------
@@ -391,6 +564,8 @@ class Coordinates:
             Dictionary (representatives types, e.g. 'pc') of DataFrames containing molecule coordinates.
         """
 
+        self.molecule_id = representatives.molecule_id
+
         self.data = {}
 
         for k1, v1 in representatives.data.items():
@@ -401,7 +576,7 @@ class Coordinates:
             else:
                 raise TypeError(f'Expected dict or pandas.DataFrame but got {type(v1)}')
 
-        return self.data
+        return self.data  # Return not necessary here, keep for clarity.
 
 
 class PhysicoChemicalProperties:
@@ -416,11 +591,25 @@ class PhysicoChemicalProperties:
     data : dict of dict of pandas.DataFrame
         Dictionary (representatives types, e.g. 'pc') of dictionaries (physicochemical properties types, e.g. 'z123') of
         DataFrames containing physicochemical properties.
+
+    Examples
+    --------
+    >>> from ratar.auxiliary import MoleculeLoader
+    >>> from ratar.encoding import PhysicoChemicalProperties
+
+     >>> molecule_path = Path(__name__).parent / 'ratar' / 'tests' / 'data' / 'AAK1_4wsq_altA_chainA.mol2'
+
+    >>> molecule_loader = MoleculeLoader(molecule_path, remove_solvent=True)
+    >>> molecule = molecule_loader.molecules[0]
+
+    >>> physicochemicalproperties = PhysicoChemicalProperties()
+    >>> physicochemicalproperties.from_molecule(molecule)
+    >>> physicochemicalproperties
     """
 
-    def __init__(self, molecule_id):
+    def __init__(self):
 
-        self.molecule_id = molecule_id
+        self.molecule_id = ''
         self.data = {
             'ca': {},
             'pca': {},
@@ -457,20 +646,37 @@ class PhysicoChemicalProperties:
 
         return all(rules)
 
-    def get_physicochemicalproperties(self, representatives):
+    def from_molecule(self, molecule):
+        """
+        Convenience class method: Get physicochemical properties from molecule object.
+
+        Parameters
+        ----------
+        molecule : biopandas.mol2.pandas_mol2.PandasMol2 or biopandas.pdb.pandas_pdb.PandasPdb
+            Content of mol2 or pdb file as BioPandas object.
+        """
+
+        representatives = Representatives()
+        representatives.from_molecule(molecule)
+
+        self.from_representatives(representatives)
+
+    def from_representatives(self, representatives):
         """
         Extract physicochemical properties (main function).
 
         Parameters
         ----------
-        representatives : pandas.DataFrame
-            Representatives' data for a certain representatives type.
+        representatives : ratar.encoding.Representatives
+            Representatives class instance.
 
         Returns
         -------
         pandas.DataFrame
             DataFrame containing physicochemical properties.
         """
+
+        self.molecule_id = representatives.molecule_id
 
         self.data = {}
 
@@ -488,7 +694,7 @@ class PhysicoChemicalProperties:
                     raise KeyError(f'Unknown representatives key: {k2}. '
                                    f'Select: {", ".join(physicochemicalproperties_keys)}')
 
-        return self.data
+        return self.data   # Return not necessary here, keep for clarity.
 
     def _get_zscales(self, representatives_df, z_number):
         """
@@ -547,11 +753,25 @@ class Subsets:
     data_pseudocenter_subsets : dict of dict of list
         Dictionary (representatives types, e.g. 'pc') of dictionaries (pseudocenter subset types, e.g. 'HBA') of
         lists containing subset indices.
+
+    Examples
+    --------
+    >>> from ratar.auxiliary import MoleculeLoader
+    >>> from ratar.encoding import Subsets
+
+     >>> molecule_path = Path(__name__).parent / 'ratar' / 'tests' / 'data' / 'AAK1_4wsq_altA_chainA.mol2'
+
+    >>> molecule_loader = MoleculeLoader(molecule_path, remove_solvent=True)
+    >>> molecule = molecule_loader.molecules[0]
+
+    >>> subsets = Subsets()
+    >>> subsets.from_molecule(molecule)
+    >>> subsets
     """
 
-    def __init__(self, molecule_id):
+    def __init__(self):
 
-        self.molecule_id = molecule_id
+        self.molecule_id = ''
         self.data_pseudocenter_subsets = {
             'pca': {},
             'pc': {}
@@ -576,16 +796,31 @@ class Subsets:
         try:
             rules = [
                 obj1.keys() == obj2.keys(),
-                all([v.equals(obj2[k]) for k, v in obj1.items()])
+                all([v == obj2[k] for k, v in obj1.items()])
             ]
         except KeyError:
             rules = False
 
         return all(rules)
 
-    def get_pseudocenter_subsets_indices(self, representatives):
+    def from_molecule(self, molecule):
         """
-        Extract feature subsets from pseudocenters (pseudocenter atoms).
+        Convenience class method: Get subset indices from molecule object.
+
+        Parameters
+        ----------
+        molecule : biopandas.mol2.pandas_mol2.PandasMol2 or biopandas.pdb.pandas_pdb.PandasPdb
+            Content of mol2 or pdb file as BioPandas object.
+        """
+
+        representatives = Representatives()
+        representatives.from_molecule(molecule)
+
+        self.from_representatives(representatives)
+
+    def from_representatives(self, representatives):
+        """
+        Extract feature subsets from e.g. pseudocenters (pseudocenter atoms).
 
         Parameters
         ----------
@@ -599,8 +834,10 @@ class Subsets:
             subset types, e.g. 'HBA').
         """
 
-        # Load pseudocenter atoms
-        pseudocenter_atoms = load_pseudocenters()
+        self.molecule_id = representatives.molecule_id
+
+        # Subset: pseudocenter atoms
+        pseudocenter_atoms = load_pseudocenters(remove_hbda=True)
 
         self.data_pseudocenter_subsets = {}
 
@@ -611,15 +848,15 @@ class Subsets:
             repres = representatives.data[k1]
 
             # Loop over all pseudocenter subset types
-            for k2 in list(set(pseudocenter_atoms['type'])):
+            for k2 in list(set(pseudocenter_atoms['pc_type'])):
 
                 # If pseudocenter type exists in dataset, save corresponding subset, else save None
-                if k2 in set(repres['pc_types']):
-                    self.data_pseudocenter_subsets[k1][k2] = list(repres[repres['pc_types'] == k2].index)
+                if k2 in set(repres['pc_type']):
+                    self.data_pseudocenter_subsets[k1][k2] = list(repres[repres['pc_type'] == k2].index)
                 else:
                     self.data_pseudocenter_subsets[k1][k2] = []
 
-        return self.data_pseudocenter_subsets
+        return self.data_pseudocenter_subsets   # Return not necessary here, keep for clarity.
 
 
 class Points:
@@ -641,11 +878,25 @@ class Points:
     data_pseudocenter_subsets : dict of dict of dict of pandas.DataFrames
         Dictionary (representatives types, e.g. 'pc') of dictionaries (physicochemical properties, e.g. 'pc_z123')
         of dictionaries (subset types, e.g. 'HBA') containing each a DataFrame describing the subsetted atoms.
+
+    Examples
+    --------
+    >>> from ratar.auxiliary import MoleculeLoader
+    >>> from ratar.encoding import Points
+
+     >>> molecule_path = Path(__name__).parent / 'ratar' / 'tests' / 'data' / 'AAK1_4wsq_altA_chainA.mol2'
+
+    >>> molecule_loader = MoleculeLoader(molecule_path, remove_solvent=True)
+    >>> molecule = molecule_loader.molecules[0]
+
+    >>> points = Points()
+    >>> points.from_molecule(molecule)
+    >>> points
     """
 
-    def __init__(self, molecule_id):
+    def __init__(self):
 
-        self.molecule_id = molecule_id
+        self.molecule_id = ''
         self.data = {
             'ca': {},
             'pca': {},
@@ -703,7 +954,32 @@ class Points:
 
         return all(rules)
 
-    def get_points(self, coordinates, physicochemicalproperties):
+    def from_molecule(self, molecule):
+        """
+        Convenience class method: Get points from molecule object.
+
+        Parameters
+        ----------
+        molecule : biopandas.mol2.pandas_mol2.PandasMol2 or biopandas.pdb.pandas_pdb.PandasPdb
+            Content of mol2 or pdb file as BioPandas object.
+        """
+
+        representatives = Representatives()
+        representatives.from_molecule(molecule)
+
+        coordinates = Coordinates()
+        coordinates.from_representatives(representatives)
+
+        physicochemicalproperties = PhysicoChemicalProperties()
+        physicochemicalproperties.from_representatives(representatives)
+
+        subsets = Subsets()
+        subsets.from_representatives(representatives)
+
+        self.from_properties(coordinates, physicochemicalproperties)
+        self.from_subsets(subsets)
+
+    def from_properties(self, coordinates, physicochemicalproperties):
         """
         Concatenate spatial (3-dimensional) and physicochemical (N-dimensional) properties
         to an 3+N-dimensional vector for each point in dataset (i.e. representative atoms in a binding site).
@@ -722,7 +998,7 @@ class Points:
              of DataFrames containing coordinates and physicochemical properties.
         """
 
-        self.data = {}
+        self.molecule_id = coordinates.molecule_id
 
         # Get physicochemical properties
         physicochemicalproperties_keys = physicochemicalproperties.data['ca'].keys()
@@ -749,11 +1025,11 @@ class Points:
                 # Drop rows (atoms) with empty entries (e.g. atoms without Z-scales assignment)
                 self.data[k1][k2].dropna(inplace=True)
 
-        return self.data
+        return self.data   # Return not necessary here, keep for clarity.
 
-    def get_points_pseudocenter_subsets(self, subsets):
+    def from_subsets(self, subsets):
         """
-        Get
+        Group points into subsets, e.g. subsets by pseudocenter types.
 
         Parameters
         ----------
@@ -764,11 +1040,14 @@ class Points:
         -------
         dict of dict of dict of pandas.DataFrames
             Dictionary (representatives types, e.g. 'pc') of dictionaries (physicochemical properties, e.g. 'pc_z123')
-            of dictionaries (subset types, e.g. 'HBA') containing each a DataFrame describing the subsetted atoms.
         """
 
-        self.data_pseudocenter_subsets = {}
+        # Subsets can only be generated if points are already created, so make check:
+        if not self.data["ca"]:
+            raise TypeError("Attribute data of Points class is empty. Before you can generate subsets, you need to set "
+                            "the points to be subset. Use Points.from_properties() class method.")
 
+        # Subset: pseudocenter atoms
         for k1, v1 in self.data.items():  # Representatives
 
             # Select points keys that we want to subset, e.g. we want to subset pseudocenters but not Calpha atoms
@@ -784,7 +1063,7 @@ class Points:
                         labels = v2.index.intersection(v3)
                         self.data_pseudocenter_subsets[k1][k2][k3] = v2.loc[labels, :]
 
-        return self.data_pseudocenter_subsets
+        return self.data_pseudocenter_subsets   # Return not necessary here, keep for clarity.
 
 
 class Shapes:
@@ -805,11 +1084,25 @@ class Shapes:
         of dictionaries (encoding method, e.g. '3Dusr') of dictionaries (subsets types, e.g. 'HBA') of dictionaries
         containing DataFrames for the encoding: 'ref_points' (the reference points), 'distances' (the distances from
         reference points to representatives), and 'moments' (the first three moments for the distance distribution).
+
+    Examples
+    --------
+    >>> from ratar.auxiliary import MoleculeLoader
+    >>> from ratar.encoding import Shapes
+
+     >>> molecule_path = Path(__name__).parent / 'ratar' / 'tests' / 'data' / 'AAK1_4wsq_altA_chainA.mol2'
+
+    >>> molecule_loader = MoleculeLoader(molecule_path, remove_solvent=True)
+    >>> molecule = molecule_loader.molecules[0]
+
+    >>> shapes = Shapes()
+    >>> shapes.from_molecule(molecule)
+    >>> shapes
     """
 
-    def __init__(self, molecule_id):
+    def __init__(self):
 
-        self.molecule_id = molecule_id
+        self.molecule_id = ''
         self.data = {
             'ca': {},
             'pca': {},
@@ -867,7 +1160,36 @@ class Shapes:
 
         return all(rules)
 
-    def get_shapes(self, points):
+    def from_molecule(self, molecule):
+        """
+        Convenience class method: Get shapes from molecule object.
+
+        Parameters
+        ----------
+        molecule : biopandas.mol2.pandas_mol2.PandasMol2 or biopandas.pdb.pandas_pdb.PandasPdb
+        Content of mol2 or pdb file as BioPandas object.
+        """
+
+        representatives = Representatives()
+        representatives.from_molecule(molecule)
+
+        coordinates = Coordinates()
+        coordinates.from_representatives(representatives)
+
+        physicochemicalproperties = PhysicoChemicalProperties()
+        physicochemicalproperties.from_representatives(representatives)
+
+        subsets = Subsets()
+        subsets.from_representatives(representatives)
+
+        points = Points()
+        points.from_properties(coordinates, physicochemicalproperties)
+        points.from_subsets(subsets)
+
+        self.from_points(points)
+        self.from_subset_points(points)
+
+    def from_points(self, points):
         """
         Get the encoding of a molecule for different types of representatives, physicochemical properties, and encoding
         methods.
@@ -886,8 +1208,6 @@ class Shapes:
             and 'moments' (the first three moments for the distance distribution).
         """
 
-        self.data = {}
-
         # Flatten nested dictionary
         points_flat = flatten(points.data, reducer='path')
 
@@ -897,10 +1217,12 @@ class Shapes:
         # Unflatten dictionary back to nested dictionary
         self.data = unflatten(self.data, splitter='path')
 
-        return self.data
+        return self.data   # Return not necessary here, keep for clarity.
 
-    def get_shapes_pseudocenter_subsets(self, points):
+    def from_subset_points(self, points):
         """
+        Get the encoding of a subset molecule for different types of representatives, physicochemical properties, and encoding
+        methods.
 
         Parameters
         ----------
@@ -914,26 +1236,24 @@ class Shapes:
             of dictionaries (encoding method, e.g. '3Dusr') of dictionaries (subsets types, e.g. 'HBA') of dictionaries
             containing DataFrames for the encoding: 'ref_points' (the reference points), 'distances' (the distances from
             reference points to representatives), and 'moments' (the first three moments for the distance distribution).
-
         """
-
-        self.data_pseudocenter_subsets = {}
 
         # Flatten nested dictionary
         points_flat = flatten(points.data_pseudocenter_subsets, reducer='path')
 
         for k, v in points_flat.items():
-            self.data_pseudocenter_subsets[k] = self._get_shape_by_method(v)
+            self.data_pseudocenter_subsets[k] = self._get_shape_by_method(v, k)
 
         # Change key order of (flattened) nested dictionary (reverse subset type and encoding type)
-        self.data_pseudocenter_subsets = self._reorder_subset_keys()
+        # Example: 'pc/z123/H/6Dratar1/moments' is changed to 'pc/z123/6Dratar1/H/moments'.
+        self.data_pseudocenter_subsets = self._reorder_nested_dict_keys(self.data_pseudocenter_subsets, [0, 1, 3, 2, 4])
 
         # Unflatten dictionary back to nested dictionary
         self.data_pseudocenter_subsets = unflatten(self.data_pseudocenter_subsets, splitter='path')
 
-        return self.data_pseudocenter_subsets
+        return self.data_pseudocenter_subsets   # Return not necessary here, keep for clarity.
 
-    def _get_shape_by_method(self, points_df):
+    def _get_shape_by_method(self, points_df, points_key=None):
         """
         Apply encoding method on points depending on points dimensions and return encoding.
 
@@ -941,6 +1261,9 @@ class Shapes:
         ----------
         points_df : pandas.DataFrame
             DataFrame containing points which can have different dimensions.
+        points_key : str
+            String describing the type of representatives, physicochemical properties, and subsets that the points are
+            based on.
 
         Returns
         -------
@@ -960,28 +1283,32 @@ class Shapes:
         elif n_dimensions == 4 and n_points > 4:
             return {'4Delectroshape': self._calc_shape_4dim_electroshape(points_df)}
         elif n_dimensions == 6 and n_points > 6:
-            return {'6Dratar1': self._calc_shape_6dim(points_df)}
+            return {'6Dratar1': self._calc_shape_6dim_ratar1(points_df)}
         elif n_dimensions < 3:
-            logger.error(f'Unexpected points dimension: {points_df.shape[1]}. Not implemented.',
-                         extra={'molecule_id': self.molecule_id})
-            return None
+            logger.warning(f'{points_key}: Unexpected points dimension: {points_df.shape[1]}. Not implemented.')
+            return {'encoding_failed': {'dist': None, 'ref_points': None, 'moments': None}}
+            # raise ValueError(f'Unexpected points dimension: {points_df.shape[1]}. Not implemented.')
         elif n_dimensions == 3 and n_points <= 3:
-            logger.error(f'Number of points in 3D must be at least 4. Number of input points: {points_df.shape[0]}.',
-                         extra={'molecule_id': self.molecule_id})
-            return {'3Dusr': {'ref_points': None, 'dist': None, 'moments': None},
-                    '3Dcsr': {'ref_points': None, 'dist': None, 'moments': None}}
+            logger.warning(f'{points_key}: Number of points in 3D must be at least 4. Number of input points: '
+                           f'{points_df.shape[0]}.')
+            return {'encoding_failed': {'dist': None, 'ref_points': None, 'moments': None}}
+            # raise ValueError(f'Number of points in 3D must be at least 4. Number of input points:
+            # {points_df.shape[0]}.')
         elif n_dimensions == 4 and n_points <= 4:
-            logger.error(f'Number of points in 4D must be at least 5. Number of input points: {points_df.shape[0]}.',
-                         extra={'molecule_id': self.molecule_id})
-            return {'4Delectroshape': {'ref_points': None, 'dist': None, 'moments': None}}
+            logger.warning(f'{points_key}: Number of points in 4D must be at least 5. Number of input points: '
+                           f'{points_df.shape[0]}.')
+            return {'encoding_failed': {'dist': None, 'ref_points': None, 'moments': None}}
+            # raise ValueError(f'Number of points in 4D must be at least 5. Number of input points:
+            # {points_df.shape[0]}.')
         elif n_dimensions == 6 and n_points <= 6:
-            logger.error(f'Number of points in 6D must be at least 7. Number of input points: {points_df.shape[0]}.',
-                         extra={'molecule_id': self.molecule_id})
-            return {'6Dratar1': {'ref_points': None, 'dist': None, 'moments': None}}
-        elif n_dimensions > 7:
-            logger.error(f'Unexpected points dimension: {points_df.shape[1]}. Not implemented.',
-                         extra={'molecule_id': self.molecule_id})
-            return None
+            logger.warning(f'{points_key}: Number of points in 6D must be at least 7. Number of input points: '
+                           f'{points_df.shape[0]}.')
+            return {'encoding_failed': {'dist': None, 'ref_points': None, 'moments': None}}
+            # raise ValueError(f'Number of points in 6D must be at least 7. Number of input points:
+            # {points_df.shape[0]}.')
+        elif n_dimensions > 6:
+            logger.warning(f'{points_key}: Unexpected points dimension: {points_df.shape[1]}. Not implemented.')
+            # raise ValueError(f'Unexpected points dimension: {points_df.shape[1]}. Not implemented.')
 
     def _calc_shape_3dim_usr(self, points):
         """
@@ -1000,10 +1327,10 @@ class Shapes:
         Notes
         -----
         1. Calculate reference points for a set of points:
-           - c1, centroid
-           - c2, closest atom to c1
-           - c3, farthest atom to c1
-           - c4, farthest atom to c3
+           - ref1, centroid
+           - ref2, closest atom to ref1
+           - ref3, farthest atom to ref1
+           - ref4, farthest atom to ref3
         2. Calculate distances (distance distribution) from reference points to all other points.
         3. Calculate first, second, and third moment for each distance distribution.
 
@@ -1014,31 +1341,33 @@ class Shapes:
         """
 
         if points.shape[1] != 3:
-            sys.exit(f'Error: Dimension of input (points) is not {points.shape[1]} as requested.')
+            raise ValueError(f'Dimension of input (points) must be 3 but is {points.shape[1]}.')
+        if points.shape[0] < 4:
+            raise ValueError(f'Number of points must be at least 4 but is {points.shape[0]}.')
 
         # Get centroid of input coordinates
-        c1 = points.mean(axis=0)
+        ref1 = points.mean(axis=0)
 
-        # Get distances from c1 to all other points
-        dist_c1 = self._calc_distances_to_point(points, c1)
+        # Get distances from ref1 to all other points
+        dist_ref1 = self._calc_distances_to_point(points, ref1)
 
-        # Get closest and farthest atom to centroid c1
-        c2, c3 = points.loc[dist_c1.idxmin()], points.loc[dist_c1.idxmax()]
+        # Get closest and farthest atom to ref1
+        ref2, ref3 = points.loc[dist_ref1.idxmin()], points.loc[dist_ref1.idxmax()]
 
-        # Get distances from c2 to all other points, get distances from c3 to all other points
-        dist_c2 = self._calc_distances_to_point(points, c2)
-        dist_c3 = self._calc_distances_to_point(points, c3)
+        # Get distances from ref2 to all other points, get distances from ref3 to all other points
+        dist_ref2 = self._calc_distances_to_point(points, ref2)
+        dist_ref3 = self._calc_distances_to_point(points, ref3)
 
-        # Get farthest atom to farthest atom to centroid c3
-        c4 = points.loc[dist_c3.idxmax()]
+        # Get farthest atom to ref3
+        ref4 = points.loc[dist_ref3.idxmax()]
 
-        # Get distances from c4 to all other points
-        dist_c4 = self._calc_distances_to_point(points, c4)
+        # Get distances from ref4 to all other points
+        dist_ref4 = self._calc_distances_to_point(points, ref4)
 
-        c = [c1, c2, c3, c4]
-        dist = [dist_c1, dist_c2, dist_c3, dist_c4]
+        reference_points = [ref1, ref2, ref3, ref4]
+        distances = [dist_ref1, dist_ref2, dist_ref3, dist_ref4]
 
-        return self._get_shape_dict(c, dist)
+        return self._get_shape_dict(reference_points, distances)
 
     def _calc_shape_3dim_csr(self, points):
         """
@@ -1057,10 +1386,10 @@ class Shapes:
         Notes
         -----
         1. Calculate reference points for a set of points:
-           - c1, centroid
-           - c2, farthest atom to c1
-           - c3, farthest atom to c2
-           - c4, cross product of two vectors spanning c1, c2, and c3
+           - ref1, centroid
+           - ref2, farthest atom to ref1
+           - ref3, farthest atom to ref2
+           - ref4, cross product of two vectors spanning ref1, ref2, and ref3
         2. Calculate distances (distance distribution) from reference points to all other points.
         3. Calculate first, second, and third moment for each distance distribution.
 
@@ -1070,39 +1399,32 @@ class Shapes:
         """
 
         if points.shape[1] != 3:
-            sys.exit(f'Error: Dimension of input (points) is not {points.shape[1]} as requested.')
+            raise ValueError(f'Dimension of input (points) must be 3 but is {points.shape[1]}.')
+        if points.shape[0] < 4:
+            raise ValueError(f'Number of points must be at least 4 but is {points.shape[0]}.')
 
-        # Get centroid of input coordinates, and distances from c1 to all other points
-        c1 = points.mean(axis=0)
-        dist_c1 = self._calc_distances_to_point(points, c1)
+        # Get centroid of input coordinates, and distances from ref1 to all other points
+        ref1 = points.mean(axis=0)
+        dist_ref1 = self._calc_distances_to_point(points, ref1)
 
-        # Get farthest atom to centroid c1, and distances from c2 to all other points
-        c2 = points.loc[dist_c1.idxmax()]
-        dist_c2 = self._calc_distances_to_point(points, c2)
+        # Get farthest atom to ref1, and distances from ref2 to all other points
+        ref2 = points.loc[dist_ref1.idxmax()]
+        dist_ref2 = self._calc_distances_to_point(points, ref2)
 
-        # Get farthest atom to farthest atom to centroid c2, and distances from c3 to all other points
-        c3 = points.loc[dist_c2.idxmax()]
-        dist_c3 = self._calc_distances_to_point(points, c3)
+        # Get farthest atom to ref2, and distances from ref3 to all other points
+        ref3 = points.loc[dist_ref2.idxmax()]
+        dist_ref3 = self._calc_distances_to_point(points, ref3)
 
         # Get forth reference point, including chirality information
-        # Define two vectors spanning c1, c2, and c3 (from c1)
-        a = c2 - c1
-        b = c3 - c1
+        ref4 = self._calc_scaled_3d_cross_product(ref1, ref2, ref3, 'half_norm_a')
 
-        # Calculate cross product of a and b (keep same units and normalise vector to have half the norm of vector a)
-        cross = np.cross(a, b)  # Cross product
-        cross_norm = np.sqrt(sum(cross ** 2))  # Norm of cross product
-        cross_unit = cross / cross_norm  # Cross unit vector
-        a_norm = np.sqrt(sum(a ** 2))  # Norm of vector a
-        c4 = pd.Series(a_norm / 2 * cross_unit, index=['x', 'y', 'z'])
+        # Get distances from ref4 to all other points
+        dist_ref4 = self._calc_distances_to_point(points, ref4)
 
-        # Get distances from c4 to all other points
-        dist_c4 = self._calc_distances_to_point(points, c4)
+        reference_points = [ref1, ref2, ref3, ref4]
+        distances = [dist_ref1, dist_ref2, dist_ref3, dist_ref4]
 
-        c = [c1, c2, c3, c4]
-        dist = [dist_c1, dist_c2, dist_c3, dist_c4]
-
-        return self._get_shape_dict(c, dist)
+        return self._get_shape_dict(reference_points, distances)
 
     def _calc_shape_4dim_electroshape(self, points, scaling_factor=1):
         """
@@ -1123,10 +1445,11 @@ class Shapes:
         Notes
         -----
         1. Calculate reference points for a set of points:
-           - c1, centroid
-           - c2, farthest atom to c1
-           - c3, farthest atom to c2
-           - c4 and c5, cross product of 2 vectors spanning c1, c2, and c3 with positive/negative sign in 4th dimension
+           - ref1, centroid
+           - ref2, farthest atom to ref1
+           - ref3, farthest atom to ref2
+           - ref4 and ref5, cross product of 2 vectors spanning ref1, ref2, and ref3; 4th dimensions set to maximum and
+             minimum value in 4th dimension of input points
         2. Calculate distances (distance distribution) from reference points to all other points.
         3. Calculate first, second, and third moment for each distance distribution.
 
@@ -1137,58 +1460,42 @@ class Shapes:
         """
 
         if points.shape[1] != 4:
-            sys.exit(f'Error: Dimension of input (points) is not {points.shape[1]} as requested.')
+            raise ValueError(f'Dimension of input (points) must be 4 but is {points.shape[1]}.')
+        if points.shape[0] < 5:
+            raise ValueError(f'Number of points must be at least 5 but is {points.shape[0]}.')
 
-        # Get centroid of input coordinates (in 4 dimensions), and distances from c1 to all other points
-        c1 = points.mean(axis=0)
-        dist_c1 = self._calc_distances_to_point(points, c1)
+        # Get centroid of input coordinates (in 4 dimensions), and distances from ref1 to all other points
+        ref1 = points.mean(axis=0)
+        dist_ref1 = self._calc_distances_to_point(points, ref1)
 
-        # Get farthest atom to centroid c1 (in 4 dimensions), and distances from c2 to all other points
-        c2 = points.loc[dist_c1.idxmax()]
-        dist_c2 = self._calc_distances_to_point(points, c2)
+        # Get farthest atom to ref1 (in 4 dimensions), and distances from ref2 to all other points
+        ref2 = points.loc[dist_ref1.idxmax()]
+        dist_ref2 = self._calc_distances_to_point(points, ref2)
 
-        # Get farthest atom to farthest atom to centroid c2 (in 4 dimensions), and distances from c3 to all other points
-        c3 = points.loc[dist_c2.idxmax()]
-        dist_c3 = self._calc_distances_to_point(points, c3)
+        # Get farthest atom to ref2 (in 4 dimensions), and distances from ref3 to all other points
+        ref3 = points.loc[dist_ref2.idxmax()]
+        dist_ref3 = self._calc_distances_to_point(points, ref3)
 
         # Get forth and fifth reference point:
-        # 1. Define two vectors spanning c1, c2, and c3 (from c1)
-        a = c2 - c1
-        b = c3 - c1
+        # a) Get first three dimensions
+        c_s = self._calc_scaled_3d_cross_product(ref1, ref2, ref3, 'half_norm_a')
 
-        # 2. Get only spatial part of a and b
-        a_s = a[0:3]
-        b_s = b[0:3]
-
-        # 3. Calculate cross product of a_s and b_s
-        # (keep same units and normalise vector to have half the norm of vector a)
-        cross = np.cross(a_s, b_s)
-        c_s = pd.Series(np.sqrt(sum(a ** 2)) / 2 * cross / (np.sqrt(sum(cross ** 2))), index=['x', 'y', 'z'])
-
-        # 4. Add c to c1 to define the spatial components of the forth and fifth reference points
-
-        # Add 4th dimension
-        name_4thdim = points.columns[3]
-        c = c_s.append(pd.Series([0], index=[name_4thdim]))
-        c1_s = c1[0:3].append(pd.Series([0], index=[name_4thdim]))
-
-        # Get values for 4th dimension (min and max of 4th dimension)
+        # b) Add forth dimension with maximum and minmum of points' 4th dimension
         max_value_4thdim = max(points.iloc[:, [3]].values)[0]
         min_value_4thdim = min(points.iloc[:, [3]].values)[0]
+        ref4 = c_s.append(pd.Series([scaling_factor * max_value_4thdim], index=[points.columns[3]]))
+        ref5 = c_s.append(pd.Series([scaling_factor * min_value_4thdim], index=[points.columns[3]]))
 
-        c4 = c1_s + c + pd.Series([0, 0, 0, scaling_factor * max_value_4thdim], index=['x', 'y', 'z', name_4thdim])
-        c5 = c1_s + c + pd.Series([0, 0, 0, scaling_factor * min_value_4thdim], index=['x', 'y', 'z', name_4thdim])
+        # Get distances from ref4 and ref5 to all other points
+        dist_ref4 = self._calc_distances_to_point(points, ref4)
+        dist_ref5 = self._calc_distances_to_point(points, ref5)
 
-        # Get distances from c4 and c5 to all other points
-        dist_c4 = self._calc_distances_to_point(points, c4)
-        dist_c5 = self._calc_distances_to_point(points, c5)
+        reference_points = [ref1, ref2, ref3, ref4, ref5]
+        distances = [dist_ref1, dist_ref2, dist_ref3, dist_ref4, dist_ref5]
 
-        c = [c1, c2, c3, c4, c5]
-        dist = [dist_c1, dist_c2, dist_c3, dist_c4, dist_c5]
+        return self._get_shape_dict(reference_points, distances)
 
-        return self._get_shape_dict(c, dist)
-
-    def _calc_shape_6dim(self, points, scaling_factor=1):
+    def _calc_shape_6dim_ratar1(self, points, scaling_factor=1):
         """
         Encode binding site in 6D.
 
@@ -1205,68 +1512,74 @@ class Shapes:
         Notes
         -----
         1. Calculate reference points for a set of points:
-           - c1, centroid
-           - c2, closest atom to c1
-           - c3, farthest atom to c1
-           - c4, farthest atom to c3
-           - c5, nearest atom to translated and scaled cross product of two vectors spanning c1, c2, and c3
-           - c6, nearest atom to translated and scaled cross product of two vectors spanning c1, c3, and c4
-           - c7, nearest atom to translated and scaled cross product of two vectors spanning c1, c4, and c2
+           - ref1, centroid
+           - ref2, closest atom to ref1
+           - ref3, farthest atom to ref1
+           - ref4, farthest atom to ref3
+           - ref5, nearest atom to translated and scaled cross product of two vectors spanning ref1, ref2, and ref3
+           - ref6, nearest atom to translated and scaled cross product of two vectors spanning ref1, ref3, and ref4
+           - ref7, nearest atom to translated and scaled cross product of two vectors spanning ref1, ref4, and ref2
         2. Calculate distances (distance distribution) from reference points to all other points.
         3. Calculate first, second, and third moment for each distance distribution.
         """
 
         if points.shape[1] != 6:
-            sys.exit(f'Error: Dimension of input (points) is not {points.shape[1]} as requested.')
+            raise ValueError(f'Dimension of input (points) must be 6 but is {points.shape[1]}.')
+        if points.shape[0] < 7:
+            raise ValueError(f'Number of points must be at least 7 but is {points.shape[0]}.')
 
-        # Get centroid of input coordinates (in 7 dimensions), and distances from c1 to all other points
-        c1 = points.mean(axis=0)
-        dist_c1 = self._calc_distances_to_point(points, c1)
+        # Get centroid of input coordinates (in 6 dimensions), and distances from ref1 to all other points
+        ref1 = points.mean(axis=0)
+        dist_ref1 = self._calc_distances_to_point(points, ref1)
 
-        # Get closest and farthest atom to centroid c1 (in 7 dimensions),
-        # and distances from c2 and c3 to all other points
-        c2, c3 = points.loc[dist_c1.idxmin()], points.loc[dist_c1.idxmax()]
-        dist_c2 = self._calc_distances_to_point(points, c2)
-        dist_c3 = self._calc_distances_to_point(points, c3)
+        # Get closest and farthest atom to centroid ref1 (in 6 dimensions),
+        # and distances from ref2 and ref3 to all other points
+        ref2, ref3 = points.loc[dist_ref1.idxmin()], points.loc[dist_ref1.idxmax()]
+        dist_ref2 = self._calc_distances_to_point(points, ref2)
+        dist_ref3 = self._calc_distances_to_point(points, ref3)
 
-        # Get farthest atom to farthest atom to centroid c2 (in 7 dimensions),
-        # and distances from c3 to all other points
-        c4 = points.loc[dist_c3.idxmax()]
-        dist_c4 = self._calc_distances_to_point(points, c4)
+        # Get farthest atom to farthest atom to centroid ref2 (in 6 dimensions),
+        # and distances from ref3 to all other points
+        ref4 = points.loc[dist_ref3.idxmax()]
+        dist_ref4 = self._calc_distances_to_point(points, ref4)
 
-        # Get adjusted cross product
-        c5_3d = self._calc_adjusted_3d_cross_product(c1, c2, c3)  # FIXME order of importance, right?
-        c6_3d = self._calc_adjusted_3d_cross_product(c1, c3, c4)
-        c7_3d = self._calc_adjusted_3d_cross_product(c1, c4, c2)
+        # Get scaled cross product
+        ref5_3d = self._calc_scaled_3d_cross_product(ref1, ref2, ref3, 'mean_norm')  # FIXME order of importance, right?
+        ref6_3d = self._calc_scaled_3d_cross_product(ref1, ref3, ref4, 'mean_norm')
+        ref7_3d = self._calc_scaled_3d_cross_product(ref1, ref4, ref2, 'mean_norm')
 
-        # Get remaining reference points as nearest atoms to adjusted cross products
-        c5 = self._calc_nearest_point(c5_3d, points, scaling_factor)
-        c6 = self._calc_nearest_point(c6_3d, points, scaling_factor)
-        c7 = self._calc_nearest_point(c7_3d, points, scaling_factor)
+        # Get remaining reference points as nearest atoms to scaled cross products
+        ref5 = self._calc_nearest_point(ref5_3d, points, scaling_factor)
+        ref6 = self._calc_nearest_point(ref6_3d, points, scaling_factor)
+        ref7 = self._calc_nearest_point(ref7_3d, points, scaling_factor)
 
-        # Get distances from c5, c6, and c7 to all other points
-        dist_c5 = self._calc_distances_to_point(points, c5)
-        dist_c6 = self._calc_distances_to_point(points, c6)
-        dist_c7 = self._calc_distances_to_point(points, c7)
+        # Get distances from ref5, ref6, and ref7 to all other points
+        dist_ref5 = self._calc_distances_to_point(points, ref5)
+        dist_ref6 = self._calc_distances_to_point(points, ref6)
+        dist_ref7 = self._calc_distances_to_point(points, ref7)
 
-        c = [c1, c2, c3, c4, c5, c6, c7]
-        dist = [dist_c1, dist_c2, dist_c3, dist_c4, dist_c5, dist_c6, dist_c7]
+        reference_points = [ref1, ref2, ref3, ref4, ref5, ref6, ref7]
+        distances = [dist_ref1, dist_ref2, dist_ref3, dist_ref4, dist_ref5, dist_ref6, dist_ref7]
 
-        return self._get_shape_dict(c, dist)
+        return self._get_shape_dict(reference_points, distances)
 
     @staticmethod
-    def _calc_adjusted_3d_cross_product(coord_origin, coord_point_a, coord_point_b):
+    def _calc_scaled_3d_cross_product(point_origin, point_a, point_b, scaled_by):
         """
         Calculates a translated and scaled 3D cross product vector based on three input vectors.
 
         Parameters
         ----------
-        coord_origin : pandas.Series
+        point_origin : pandas.Series
             Point with a least N dimensions (N > 2).
-        coord_point_a : pandas.Series
-            Point with a least N dimensions (N > 2)
-        coord_point_b : pandas.Series
-            Point with a least N dimensions (N > 2)
+        point_a : pandas.Series
+            Point with a least N dimensions (N > 2).
+        point_b : pandas.Series
+            Point with a least N dimensions (N > 2).
+        scaled_by : str
+            Method to scale the cross product vector:
+            - 'half_norm_a': scaled by half the norm of point_a (including all dimensions)
+            - 'mean_norm': scaled by the mean norm of point_a and point_b (including first 3 dimensions)
 
         Returns
         -------
@@ -1283,46 +1596,47 @@ class Shapes:
         3. Get nearest point in points (in 3D) and return its 6D vector.
         """
 
-        if not coord_origin.size == coord_point_a.size == coord_point_b.size:
-            sys.exit('Error: The three input pandas.Series are not of same length.')
-        if not coord_origin.size > 2:
-            sys.exit('Error: The three input pandas.Series are not at least of length 3.')
+        if len({point_origin.size, point_a.size, point_b.size}) > 1:
+            raise ValueError(f'The three input pandas.Series are not of same length: '
+                             f'{[point_origin.size, point_a.size, point_b.size]}')
+        if point_origin.size < 3:
+            raise ValueError('The three input pandas.Series are not at least of length 3.')
 
         # Span vectors to point a and b from origin point
-        a = coord_point_a - coord_origin
-        b = coord_point_b - coord_origin
-
-        # Get only first three dimensions
-        a_3d = a[0:3]
-        b_3d = b[0:3]
-
-        # Calculate norm of vectors and their mean norm
-        a_3d_norm = np.sqrt(sum(a_3d ** 2))
-        b_3d_norm = np.sqrt(sum(b_3d ** 2))
-        ab_3d_norm = (a_3d_norm + b_3d_norm) / 2
+        a = point_a - point_origin
+        b = point_b - point_origin
 
         # Calculate cross product
-        cross = np.cross(a_3d, b_3d)
+        cross = np.cross(a[0:3], b[0:3])
 
         # Calculate norm of cross product
-        cross_norm = np.sqrt(sum(cross ** 2))
+        cross_norm = np.linalg.norm(cross)
+        if cross_norm == 0:
+            raise ValueError(f'Cross product is zero, thus vectors are linear dependent.')
 
         # Calculate unit vector of cross product
         cross_unit = cross / cross_norm
 
-        # Adjust cross product to length of the mean of both vectors described by the cross product
-        cross_adjusted = ab_3d_norm * cross_unit
+        # Calculate value to scale cross product vector
+        scaled_by_list = 'half_norm_a mean_norm'.split()
 
-        # Cast adjusted cross product to Series
-        coord_cross = pd.Series(cross_adjusted, index=a_3d.index)
+        if scaled_by == scaled_by_list[0]:
+            # Calculate half the norm of first vector (including all dimensions)
+            scaled_scalar = np.linalg.norm(a) / 2
 
-        # Move adjusted cross product so that it originates from origin point
-        c_3d = coord_origin[0:3] + coord_cross
+        elif scaled_by == scaled_by_list[1]:
+            # Calculate mean of both vector norms (including first 3 dimensions)
+            scaled_scalar = (np.linalg.norm(a[0:3]) + np.linalg.norm(b[0:3])) / 2
+        else:
+            raise ValueError(f'Scaling method unknown: {scaled_by}. Use: {", ".join(scaled_by_list)}')
+
+        # Scale cross product to length of the mean of both vectors described by the cross product
+        cross_scaled = cross_unit * scaled_scalar
+
+        # Move scaled cross product so that it originates from origin point
+        c_3d = point_origin[0:3] + pd.Series(cross_scaled, index=point_origin[0:3].index)
 
         return c_3d
-
-    def _calc_adjusted_6d_cross_product(self):
-        pass
 
     def _get_shape_dict(self, ref_points, dist):
         """
@@ -1341,13 +1655,15 @@ class Shapes:
             Reference points, distance distributions, and moments.
         """
 
-        # Store reference points as data frame
-        ref_points = pd.concat(ref_points, axis=1).transpose()
-        ref_points.index = ['c' + str(i) for i in range(1, len(ref_points.index) + 1)]
+        # TODO include test for linear independence / degeneracy of reference points
 
-        # Store distance distributions as data frame
+        # Store reference points as DataFrame
+        ref_points = pd.concat(ref_points, axis=1).transpose()
+        ref_points.index = [f'ref{i+1}' for i, j in enumerate(ref_points.index)]
+
+        # Store distance distributions as DataFrame
         dist = pd.concat(dist, axis=1)
-        dist.columns = ['dist_c' + str(i) for i in range(1, len(dist.columns) + 1)]
+        dist.columns = [f'dist_ref{i+1}' for i, j in enumerate(dist.columns)]
 
         # Get first, second, and third moment for each distance distribution
         moments = self._calc_moments(dist)
@@ -1374,7 +1690,7 @@ class Shapes:
         pandas.Series
             Distances from reference point to representatives.
         """
-        # TODO use here np.linalg.norm?
+
         distances = np.sqrt(((points - ref_point) ** 2).sum(axis=1))
 
         return distances
@@ -1397,9 +1713,9 @@ class Shapes:
         """
 
         if not point.size == 3:
-            sys.exit('Error: Input point is not of length 3.')
+            raise ValueError(f'Input point has {point.size} dimensions. Must have 3 dimensions.')
         if not points.shape[1] > 2:
-            sys.exit('Error: Input points are not of at least length 3.')
+            raise ValueError(f'Input points have {points.size} dimensions. Must have at least 3 dimensions.')
 
         # Get distances (in space, i.e. 3D) to all points
         dist_c_3d = self._calc_distances_to_point(points.iloc[:, 0:3], point)
@@ -1421,32 +1737,35 @@ class Shapes:
 
         Parameters
         ----------
-        dist : pandas.Series
+        dist : pandas.DataFrame
             Distance distribution, i.e. distances from reference point to all representatives (points)
 
         Returns
         -------
-        pandas.Series
+        pandas.DataFrame
             First, second, and third moment of distance distribution.
         """
 
         # Get first, second, and third moment (mean, standard deviation, and skewness) for a distance distribution
+        # Second and third moment: delta degrees of freedom = 0 (divisor N)
         if len(dist) > 0:
             m1 = dist.mean()
-            m2 = dist.std()
-            m3 = pd.Series(cbrt(skew(dist.values, axis=0)), index=dist.columns.tolist())
+            m2 = dist.std(ddof=0)
+            m3 = pd.Series(cbrt(moment(dist, moment=3)), index=dist.columns.tolist())
         else:
             # In case there is only one data point.
             # However, this should not be possible due to restrictions in get_shape function.
+            logger.info(f'Only one data point available for moment calculation, thus write None to moments.')
             m1, m2, m3 = None, None, None
 
-        # Store all moments in data frame
+        # Store all moments in DataFrame
         moments = pd.concat([m1, m2, m3], axis=1)
         moments.columns = ['m1', 'm2', 'm3']
 
         return moments
 
-    def _reorder_subset_keys(self):
+    @staticmethod
+    def _reorder_nested_dict_keys(nested_dict, key_order):
         """
         Change the key order of the nested dictionary data_pseudocenter_subsets (Shapes attribute).
         Example: 'pc/z123/H/6Dratar1/moments' is changed to 'pc/z123/6Dratar1/H/moments'.
@@ -1457,21 +1776,26 @@ class Shapes:
             Dictionary of DataFrames.
         """
 
-        self.data_pseudocenter_subsets = flatten(self.data_pseudocenter_subsets, reducer='path')
+        flat_dict = flatten(nested_dict, reducer='path')
 
-        keys_old = self.data_pseudocenter_subsets.keys()
+        keys_old = flat_dict.keys()
+
+        if len(set([len(i.split('/')) for i in keys_old])) > 1:
+            raise KeyError(f'Flattened keys are nested differently: {[len(i.split("/")) for i in keys_old]}')
+        elif [len(i.split('/')) for i in keys_old][0] != len(key_order):
+            raise ValueError(f'Key order length ({len(key_order)}) does not match nested levels in dictionary ({len(keys_old)}).')
+
         keys_new = [i.split('/') for i in keys_old]
-        key_order = [0, 1, 3, 2, 4]
         keys_new = [[i[j] for j in key_order] for i in keys_new]
         keys_new = ['/'.join(i) for i in keys_new]
 
         for key_old, key_new in zip(keys_old, keys_new):
-            self.data_pseudocenter_subsets[key_new] = self.data_pseudocenter_subsets.pop(key_old)
+            flat_dict[key_new] = flat_dict.pop(key_old)
 
-        return self.data_pseudocenter_subsets
+        return flat_dict
 
 
-def process_encoding(input_mol_path, output_dir):
+def process_encoding(molecule_path, output_dir, remove_solvent=False):
     """
     Process a list of molecule structure files (retrieved by an input path to one or multiple files) and
     save per binding site multiple output files to an output directory.
@@ -1495,61 +1819,65 @@ def process_encoding(input_mol_path, output_dir):
 
     Parameters
     ----------
-    input_mol_path : str
+    molecule_path : str
         Path to molecule structure file(s), can include a wildcard to match multiple files.
     output_dir : str
         Output directory.
+    remove_solvent : bool
+        Solvent atoms are removed when set to True (default: False).
+
+    Examples
+    --------
+    >>> from ratar.encoding import process_encoding
+    >>> molecule_path = Path(__name__).parent / 'ratar' / 'tests' / 'data' / 'AAK1_4wsq_altA_chainA.mol2'
+    >>> output_dir = Path(__name__).parent / 'ratar' / 'tests' / 'data' / 'tmp'
+    >>> process_encoding(molecule_path, output_dir)
     """
 
     # Get all molecule structure files
-    input_mol_path_list = glob.glob(input_mol_path)
-    input_mol_path_list = input_mol_path_list
+    molecule_path_list = glob.glob(str(molecule_path))  # Path.glob(<pattern>) not as convenient, glob.glob needs str
 
-    if len(input_mol_path_list) == 0:
-        logger.info(f'Input path matches no molecule files: {input_mol_path}', extra={'molecule_id': 'all'})
+    if len(molecule_path_list) == 0:
+        logger.info(f'Input path matches no molecule files: {molecule_path}', extra={'molecule_id': 'all'})
     else:
-        logger.info(f'Input path matches {len(input_mol_path_list)} molecule file(s): {input_mol_path}',
+        logger.info(f'Input path matches {len(molecule_path_list)} molecule file(s): {molecule_path}',
                     extra={'molecule_id': 'all'})
 
     # Get number of molecule structure files and set molecule structure counter
-    mol_sum = len(input_mol_path_list)
+    mol_sum = len(molecule_path_list)
 
     # Iterate over all binding sites (molecule structure files)
-    for mol_counter, mol in enumerate(input_mol_path_list, 1):
+    for mol_counter, mol_path in enumerate(molecule_path_list, 1):
 
         # Load binding site from molecule structure file
-        bs_loader = MoleculeLoader(mol)
-        bs_loader.load_molecule(remove_solvent=True)
-        pmols = bs_loader.pmols
+        molecule_loader = MoleculeLoader(mol_path, remove_solvent)
 
-        # Get number of pmol objects and set pmol counter
-        pmol_sum = len(pmols)
+        # Get number of molecule objects and set molecule counter
+        molecule_sum = len(molecule_loader.molecules)
 
         # Iterate over all binding sites in molecule structure file
-        for pmol_counter, pmol in enumerate(pmols, 1):
+        for molecule_counter, molecule in enumerate(molecule_loader.molecules, 1):
+            print(molecule_counter)
 
             # Get iteration progress
-            logger.info(f'Encoding: {mol_counter}/{mol_sum} molecule structure file - {pmol_counter}/{pmol_sum} molecule',
-                        extra={'molecule_id': pmol.code})
+            logger.info(f'Encoding: {mol_counter}/{mol_sum} molecule structure file - '
+                        f'{molecule_counter}/{molecule_sum} molecule',
+                        extra={'molecule_id': molecule.code})
 
             # Process single binding site:
 
             # Create output folder
-            molecule_id_encoding = Path(output_dir) / 'encoding' / pmol.code
-            create_directory(molecule_id_encoding)
-
-            # Get output file paths
-            output_enc_path = molecule_id_encoding / 'ratar_encoding.p'
-            output_cgo_path = molecule_id_encoding / 'ref_points_cgo.py'
+            molecule_id_encoding = Path(output_dir) / 'encoding' / molecule.code
+            molecule_id_encoding.mkdir(parents=True, exist_ok=True)
 
             # Encode binding site
-            binding_site = BindingSite(pmol)
+            binding_site = BindingSite(molecule)
 
             # Save binding site
-            save_binding_site(binding_site, str(output_enc_path))
+            save_binding_site(binding_site, molecule_id_encoding / 'ratar_encoding.p')
 
             # Save binding site reference points as cgo file
-            save_cgo_file(binding_site, str(output_cgo_path))
+            save_cgo_file(binding_site, molecule_id_encoding / 'ref_points_cgo.py')
 
 
 def save_binding_site(binding_site, output_path):
@@ -1562,6 +1890,20 @@ def save_binding_site(binding_site, output_path):
         Encoded binding site.
     output_path : str
         Path to output file.
+
+    Examples
+    --------
+    >>> from ratar.auxiliary import MoleculeLoader
+    >>> from ratar.encoding import BindingSite, save_binding_site
+
+     >>> molecule_path = Path(__name__).parent / 'ratar' / 'tests' / 'data' / 'AAK1_4wsq_altA_chainA.mol2'
+
+    >>> molecule_loader = MoleculeLoader(molecule_path, remove_solvent=True)
+    >>> molecule = molecule_loader.molecules[0]
+
+    >>> binding_site = BindingSite(molecule)
+    >>> save_binding_site(binding_site, Path(__name__).parent / 'ratar' / 'tests' / 'data' / 'tmp' / 'bindingsite.p')
+)
     """
 
     create_directory(Path(output_path).parent)
@@ -1584,6 +1926,19 @@ def save_cgo_file(binding_site, output_path):
     Notes
     -----
     Python script (cgo file) for PyMol.
+
+    Examples
+    --------
+    >>> from ratar.auxiliary import MoleculeLoader
+    >>> from ratar.encoding import BindingSite, save_cgo_file
+
+     >>> molecule_path = Path(__name__).parent / 'ratar' / 'tests' / 'data' / 'AAK1_4wsq_altA_chainA.mol2'
+
+    >>> molecule_loader = MoleculeLoader(molecule_path, remove_solvent=True)
+    >>> molecule = molecule_loader.molecules[0]
+
+    >>> binding_site = BindingSite(molecule)
+    >>> save_cgo_file(binding_site, '/path/to/output/directory')
     """
 
     # Set PyMol sphere colors (for reference points)
@@ -1616,7 +1971,7 @@ def save_cgo_file(binding_site, output_path):
             ref_points = bs_flat[key]
 
             # Set descriptive name for reference points (PDB ID, representatives, dimensions, encoding method)
-            obj_name = f'{key.replace("/", "_").replace("_ref_points", "")}__{binding_site.molecule_id}'
+            obj_name = f'{key.replace("/", "_").replace("_ref_points", "")}__{binding_site.molecule.code}'
             obj_names.append(obj_name)
 
             # Set size for PyMol spheres
@@ -1652,104 +2007,8 @@ def save_cgo_file(binding_site, output_path):
             )
 
     # Group all objects to one group
-    lines.append(f'cmd.group("{binding_site.molecule_id[:4]}_ref_points", "{" ".join(obj_names)}")')
+    lines.append(f'cmd.group("{binding_site.molecule.code[:4]}_ref_points", "{" ".join(obj_names)}")')
 
     with open(output_path, 'w') as f:
         f.write('\n'.join(lines))
 
-
-def get_encoded_binding_site_path(code, output_path):
-    """
-    Get a binding site pickle path based on a path wildcard constructed from
-    - a molecule code (can contain only PDB ID to check for file matches) and
-    - the path to the ratar encoding output directory.
-
-    Constructed wildcard: f'{output_path}/encoding/*{code}*/ratar_encoding.p'
-
-    Parameters
-    ----------
-    code: str
-        Molecule code (is or contains PDB ID).
-    output_path: str
-        Path to output directory containing ratar related files.
-
-    Returns
-    -------
-    str
-        Path to binding site pickle file.
-    """
-
-    # Define wildcard for path to pickle file
-    bs_wildcard = f'{output_path}/encoding/*{code}*/ratar_encoding.p'
-
-    # Retrieve all paths that match the wildcard
-    bs_path = glob.glob(bs_wildcard)
-
-    # If wildcard matches no file, retry.
-    if len(bs_path) == 0:
-        lines = [
-            'Error: Your input path matches no file. Please retry.',
-            'Your input wildcard was the following: ',
-            bs_wildcard
-        ]
-        raise FileNotFoundError('\n'.join(lines))
-
-    # If wildcard matches multiple files, retry.
-    elif len(bs_path) > 1:
-        lines = [
-            'Error: Your input path matches multiple files. Please select one of the following as input string: ',
-            bs_path,
-            'Your input wildcard was the following: ',
-            bs_wildcard
-        ]
-        raise FileNotFoundError('\n'.join(lines))
-
-    # If wildcard matches one file, return file path.
-    else:
-        bs_path = bs_path[0]
-        return bs_path
-
-
-def load_binding_site(output_path):
-    """
-    Load an encoded binding site from a pickle file.
-
-    Parameters
-    ----------
-    output_path : str
-        Path to binding site pickle file.
-
-    Returns
-    -------
-    encoding.BindingSite
-        Encoded binding site.
-    """
-
-    # Retrieve all paths that match the input path
-    bs_path = glob.glob(output_path)
-
-    # If input path matches no file, retry.
-    if len(bs_path) == 0:
-        lines = [
-            'Error: Your input path matches no file. Please retry.',
-            'Your input path was the following: ',
-            bs_path
-        ]
-        raise FileNotFoundError('\n'.join(lines))
-
-    # If input path matches multiple files, retry.
-    elif len(bs_path) > 1:
-        lines = [
-            'Error: Your input path matches multiple files. Please select one of the following as input string: ',
-            bs_path,
-            '\nYour input path was the following: ',
-            output_path
-        ]
-        raise FileNotFoundError('\n'.join(lines))
-
-    # If input path matches one file, load file.
-    else:
-        bs_path = bs_path[0]
-        with open(bs_path, 'rb') as f:
-            binding_site = pickle.load(f)
-        return binding_site

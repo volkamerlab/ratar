@@ -23,8 +23,8 @@ def parse_arguments():
 
     Returns
     -------
-    Tuple of str
-        Input molecule structure file path and output directory.
+    argparse.Namespace
+        Input arguments, i.e. molecule structure file path and output directory.
     """
 
     # Parse arguments
@@ -34,10 +34,8 @@ def parse_arguments():
 
     # Set as variables
     args = parser.parse_args()
-    input_mol_path = args.input_mol_path
-    output_dir = args.output_dir
 
-    return input_mol_path, output_dir
+    return args
 
 
 def main():
@@ -49,17 +47,17 @@ def main():
     encoding_start = datetime.datetime.now()
 
     # Parse arguments
-    input_mol_path, output_dir = parse_arguments()
+    args = parse_arguments()
 
     # Create output folder
-    create_directory(output_dir)
+    create_directory(args.output_dir)
 
     # Create custom logger
-    logging.config.fileConfig('logging.conf', defaults={'logfilename': str(Path(output_dir) / 'ratar.log')})
+    logging.config.fileConfig('logging.conf', defaults={'logfilename': str(Path(args.output_dir) / 'ratar.log')})
 
     # Create handlers
     c_handler = logging.StreamHandler()
-    f_handler = logging.FileHandler(filename=Path(output_dir) / 'ratar.log')
+    f_handler = logging.FileHandler(filename=Path(args.output_dir) / 'ratar.log')
 
     # Get handler
     logger = logging.getLogger(__name__)
@@ -70,12 +68,12 @@ def main():
 
     # Log IO
     logger.info('IO', extra={'molecule_id': 'all'})
-    logger.info(f'Input: {input_mol_path}', extra={'molecule_id': 'all'})
-    logger.info(f'Output: {output_dir}', extra={'molecule_id': 'all'})
+    logger.info(f'Input: {args.input_mol_path}', extra={'molecule_id': 'all'})
+    logger.info(f'Output: {args.output_dir}', extra={'molecule_id': 'all'})
 
     # Process encoding
     logger.info(f'PROCESS ENCODING...', extra={'molecule_id': 'all'})
-    process_encoding(input_mol_path, output_dir)
+    process_encoding(args.input_mol_path, args.output_dir, remove_solvent=True)
 
     # Get end time of encoding step and runtime
     encoding_end = datetime.datetime.now()
