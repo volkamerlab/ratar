@@ -9,19 +9,11 @@ Handles the primary functions for comparing binding sites.
 """
 
 
-########################################################################################
-# Import modules
-########################################################################################
-
 import glob
 import pickle
 
 import pandas as pd
 
-
-########################################################################################
-# Functions
-########################################################################################
 
 def get_similarity(moments_p1, moments_p2, measure):
     """
@@ -132,93 +124,6 @@ def get_similarity_all_against_all(output_path):
                         sim_matrices[desc].at[id2, id1] = round(sim, 5)  # lower matrix triangle
 
     return sim_matrices
-
-
-def get_similarity_pairs(benchmarkset):
-
-    """
-    Calculate the similarity values for binding site pairs described in different benchmarking datasets.
-
-    Parameters
-    ----------
-    benchmarkset : str
-        Benchmarking dataset type.
-
-    Returns
-    -------
-    dict of pandas.DataFrame
-        Dictionary of DataFrames containing a matrix of similarity values (pair ID x similarity measurement)
-
-    Notes
-    -----
-    For a given benchmark dataset, return a dictionary of DataFrames that contains each different similarity measures
-    for pairs of binding sites.
-    """
-
-    benchmarksets = ['fuzcav', 'tough-m1']
-
-    if benchmarkset == benchmarksets[0]:
-
-        # Set path to pairs list
-        sim_pairs_path = '/home/dominique/Documents/data/benchmarking/fuzcav/sim_dis_pairs/similar_pairs.txt'
-        dis_pairs_path = '/home/dominique/Documents/data/benchmarking/fuzcav/sim_dis_pairs/dissimilar_pairs.txt'
-
-        # Get pairs list
-        sim_pairs = pd.read_csv(sim_pairs_path,
-                                delimiter='  ',
-                                names=['struc1', 'struc2'],
-                                engine='python')
-        dis_pairs = pd.read_csv(dis_pairs_path,
-                                delimiter='  ',
-                                names=['struc1', 'struc2'],
-                                engine='python')
-
-        # Set path to structures directory
-        struc_path_template = '/home/dominique/Documents/projects/ratar-data/results/benchmarking/' \
-                              'fuzcav/sim_dis_pairs/encoding/%s_site/ratar_encoding.p'
-
-        similarity = {'sim_pairs': calculate_similarity_pairs(sim_pairs, struc_path_template),
-                      'dis_pairs': calculate_similarity_pairs(dis_pairs, struc_path_template)}
-
-        # Save to file
-        output_path = '/home/dominique/Documents/projects/ratar-data/results/benchmarking/' \
-                      'fuzcav/sim_dis_pairs/similarity/pairs_similarity.p'
-        with open(output_path, 'wb') as f:
-            pickle.dump(similarity, f)
-
-        return similarity
-
-    elif benchmarkset == benchmarksets[1]:
-
-        # Set path to dataset
-        sim_pairs_path = '/home/dominique/Documents/data/benchmarking/TOUGH-M1/TOUGH-M1_positive.list'
-        dis_pairs_path = '/home/dominique/Documents/data/benchmarking/TOUGH-M1/TOUGH-M1_negative.list'
-
-        # Get pairs
-        sim_pairs = pd.read_csv(sim_pairs_path,
-                                delimiter=' ',
-                                names=['struc1', 'struc2', 'seq_sim', 'struc_sim', 'lig_sim'])
-        dis_pairs = pd.read_csv(dis_pairs_path,
-                                delimiter=' ',
-                                names=['struc1', 'struc2', 'seq_sim', 'struc_sim', 'lig_sim'])
-
-        # Set path to structures directory
-        struc_path_template = '/home/dominique/Documents/projects/ratar-data/results/benchmarking/' \
-                              'TOUGH-M1/encoding/%s/ratar_encoding.p'
-
-        similarity = {'sim_pairs': calculate_similarity_pairs(sim_pairs, struc_path_template),
-                      'dis_pairs': calculate_similarity_pairs(dis_pairs, struc_path_template)}
-
-        # Save to file
-        output_path = '/home/dominique/Documents/projects/ratar-data/results/benchmarking/' \
-                      'TOUGH-M1/similarity/pairs_similarity.p'
-        with open(output_path, 'wb') as f:
-            pickle.dump(similarity, f)
-
-        return similarity
-
-    else:
-        return f'Selected benchmarking dataset unknown. Please choose from: {", ".join(benchmarksets)}'
 
 
 def calculate_similarity_pairs(pairs, struc_path_template):
