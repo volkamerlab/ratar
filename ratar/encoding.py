@@ -1538,35 +1538,22 @@ class Shapes:
         if n_dimensions == 3 and n_points > 3:
             return {'3Dusr': self._calc_shape_3dim_usr(points_df),
                     '3Dcsr': self._calc_shape_3dim_csr(points_df)}
+
         elif n_dimensions == 4 and n_points > 4:
             return {'4Delectroshape': self._calc_shape_4dim_electroshape(points_df)}
+
         elif n_dimensions == 6 and n_points > 6:
             return {'6Dratar1': self._calc_shape_6dim_ratar1(points_df)}
-        elif n_dimensions < 3:
-            logger.warning(f'{points_key}: Unexpected points dimension: {points_df.shape[1]}. Not implemented.')
-            return {'encoding_failed': {'dist': None, 'ref_points': None, 'moments': None}}
-            # raise ValueError(f'Unexpected points dimension: {points_df.shape[1]}. Not implemented.')
+
+        elif n_dimensions < 3 or n_dimensions > 6:
+            logger.warning(f'{points_key}: Method not implemented for less than 3 and more than 6 dimensions.'
+                           f'Here {points_df.shape[1]} dimensions.')
             return {'encoding_failed': self._get_shape_nametuple_empty()}
-            logger.warning(f'{points_key}: Number of points in 3D must be at least 4. Number of input points: '
-                           f'{points_df.shape[0]}.')
-            return {'encoding_failed': {'dist': None, 'ref_points': None, 'moments': None}}
-            # raise ValueError(f'Number of points in 3D must be at least 4. Number of input points:
+
+        elif n_points < n_dimensions+1:
+            logger.warning(f'{points_key}: Number of points in N dimensions must be at least N+1. '
+                           f'Here {points_df.shape[1]} dimensions and {points_df.shape[0]} points.')
             return {'encoding_failed': self._get_shape_nametuple_empty()}
-        elif n_dimensions == 4 and n_points <= 4:
-            logger.warning(f'{points_key}: Number of points in 4D must be at least 5. Number of input points: '
-                           f'{points_df.shape[0]}.')
-            return {'encoding_failed': {'dist': None, 'ref_points': None, 'moments': None}}
-            # raise ValueError(f'Number of points in 4D must be at least 5. Number of input points:
-            # {points_df.shape[0]}.')
-        elif n_dimensions == 6 and n_points <= 6:
-            logger.warning(f'{points_key}: Number of points in 6D must be at least 7. Number of input points: '
-                           f'{points_df.shape[0]}.')
-            return {'encoding_failed': {'dist': None, 'ref_points': None, 'moments': None}}
-            # raise ValueError(f'Number of points in 6D must be at least 7. Number of input points:
-            # {points_df.shape[0]}.')
-        elif n_dimensions > 6:
-            logger.warning(f'{points_key}: Unexpected points dimension: {points_df.shape[1]}. Not implemented.')
-            # raise ValueError(f'Unexpected points dimension: {points_df.shape[1]}. Not implemented.')
 
     def _calc_shape_3dim_usr(self, points):
         """
