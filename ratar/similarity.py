@@ -13,21 +13,22 @@ import glob
 import pickle
 
 import pandas as pd
+from scipy.spatial import distance
 
 
-def get_similarity(moments_p1, moments_p2, measure):
+def calculate_similarity(fingerprint1, fingerprint2, measure):
     """
-    Calculate the similarity between two proteins p1 and p2 based on a similarity measure.
+    Calculate the similarity between two fingerprints based on a similarity measure.
 
     Parameters
     ----------
-    moments_p1 : pandas.DataFrame
-        Fingerprint for protein (binding site) p1.
-    moments_p2 : pandas.DataFrame
-        Fingerprint for protein (binding site) p2.
-    measure : int
+    fingerprint1 : 1D array-like or pandas.DataFrame
+        Fingerprint for molecule.
+    fingerprint2 : 1D array-like or pandas.DataFrame
+        Fingerprint for molecule.
+    measure : str
         Similarity measurement method:
-         - 1 (inverse of the translated and scaled Manhattan distance)
+         - modified_manhattan (inverse of the translated and scaled Manhattan distance)
 
     Returns
     -------
@@ -35,12 +36,22 @@ def get_similarity(moments_p1, moments_p2, measure):
         Similarity value.
     """
 
-    # Calculate inverse of the translated and scaled Manhattan distance
-    if measure == 1:
-        return 1 / (1 + 1 / moments_p1.size * abs(moments_p1 - moments_p2).values.sum())
-    # Print message if measure unknown
+    measures = ['modified_manhattan']
+
+    # Convert DataFrame into 1D array
+    if isinstance(fingerprint1, pd.DataFrame):
+        fingerprint1 = fingerprint1.values.flatten()
+    if isinstance(fingerprint2, pd.DataFrame):
+        fingerprint2 = fingerprint2.values.flatten()
+
+    if len(fingerprint1) != len(fingerprint2):
+        raise ValueError(f'Input fingerprints must be of same length.')
+
+    if measure == measures[0]:
+        # Calculate inverse of the translated and scaled Manhattan distance
+        return 1 / (1 + 1 / len(fingerprint1) * distance.cityblock(fingerprint1, fingerprint2))
     else:
-        print('Please choose a similarity measure: 1 (inverse of the translated and scaled Manhattan distance).')
+        raise ValueError(f'Please choose a similarity measure: {", ".join(measures)}')
 
 
 def get_similarity_all_against_all(output_path):
