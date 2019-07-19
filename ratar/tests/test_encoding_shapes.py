@@ -138,17 +138,30 @@ def test_calc_distances_to_point(points, ref_point, distances_to_point_ref):
         )
     )
 ])
-def test_get_shape_dict(ref_points, dist, moments_ref):
+def test_get_shape_nametuple(ref_points, dist, moments_ref):
 
     shapes = Shapes()
-    shape_dict = shapes._get_shape_dict(ref_points, dist)
+    shape = shapes._get_shape_nametuple(ref_points, dist)
 
-    assert all(shape_dict['ref_points'].index == [f'ref{i+1}' for i, j in enumerate(ref_points)])
-    assert all(shape_dict['dist'].columns == [f'dist_ref{i+1}' for i, j in enumerate(dist)])
-    assert all(shape_dict['moments'].index == [f'dist_ref{i+1}' for i, j in enumerate(dist)])
-    assert all(shape_dict['moments'].columns == 'm1 m2 m3'.split())
+    assert all(shape.ref_points.index == [f'ref{i+1}' for i, j in enumerate(ref_points)])
+    assert all(shape.dist.columns == [f'dist_ref{i+1}' for i, j in enumerate(dist)])
+    assert all(shape.moments.index == [f'dist_ref{i+1}' for i, j in enumerate(dist)])
+    assert all(shape.moments.columns == 'm1 m2 m3'.split())
 
-    assert np.isclose(shape_dict['moments'], moments_ref, rtol=1e-04).all(axis=None)
+    assert np.isclose(shape.moments, moments_ref, rtol=1e-04).all(axis=None)
+
+
+@pytest.mark.parametrize('ref_points, dist, moments', [
+    (None, None, None)
+])
+def test_get_shape_nametuple_empty(ref_points, dist, moments):
+
+    shapes = Shapes()
+    shape = shapes._get_shape_nametuple_empty()
+
+    assert shape.ref_points is ref_points
+    assert shape.dist is dist
+    assert shape.moments is moments
 
 
 @pytest.mark.parametrize('coord_origin, coord_point_a, coord_point_b, scaled_by', [
@@ -380,8 +393,8 @@ def test_calc_shape_3dim_usr(points, ref_points):
 
     shape_3dim_usr = shapes._calc_shape_3dim_usr(points)
 
-    assert shape_3dim_usr['ref_points'].shape == ref_points.shape
-    assert np.isclose(shape_3dim_usr['ref_points'], ref_points, rtol=1e-04).all(axis=None)
+    assert shape_3dim_usr.ref_points.shape == ref_points.shape
+    assert np.isclose(shape_3dim_usr.ref_points, ref_points, rtol=1e-04).all(axis=None)
 
 
 @pytest.mark.parametrize('points, ref_points', [
@@ -411,8 +424,8 @@ def test_calc_shape_3dim_csr(points, ref_points):
 
     shape_3dim_usr = shapes._calc_shape_3dim_csr(points)
 
-    assert shape_3dim_usr['ref_points'].shape == ref_points.shape
-    assert np.isclose(shape_3dim_usr['ref_points'], ref_points, rtol=1e-04).all(axis=None)
+    assert shape_3dim_usr.ref_points.shape == ref_points.shape
+    assert np.isclose(shape_3dim_usr.ref_points, ref_points, rtol=1e-04).all(axis=None)
 
 
 @pytest.mark.parametrize('points, ref_points', [
@@ -443,8 +456,8 @@ def test_calc_shape_4dim_electroshape(points, ref_points):
 
     shape_3dim_usr = shapes._calc_shape_4dim_electroshape(points)
 
-    assert shape_3dim_usr['ref_points'].shape == ref_points.shape
-    assert np.isclose(shape_3dim_usr['ref_points'], ref_points, rtol=1e-04).all(axis=None)
+    assert shape_3dim_usr.ref_points.shape == ref_points.shape
+    assert np.isclose(shape_3dim_usr.ref_points, ref_points, rtol=1e-04).all(axis=None)
 
 
 @pytest.mark.parametrize('points, ref_points', [
@@ -477,9 +490,9 @@ def test_calc_shape_6dim_ratar1(points, ref_points):
 
     shape_6dim_ratar1 = shapes._calc_shape_6dim_ratar1(points)
 
-    assert shape_6dim_ratar1['ref_points'].shape == ref_points.shape
+    assert shape_6dim_ratar1.ref_points.shape == ref_points.shape
 
-    for index, row in shape_6dim_ratar1['ref_points'].iterrows():
+    for index, row in shape_6dim_ratar1.ref_points.iterrows():
         assert np.isclose(row, ref_points.loc[index], rtol=1e-04).all(axis=None)
 
 
@@ -520,12 +533,14 @@ def test_calc_shape_6dim_ratar1(points, ref_points):
             ])
     )  # Too many dimensions
 ])
-def ttest_get_shape_by_method_exceptions(points_df):
+def test_get_shape_by_method_exceptions(points_df):
 
     shapes = Shapes()
+    shape = shapes._get_shape_by_method(points_df)
 
-    with pytest.raises(ValueError):
-        shapes._get_shape_by_method(points_df)
+    assert shape['encoding_failed'].ref_points is None
+    assert shape['encoding_failed'].dist is None
+    assert shape['encoding_failed'].moments is None
 
 
 @pytest.mark.parametrize('points_df, shape_keys', [
@@ -601,6 +616,6 @@ def test_from_molecule(filename, keys_ref):
     shapes_flat = flatten(shapes.data, reducer='path')
 
     keys_ref = sorted(keys_ref)
-    keys_calc = sorted(set(['/'.join(i.split('/')[:-1]) for i in shapes_flat.keys()]))
+    keys_calc = sorted(set(['/'.join(i.split('/')) for i in shapes_flat.keys()]))
 
     assert keys_calc == keys_ref

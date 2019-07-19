@@ -8,6 +8,7 @@ Handles the primary functions for encoding one or multiple binding site (s).
 """
 
 
+from collections import namedtuple
 import glob
 import logging
 from pathlib import Path
@@ -1258,16 +1259,23 @@ class Shapes:
     ----------
     molecule_id : str
         Molecule ID (e.g. PDB ID).
-    data : dict of dict of dict of dict of pandas.DataFrames
-        Dictionary (representatives types, e.g. 'pc') of dictionaries (physicochemical properties types, e.g. 'z1')
-        of dictionaries (encoding method, e.g. '3Dusr') of dictionaries containing DataFrames for the encoding:
-        'ref_points' (the reference points), 'distances' (the distances from reference points to representatives),
-        and 'moments' (the first three moments for the distance distribution).
-    data_pseudocenter_subsets : dict of dict of dict of dict of pandas.DataFrames
-        Dictionary (representatives types, e.g. 'pc') of dictionaries (physicochemical properties types, e.g. 'z1')
-        of dictionaries (encoding method, e.g. '3Dusr') of dictionaries (subsets types, e.g. 'HBA') of dictionaries
-        containing DataFrames for the encoding: 'ref_points' (the reference points), 'distances' (the distances from
-        reference points to representatives), and 'moments' (the first three moments for the distance distribution).
+    data : dict of dict of dict of nametuple of pandas.DataFrames
+        Dictionary (representatives types, e.g. 'pc') of
+        - dictionaries (physicochemical properties types, e.g. 'z1') of
+        - dictionaries (encoding method, e.g. '3Dusr') of
+        - namedtuple containing DataFrames for the encoding:
+          - 'ref_points' (the reference points),
+          - 'distances' (the distances from reference points to representatives), and
+          - 'moments' (the first three moments for the distance distribution).
+    data_pseudocenter_subsets : dict of dict of dict of nametuple of pandas.DataFrames
+        Dictionary (representatives types, e.g. 'pc') of
+         - dictionaries (physicochemical properties types, e.g. 'z1') of
+         - dictionaries (encoding method, e.g. '3Dusr') of
+         - dictionaries (subsets types, e.g. 'HBA') of
+         - namedtuple containing DataFrames for the encoding:
+           - 'ref_points' (the reference points),
+           - 'distances' (the distances from reference points to representatives), and
+           - 'moments' (the first three moments for the distance distribution).
 
     Examples
     --------
@@ -1389,8 +1397,12 @@ class Shapes:
             rules = [
                 obj1[0].keys() == obj2[0].keys(),
                 obj1[1].keys() == obj2[1].keys(),
-                all([value.equals(obj2[0][key]) for key, value in obj1[0].items()]),
-                all([value.equals(obj2[1][key]) for key, value in obj1[1].items()])
+                all([value.ref_points.equals(obj2[0][key].ref_points) for key, value in obj1[0].items()]),
+                all([value.ref_points.equals(obj2[1][key].ref_points) for key, value in obj1[1].items()]),
+                all([value.dist.equals(obj2[0][key].dist) for key, value in obj1[0].items()]),
+                all([value.dist.equals(obj2[1][key].dist) for key, value in obj1[1].items()]),
+                all([value.moments.equals(obj2[0][key].moments) for key, value in obj1[0].items()]),
+                all([value.moments.equals(obj2[1][key].moments) for key, value in obj1[1].items()])
             ]
         except KeyError:
             rules = False
@@ -1438,11 +1450,14 @@ class Shapes:
 
         Returns
         -------
-        dict of dict of dict of dict of pandas.DataFrames
-            Dictionary (representatives types, e.g. 'pc') of dictionaries (physicochemical properties types, e.g. 'z1')
-            of dictionaries (encoding method, e.g. '3Dusr') of dictionaries containing DataFrames for the encoding:
-            'ref_points' (the reference points), 'distances' (the distances from reference points to representatives),
-            and 'moments' (the first three moments for the distance distribution).
+        dict of dict of dict of nametuple of pandas.DataFrames
+            Dictionary (representatives types, e.g. 'pc') of
+            - dictionaries (physicochemical properties types, e.g. 'z1') of
+            - dictionaries (encoding method, e.g. '3Dusr') of
+            - namedtuple containing DataFrames for the encoding:
+              - 'ref_points' (the reference points),
+              - 'distances' (the distances from reference points to representatives), and
+              - 'moments' (the first three moments for the distance distribution).
         """
 
         # Flatten nested dictionary
@@ -1468,11 +1483,15 @@ class Shapes:
 
         Returns
         -------
-        dict of dict of dict of dict of pandas.DataFrames
-            Dictionary (representatives types, e.g. 'pc') of dictionaries (physicochemical properties types, e.g. 'z1')
-            of dictionaries (encoding method, e.g. '3Dusr') of dictionaries (subsets types, e.g. 'HBA') of dictionaries
-            containing DataFrames for the encoding: 'ref_points' (the reference points), 'distances' (the distances from
-            reference points to representatives), and 'moments' (the first three moments for the distance distribution).
+        dict of dict of dict of nametuple of pandas.DataFrames
+            Dictionary (representatives types, e.g. 'pc') of
+            - dictionaries (physicochemical properties types, e.g. 'z1') of
+            - dictionaries (encoding method, e.g. '3Dusr') of
+            - dictionaries (subsets types, e.g. 'HBA') of
+            - namedtuple containing DataFrames for the encoding:
+              - 'ref_points' (the reference points),
+              - 'distances' (the distances from reference points to representatives), and
+              - 'moments' (the first three moments for the distance distribution).
         """
 
         # Flatten nested dictionary
@@ -1483,7 +1502,7 @@ class Shapes:
 
         # Change key order of (flattened) nested dictionary (reverse subset type and encoding type)
         # Example: 'pc/z123/H/6Dratar1/moments' is changed to 'pc/z123/6Dratar1/H/moments'.
-        self.data_pseudocenter_subsets = self._reorder_nested_dict_keys(self.data_pseudocenter_subsets, [0, 1, 3, 2, 4])
+        self.data_pseudocenter_subsets = self._reorder_nested_dict_keys(self.data_pseudocenter_subsets, [0, 1, 3, 2])
 
         # Unflatten dictionary back to nested dictionary
         self.data_pseudocenter_subsets = unflatten(self.data_pseudocenter_subsets, splitter='path')
@@ -1504,10 +1523,12 @@ class Shapes:
 
         Returns
         -------
-        dict of dict of pandas.DataFrames
-            Dictionary (encoding type) of dictionaries containing DataFrames for the encoding:
-            'ref_points' (the reference points), 'distances' (the distances from reference points to representatives),
-            and 'moments' (the first three moments for the distance distribution).
+        dict of namedtuple of pandas.DataFrames
+            Dictionary (encoding type) of
+            - namedtuple containing DataFrames for the encoding:
+              - 'ref_points' (the reference points),
+              - 'distances' (the distances from reference points to representatives), and
+              - 'moments' (the first three moments for the distance distribution).
         """
 
         n_points = points_df.shape[0]
@@ -1525,12 +1546,12 @@ class Shapes:
             logger.warning(f'{points_key}: Unexpected points dimension: {points_df.shape[1]}. Not implemented.')
             return {'encoding_failed': {'dist': None, 'ref_points': None, 'moments': None}}
             # raise ValueError(f'Unexpected points dimension: {points_df.shape[1]}. Not implemented.')
-        elif n_dimensions == 3 and n_points <= 3:
+            return {'encoding_failed': self._get_shape_nametuple_empty()}
             logger.warning(f'{points_key}: Number of points in 3D must be at least 4. Number of input points: '
                            f'{points_df.shape[0]}.')
             return {'encoding_failed': {'dist': None, 'ref_points': None, 'moments': None}}
             # raise ValueError(f'Number of points in 3D must be at least 4. Number of input points:
-            # {points_df.shape[0]}.')
+            return {'encoding_failed': self._get_shape_nametuple_empty()}
         elif n_dimensions == 4 and n_points <= 4:
             logger.warning(f'{points_key}: Number of points in 4D must be at least 5. Number of input points: '
                            f'{points_df.shape[0]}.')
@@ -1558,7 +1579,7 @@ class Shapes:
 
         Returns
         -------
-        dict
+        namedtuple
             Reference points, distance distributions, and moments.
 
         Notes
@@ -1604,7 +1625,7 @@ class Shapes:
         reference_points = [ref1, ref2, ref3, ref4]
         distances = [dist_ref1, dist_ref2, dist_ref3, dist_ref4]
 
-        return self._get_shape_dict(reference_points, distances)
+        return self._get_shape_nametuple(reference_points, distances)
 
     def _calc_shape_3dim_csr(self, points):
         """
@@ -1661,7 +1682,7 @@ class Shapes:
         reference_points = [ref1, ref2, ref3, ref4]
         distances = [dist_ref1, dist_ref2, dist_ref3, dist_ref4]
 
-        return self._get_shape_dict(reference_points, distances)
+        return self._get_shape_nametuple(reference_points, distances)
 
     def _calc_shape_4dim_electroshape(self, points, scaling_factor=1):
         """
@@ -1730,7 +1751,7 @@ class Shapes:
         reference_points = [ref1, ref2, ref3, ref4, ref5]
         distances = [dist_ref1, dist_ref2, dist_ref3, dist_ref4, dist_ref5]
 
-        return self._get_shape_dict(reference_points, distances)
+        return self._get_shape_nametuple(reference_points, distances)
 
     def _calc_shape_6dim_ratar1(self, points, scaling_factor=1):
         """
@@ -1798,7 +1819,7 @@ class Shapes:
         reference_points = [ref1, ref2, ref3, ref4, ref5, ref6, ref7]
         distances = [dist_ref1, dist_ref2, dist_ref3, dist_ref4, dist_ref5, dist_ref6, dist_ref7]
 
-        return self._get_shape_dict(reference_points, distances)
+        return self._get_shape_nametuple(reference_points, distances)
 
     @staticmethod
     def _calc_scaled_3d_cross_product(point_origin, point_a, point_b, scaled_by):
@@ -1875,7 +1896,7 @@ class Shapes:
 
         return c_3d
 
-    def _get_shape_dict(self, ref_points, dist):
+    def _get_shape_nametuple(self, ref_points, dist):
         """
         Get shape of binding site, i.e. reference points, distance distributions, and moments.
 
@@ -1888,7 +1909,7 @@ class Shapes:
 
         Returns
         -------
-        dict of DataFrames
+        nametuple of DataFrames
             Reference points, distance distributions, and moments.
         """
 
@@ -1905,8 +1926,24 @@ class Shapes:
         # Get first, second, and third moment for each distance distribution
         moments = self._calc_moments(dist)
 
-        # Save shape as dictionary
-        shape = {'ref_points': ref_points, 'dist': dist, 'moments': moments}
+        # Save shape as named tuple
+        Shape = namedtuple('Shape', ['ref_points', 'dist', 'moments'])
+        shape = Shape(ref_points, dist, moments)
+
+        return shape
+
+    def _get_shape_nametuple_empty(self):
+        """
+        Get emtpy shape of binding site, e.g. for a failed encoding.
+
+        Returns
+        -------
+        nametuple of DataFrames
+            Reference points, distance distributions, and moments.
+        """
+
+        Shape = namedtuple('Shape', ['ref_points', 'dist', 'moments'])
+        shape = Shape(None, None, None)
 
         return shape
 
