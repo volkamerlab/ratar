@@ -1312,7 +1312,7 @@ class Shapes:
 
         Returns
         -------
-        dict of dict of dict of pandas.DataFrame
+        dict of dict of namedtuples of pandas.DataFrame
             Different shape encodings for representatives for different physicochemical properties: Calpha.
         """
 
@@ -1325,7 +1325,7 @@ class Shapes:
 
         Returns
         -------
-        dict of dict of dict of pandas.DataFrame
+        dict of dict of namedtuples of pandas.DataFrame
             Different shape encodings for representatives for different physicochemical properties: pseudocenter atoms.
         """
 
@@ -1338,7 +1338,7 @@ class Shapes:
 
         Returns
         -------
-        dict of dict of dict of pandas.DataFrame
+        dict of dict of namedtuples of pandas.DataFrame
             Different shape encodings for representatives for different physicochemical properties: pseudocenters
             (consisting of pseudocenter atoms).
         """
@@ -1352,7 +1352,7 @@ class Shapes:
 
         Returns
         -------
-        dict of dict of dict of pandas.DataFrame
+        dict of dict of namedtuples of pandas.DataFrame
             Different shape encodings for different physicochemical properties and for different
             subsets: pseudocenter atoms.
         """
@@ -1366,12 +1366,30 @@ class Shapes:
 
         Returns
         -------
-        dict of dict of dict of pandas.DataFrame
+        dict of dict of namedtuples of pandas.DataFrame
             Different shape encodings for different physicochemical properties and for different
             subsets: pseudocenters (consisting of pseudocenter atoms).
         """
 
         return self.data_pseudocenter_subsets['pc']
+
+    @property
+    def all(self):
+        """
+        Get all shape encodings as flattened dictionary.
+
+        Returns
+        -------
+        dict of namedtuples of pandas.DataFrames
+            All shape encodings as flattened dictionary.
+        """
+
+        # Collect all encodings in a one-level dictionary
+        shape_flat = {}
+        shape_flat.update(flatten(self.data, reducer='path'))
+        shape_flat.update(flatten(self.data_pseudocenter_subsets, reducer='path'))
+
+        return shape_flat
 
     def __eq__(self, other):
         """
