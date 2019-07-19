@@ -33,7 +33,7 @@ output_dir="/home/dominique/Documents/projects/ratar-data/results"
 #ratar -i ${data_dir}"/benchmarking/TOUGH-M1/structures/*/site_CA_Met.mol2" -o ${output_dir}"/benchmarking/fuzcav/sim_dis_pairs/"
 
 # KLIFS test
-ratar -i ${data_dir}"/klifs/test_20190506/structures/HUMAN/*/*/pocket.mol2" -o ${output_dir}"/klifs/test_20190509/HUMAN/"
+ratar -i ${data_dir}"/klifs/test_20190506/structures/HUMAN/*/*/pocket.mol2" -o ${output_dir}"/klifs/test_20190506/HUMAN/"
 
 # KLIFS full
 #ratar -i ${data_dir}"/klifs/klifs_20190506/structures/HUMAN/*/*/pocket.mol2" -o ${output_dir}"/klifs/klifs_20190506/HUMAN/"
