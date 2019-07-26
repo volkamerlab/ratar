@@ -30,7 +30,7 @@ class MoleculeLoader:
 
     Attributes
     ----------
-    input_path : str or pathlib.Path
+    molecule_path : str or pathlib.Path
         Absolute path to a mol2 (can contain multiple entries) or pdb file.
     remove_solvent : bool
         Set True to remove solvent molecules (default: False).
@@ -54,9 +54,9 @@ class MoleculeLoader:
     True
     """
 
-    def __init__(self, input_path, remove_solvent=False):
+    def __init__(self, molecule_path, remove_solvent=False):
 
-        self.input_path = Path(input_path)
+        self.molecule_path = Path(molecule_path)
         self.remove_solvent = remove_solvent
         self.molecules = self.load_molecule()
         self.n_molecules = len(self.molecules)
@@ -71,19 +71,19 @@ class MoleculeLoader:
             List of BioPandas objects containing metadata and structural data of molecule(s) in mol2 file.
         """
 
-        if self.input_path.exists():
-            logger.info(f'File to be loaded: {self.input_path}', extra={'molecule_id': 'all'})
+        if self.molecule_path.exists():
+            logger.info(f'File to be loaded: {self.molecule_path}', extra={'molecule_id': 'all'})
         else:
-            logger.error(f'File not found: {self.input_path}', extra={'molecule_id': 'all'})
-            raise FileNotFoundError(f'File not found: {self.input_path}')
+            logger.error(f'File not found: {self.molecule_path}', extra={'molecule_id': 'all'})
+            raise FileNotFoundError(f'File not found: {self.molecule_path}')
 
         # Load molecule data
-        if self.input_path.suffix == '.pdb':
+        if self.molecule_path.suffix == '.pdb':
             molecules = self._load_pdb(self.remove_solvent)
-        elif self.input_path.suffix == '.mol2':
+        elif self.molecule_path.suffix == '.mol2':
             molecules = self._load_mol2(self.remove_solvent)
         else:
-            raise IOError(f'Unsupported file format {self.input_path.suffix}, only pdb and mol2 are supported.')
+            raise IOError(f'Unsupported file format {self.molecule_path.suffix}, only pdb and mol2 are supported.')
 
         logger.info('File loaded.', extra={'molecule_id': 'all'})
 
@@ -108,6 +108,11 @@ class MoleculeLoader:
         """
         Load molecule data from a mol2 file, which can contain multiple entries.
 
+        Parameters
+        ----------
+        remove_solvent : bool
+            Set True to remove solvent molecules (default: False).
+
         Returns
         -------
         list of biopandas.mol2.pandas_mol2.PandasMol2
@@ -117,7 +122,7 @@ class MoleculeLoader:
         # In case of multiple entries in one mol2 file, include iteration step
         molecules = []
 
-        for mol2 in split_multimol2(str(self.input_path)):  # biopandas not compatible with pathlib
+        for mol2 in split_multimol2(str(self.molecule_path)):  # biopandas not compatible with pathlib
 
             # Mol2 files can have 9 or 10 columns.
             try:  # Try 9 columns.
@@ -194,8 +199,8 @@ class MoleculeLoader:
 
         Parameters
         ----------
-        self.input_path : str
-            Absolute path to pdb file.
+        remove_solvent : bool
+            Set True to remove solvent molecules (default: False).
 
         Returns
         -------
@@ -203,12 +208,12 @@ class MoleculeLoader:
             List of BioPandas objects containing metadata and structural data of molecule(s) in pdb file.
         """
 
-        molecule = PandasPdb().read_pdb(str(self.input_path))  # biopandas not compatible with pathlib
+        molecule = PandasPdb().read_pdb(str(self.molecule_path))  # biopandas not compatible with pathlib
 
         # If object has no code, set string from file stem and its folder name
         # E.g. "/mydir/pdb/3w32.mol2" will generate the code "pdb_3w32".
         if not (molecule.code or molecule.code.strip()):
-            molecule.code = f'{self.input_path.parts[-2]}_{self.input_path.stem}'
+            molecule.code = f'{self.molecule_path.parts[-2]}_{self.molecule_path.stem}'
 
         # Get both ATOM and HETATM lines of PDB file
         molecule._df = pd.concat([molecule.df['ATOM'], molecule.df['HETATM']])
