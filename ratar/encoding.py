@@ -34,11 +34,6 @@ class BindingSite:
     """
     Class used to represent a molecule and its encoding.
 
-    Parameters
-    ----------
-    molecule : biopandas.mol2.pandas_mol2.PandasMol2 or biopandas.pdb.pandas_pdb.PandasPdb
-        Content of mol2 or pdb file as BioPandas object.
-
     Attributes
     ----------
     molecule : biopandas.mol2.pandas_mol2.PandasMol2 or biopandas.pdb.pandas_pdb.PandasPdb
@@ -58,14 +53,15 @@ class BindingSite:
     >>> molecule_loader = MoleculeLoader(molecule_path, remove_solvent=True)
     >>> molecule = molecule_loader.molecules[0]
 
-    >>> binding_site = BindingSite(molecule)
+    >>> binding_site = BindingSite()
+    >>> binding_site.from_molecule(molecule)
     """
 
-    def __init__(self, molecule):
+    def __init__(self):
 
-        self.molecule = molecule
-        self.representatives = self.get_representatives()
-        self.shapes = self.run()
+        self.molecule = None
+        self.representatives = None
+        self.shapes = None
 
     def __eq__(self, other):
         """
@@ -85,7 +81,53 @@ class BindingSite:
         ]
         return all(rules)
 
-    def get_representatives(self):
+    def from_molecule(self, molecule):
+        """
+        Set molecule, representatives and shapes of a molecule.
+
+        Parameters
+        ----------
+        molecule : biopandas.mol2.pandas_mol2.PandasMol2 or biopandas.pdb.pandas_pdb.PandasPdb
+            Content of mol2 or pdb file as BioPandas object.
+        """
+
+        self.molecule = molecule
+        self.representatives = self.get_representatives(molecule)
+
+        coordinates = self.get_coordinates(self.representatives)
+        physicochemicalproperties = self.get_physicochemicalproperties(self.representatives)
+        subsets = self.get_subsets(self.representatives)
+        points = self.get_points(coordinates, physicochemicalproperties, subsets)
+
+        self.shapes = self.get_shapes(points)
+
+    def from_file(self, molecule_path, remove_solvent=False, molecule_index=0):
+        """
+        Set molecule, representatives and shapes of a molecule from a molecule file.
+
+        Parameters
+        ----------
+        molecule_path : str or pathlib.Path
+            Absolute path to a mol2 (can contain multiple entries) or pdb file.
+        remove_solvent : bool
+            Set True to remove solvent molecules (default: False).
+        molecule_index : int
+            Molecule index for which the molecule encoding shall be performed.
+        """
+
+        molecule_path = Path(molecule_path)
+        molecule_loader = MoleculeLoader(molecule_path, remove_solvent=remove_solvent)
+
+        if molecule_index < len(molecule_loader.molecules):
+            molecule = molecule_loader.molecules[molecule_index]
+        else:
+            raise IndexError(f'Molecule index {molecule_index} out of range. '
+                             f'Number of molecules{len(molecule_loader.molecules)}')
+
+        self.from_molecule(molecule)
+
+    @staticmethod
+    def get_representatives(molecule):
         """
         Get representatives of a molecule.
 
@@ -96,7 +138,8 @@ class BindingSite:
         """
 
         representatives = Representatives()
-        representatives.from_molecule(self.molecule)
+        representatives.from_molecule(molecule)
+
         return representatives
 
     @staticmethod
