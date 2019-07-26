@@ -1437,42 +1437,78 @@ class Shapes:
 
         return shape_flat
 
-    @property
     def all_by_type(
             self,
             representatives='all',
             physicochemicalproperties='all',
             encoding_method='all',
-            subsets='all'
+            subsets=None
     ):
+        """
+        Get selected shapes from binding site.
+
+        Parameters
+        ----------
+        representatives : str or list of str
+            Name(s) for selected representatives types. Defaults to all types.
+            Unknown names and None will select nothing.
+        physicochemicalproperties : str or list of str
+            Name(s) for selected physicochemical property types. Defaults to all types.
+            Unknown names and None will select nothing.
+        encoding_method : str or list of str
+            Name(s) for selected encoding methods. Defaults to all methods.
+            Unknown names and None will select nothing.
+        subsets : str or list of str
+            Name(s) for selected subsets. Defaults to no subsets.
+            Unknown names and None will select nothing.
+
+        Returns
+        -------
+        dict
+            Selected shapes.
+        """
 
         # Save here all keys to be extracted from dictionary
         allowed_keys = []
 
         # If parameter input is str, cast to list
         if isinstance(representatives, str):
-            representatives = list(representatives)
+            representatives = [representatives]
         if isinstance(physicochemicalproperties, str):
-            physicochemicalproperties = list(physicochemicalproperties)
+            physicochemicalproperties = [physicochemicalproperties]
         if isinstance(encoding_method, str):
-            encoding_method = list(encoding_method)
+            encoding_method = [encoding_method]
         if isinstance(subsets, str):
-            subsets = list(subsets)
+            subsets = [subsets]
 
         for shape_key, shape in self.all.items():
-            shape_key_split = shape_key.split()
+            shape_key_split = shape_key.split('/')
 
-            rules = [
-                shape_key_split[0] in representatives or representatives == ['all'],
-                shape_key_split[1] in physicochemicalproperties or physicochemicalproperties == ['all'],
-                shape_key_split[2] in encoding_method or encoding_method == ['all'],
-                shape_key_split[3] in subsets or subsets == ['all']
-            ]
+            if len(shape_key_split) == 3 and subsets is None:
+                rules = [
+                    shape_key_split[0] in representatives or representatives == ['all'],
+                    shape_key_split[1] in physicochemicalproperties or physicochemicalproperties == ['all'],
+                    shape_key_split[2] in encoding_method or encoding_method == ['all']
+                ]
+            elif len(shape_key_split) == 4 and subsets is not None:
+                rules = [
+                    shape_key_split[0] in representatives or representatives == ['all'],
+                    shape_key_split[1] in physicochemicalproperties or physicochemicalproperties == ['all'],
+                    shape_key_split[2] in encoding_method or encoding_method == ['all'],
+                    shape_key_split[3] in subsets or subsets == ['all']
+                ]
+            else:
+                rules = [False]
 
             if all(rules):
                 allowed_keys.append(shape_key)
 
-        return {key: value for key, value in self.all if key in allowed_keys}
+        if len(allowed_keys) > 0:
+            return {key: value for key, value in self.all.items() if key in allowed_keys}
+        else:
+            logging.warning(f'No shapes selected. Either on or more input strings are unknown or '
+                            f'the combination of input strings does not exist.')
+            return {None: None}
 
     def __eq__(self, other):
         """
