@@ -13,6 +13,62 @@ from ratar.auxiliary import MoleculeLoader
 from ratar.encoding import Shapes
 
 
+@pytest.mark.parametrize('mol_file, type_list, selected_keys', [
+    (
+        'AAK1_4wsq_altA_chainA.mol2',
+        ['pca', 'z1', '4Delectroshape', None],
+        ['pca/z1/4Delectroshape']
+    ),
+    (
+        'AAK1_4wsq_altA_chainA.mol2',
+        ['ca', 'no', 'all', None],
+        ['ca/no/3Dusr', 'ca/no/3Dcsr']
+    ),
+    (
+        'AAK1_4wsq_altA_chainA.mol2',
+        ['pca', 'z1', '4Delectroshape', 'H'],
+        ['pca/z1/4Delectroshape/H']
+    ),
+    (
+        'AAK1_4wsq_altA_chainA.mol2',
+        ['xxx', 'z1', '4Delectroshape', None],
+        [None]
+    ),
+    (
+        'AAK1_4wsq_altA_chainA.mol2',
+        ['ca', 'z1', '3Dusr', None],
+        [None]
+    )
+])
+def test_all_by_type(mol_file, type_list, selected_keys):
+    """
+    Test all_by_type method.
+
+    Parameters
+    ----------
+    mol_file : str or pathlib.Path
+        Name of molecule file.
+    type_list : list of str/None
+        List of types for representatives, physicochemical properties, encoding method and subsets.,
+    selected_keys: list of str/None
+        List of keys for selected shapes.
+    """
+
+    molecule_path = Path(__name__).parent / 'ratar' / 'tests' / 'data' / mol_file
+    molecule_loader = MoleculeLoader(molecule_path)
+    shapes = Shapes()
+    shapes.from_molecule(molecule_loader.molecules[0])
+
+    all_by_type = shapes.all_by_type(
+        representatives=type_list[0],
+        physicochemicalproperties=type_list[1],
+        encoding_method=type_list[2],
+        subsets=type_list[3]
+    )
+
+    assert list(all_by_type.keys()) == selected_keys
+
+
 @pytest.mark.parametrize('mol_file1, mol_file2', [
     ('AAK1_4wsq_altA_chainA.mol2', 'AAK1_4wsq_altA_chainB.mol2')
 ])
