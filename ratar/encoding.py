@@ -1246,6 +1246,9 @@ class Points:
         return self.data_pseudocenter_subsets   # Return not necessary here, keep for clarity.
 
 
+Shape = namedtuple('Shape', ['ref_points', 'dist', 'moments'])
+
+
 class Shapes:
     """
     Class used to store the encoded molecule representatives, which were defined by the Representatives class.
@@ -1390,6 +1393,43 @@ class Shapes:
         shape_flat.update(flatten(self.data_pseudocenter_subsets, reducer='path'))
 
         return shape_flat
+
+    @property
+    def all_by_type(
+            self,
+            representatives='all',
+            physicochemicalproperties='all',
+            encoding_method='all',
+            subsets='all'
+    ):
+
+        # Save here all keys to be extracted from dictionary
+        allowed_keys = []
+
+        # If parameter input is str, cast to list
+        if isinstance(representatives, str):
+            representatives = list(representatives)
+        if isinstance(physicochemicalproperties, str):
+            physicochemicalproperties = list(physicochemicalproperties)
+        if isinstance(encoding_method, str):
+            encoding_method = list(encoding_method)
+        if isinstance(subsets, str):
+            subsets = list(subsets)
+
+        for shape_key, shape in self.all.items():
+            shape_key_split = shape_key.split()
+
+            rules = [
+                shape_key_split[0] in representatives or representatives == ['all'],
+                shape_key_split[1] in physicochemicalproperties or physicochemicalproperties == ['all'],
+                shape_key_split[2] in encoding_method or encoding_method == ['all'],
+                shape_key_split[3] in subsets or subsets == ['all']
+            ]
+
+            if all(rules):
+                allowed_keys.append(shape_key)
+
+        return {key: value for key, value in self.all if key in allowed_keys}
 
     def __eq__(self, other):
         """
@@ -1932,12 +1972,12 @@ class Shapes:
         moments = self._calc_moments(dist)
 
         # Save shape as named tuple
-        Shape = namedtuple('Shape', ['ref_points', 'dist', 'moments'])
         shape = Shape(ref_points, dist, moments)
 
         return shape
 
-    def _get_shape_nametuple_empty(self):
+    @staticmethod
+    def _get_shape_nametuple_empty():
         """
         Get emtpy shape of binding site, e.g. for a failed encoding.
 
@@ -1947,7 +1987,6 @@ class Shapes:
             Reference points, distance distributions, and moments.
         """
 
-        Shape = namedtuple('Shape', ['ref_points', 'dist', 'moments'])
         shape = Shape(None, None, None)
 
         return shape
