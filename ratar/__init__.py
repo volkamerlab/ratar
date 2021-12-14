@@ -4,7 +4,7 @@ Read-across the targetome - an integrated structure- and ligand-based workbench 
 """
 
 # Add imports here
-from .ratar import *
+from .encoding import process_encoding
 
 # Handle versioneer
 from ._version import get_versions
