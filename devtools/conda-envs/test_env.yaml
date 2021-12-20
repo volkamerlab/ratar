@@ -20,6 +20,7 @@ dependencies:
   - pytest
   - pytest-cov
   - codecov
+  - nbval
   # Pip-only installs
   - pip:
     - flatten-dict
