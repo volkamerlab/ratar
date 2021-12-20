@@ -12,6 +12,7 @@ dependencies:
   - pandas
   - biopandas
   - seaborn
+  - scipy
   - jupyter
   - jupyterlab
   - pymol-open-source
