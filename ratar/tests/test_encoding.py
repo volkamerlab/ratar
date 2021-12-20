@@ -10,9 +10,7 @@ from ratar.auxiliary import MoleculeLoader
 from ratar.encoding import BindingSite, save_binding_site, save_cgo_file, process_encoding
 
 
-@pytest.mark.parametrize('mol_file', [
-    'AAK1_4wsq_altA_chainA.mol2'
-])
+@pytest.mark.parametrize("mol_file", ["AAK1_4wsq_altA_chainA.mol2"])
 def test_save_binding_site(mol_file):
     """
     Test whether the binding site pickle file is saved when calling the ratar.encoding.save_binding_site function.
@@ -23,11 +21,12 @@ def test_save_binding_site(mol_file):
         Name of file containing the structure for molecule.
     """
 
-    molecule_path = Path(__name__).parent / 'ratar' / 'tests' / 'data' / mol_file
+    molecule_path = Path(__name__).parent / "ratar" / "tests" / "data" / mol_file
     molecule_loader = MoleculeLoader(molecule_path)
-    bindingsite = BindingSite(molecule_loader.molecules[0])
+    bindingsite = BindingSite()
+    bindingsite.from_molecule(molecule_loader.molecules[0])
 
-    output_path = Path(__name__).parent / 'ratar' / 'tests' / 'data' / 'tmp' / 'bindingsite.p'
+    output_path = Path(__name__).parent / "ratar" / "tests" / "data" / "tmp" / "bindingsite.p"
 
     # Remove this file if exists already
     if output_path.exists():
@@ -44,9 +43,7 @@ def test_save_binding_site(mol_file):
         output_path.unlink()
 
 
-@pytest.mark.parametrize('mol_file', [
-    'AAK1_4wsq_altA_chainA.mol2'
-])
+@pytest.mark.parametrize("mol_file", ["AAK1_4wsq_altA_chainA.mol2"])
 def test_save_cgo_file(mol_file):
     """
     Test whether the binding site cgo file is saved when calling the ratar.encoding.save_cgo_file function.
@@ -57,11 +54,12 @@ def test_save_cgo_file(mol_file):
         Name of file containing the structure for molecule.
     """
 
-    molecule_path = Path(__name__).parent / 'ratar' / 'tests' / 'data' / mol_file
+    molecule_path = Path(__name__).parent / "ratar" / "tests" / "data" / mol_file
     molecule_loader = MoleculeLoader(molecule_path)
-    bindingsite = BindingSite(molecule_loader.molecules[0])
+    bindingsite = BindingSite()
+    bindingsite.from_molecule(molecule_loader.molecules[0])
 
-    output_path = Path(__name__).parent / 'ratar' / 'tests' / 'data' / 'tmp' / 'ref_points.cgo'
+    output_path = Path(__name__).parent / "ratar" / "tests" / "data" / "tmp" / "ref_points.cgo"
 
     # Remove this file if exists already
     if output_path.exists():
@@ -78,13 +76,16 @@ def test_save_cgo_file(mol_file):
         output_path.unlink()
 
 
-@pytest.mark.parametrize('mol_file, output_path_p, output_path_cgo', [
-    (
-        'AAK1_4wsq_altA_chainA.mol2',
-        Path('.') / 'encoding' / 'HUMAN' / 'AAK1_4wsq_altA_chainA' / 'ratar_encoding.p',
-        Path('.') / 'encoding' / 'HUMAN' / 'AAK1_4wsq_altA_chainA' / 'ref_points_cgo.py'
-    )
-])
+@pytest.mark.parametrize(
+    "mol_file, output_path_p, output_path_cgo",
+    [
+        (
+            "AAK1_4wsq_altA_chainA.mol2",
+            Path(".") / "encoding" / "HUMAN" / "AAK1_4wsq_altA_chainA" / "ratar_encoding.p",
+            Path(".") / "encoding" / "HUMAN" / "AAK1_4wsq_altA_chainA" / "ref_points_cgo.py",
+        )
+    ],
+)
 def test_process_encoding(mol_file, output_path_p, output_path_cgo):
     """
     Test whether the binding site cgo file is saved when calling the ratar.encoding.process_encoding function.
@@ -95,15 +96,15 @@ def test_process_encoding(mol_file, output_path_p, output_path_cgo):
         Name of file containing the structure for molecule.
     """
 
-    molecule_path = Path(__name__).parent / 'ratar' / 'tests' / 'data' / mol_file
-    output_dir = Path(__name__).parent / 'ratar' / 'tests' / 'data' / 'tmp'
+    molecule_path = Path(__name__).parent / "ratar" / "tests" / "data" / mol_file
+    output_dir = Path(__name__).parent / "ratar" / "tests" / "data" / "tmp"
 
     # Remove this file if exists already
-    if (output_dir / 'encoding').exists():
-        dir_file_list = [i for i in (output_dir / 'encoding').glob('**/*')]
+    if (output_dir / "encoding").exists():
+        dir_file_list = [i for i in (output_dir / "encoding").glob("**/*")]
         dir_file_list.reverse()
         [i.rmdir() if i.is_dir() else i.unlink() for i in dir_file_list]
-        (output_dir / 'encoding').rmdir()
+        (output_dir / "encoding").rmdir()
 
     # Save file
     process_encoding(molecule_path, output_dir)
@@ -113,8 +114,8 @@ def test_process_encoding(mol_file, output_path_p, output_path_cgo):
     assert (output_dir / output_path_cgo).exists()
 
     # Remove this file if exists already
-    if (output_dir / 'encoding').exists():
-        dir_file_list = [i for i in (output_dir / 'encoding').glob('**/*')]
+    if (output_dir / "encoding").exists():
+        dir_file_list = [i for i in (output_dir / "encoding").glob("**/*")]
         dir_file_list.reverse()
         [i.rmdir() if i.is_dir() else i.unlink() for i in dir_file_list]
-        (output_dir / 'encoding').rmdir()
+        (output_dir / "encoding").rmdir()

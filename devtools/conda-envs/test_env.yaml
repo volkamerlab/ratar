@@ -1,14 +1,26 @@
 name: test
 channels:
+  - conda-forge
+  - defaults
+  - tpeulen
 dependencies:
-    # Base depends
-  - python
+  # Base depends
+  - python>=3.6
   - pip
-
-    # Testing
+  # Package depends
+  - numpy
+  - pandas
+  - biopandas
+  - seaborn
+  - scipy
+  - jupyter
+  - jupyterlab
+  - pymol-open-source
+  # Testing
   - pytest
   - pytest-cov
-
-    # Pip-only installs
+  - codecov
+  - nbval
+  # Pip-only installs
   - pip:
-    - codecov
+    - flatten-dict

@@ -11,9 +11,9 @@ from ratar.auxiliary import MoleculeLoader
 from ratar.encoding import Representatives
 
 
-@pytest.mark.parametrize('mol_file1, mol_file2', [
-    ('AAK1_4wsq_altA_chainA.mol2', 'AAK1_4wsq_altA_chainB.mol2')
-])
+@pytest.mark.parametrize(
+    "mol_file1, mol_file2", [("AAK1_4wsq_altA_chainA.mol2", "AAK1_4wsq_altA_chainB.mol2")]
+)
 def test_representatives_eq(mol_file1, mol_file2):
     """
     Test __eq__ function for Representatives class.
@@ -27,8 +27,8 @@ def test_representatives_eq(mol_file1, mol_file2):
 
     """
 
-    molecule_path1 = Path(__name__).parent / 'ratar' / 'tests' / 'data' / mol_file1
-    molecule_path2 = Path(__name__).parent / 'ratar' / 'tests' / 'data' / mol_file2
+    molecule_path1 = Path(__name__).parent / "ratar" / "tests" / "data" / mol_file1
+    molecule_path2 = Path(__name__).parent / "ratar" / "tests" / "data" / mol_file2
 
     molecule_loader1 = MoleculeLoader(molecule_path1)
     molecule_loader2 = MoleculeLoader(molecule_path2)
@@ -41,30 +41,29 @@ def test_representatives_eq(mol_file1, mol_file2):
     representatives2.from_molecule(molecule_loader1.molecules[0])
     representatives3.from_molecule(molecule_loader2.molecules[0])
 
-    assert (representatives1 == representatives2)
+    assert representatives1 == representatives2
     assert not (representatives1 == representatives3)
 
 
-@pytest.mark.parametrize('filename, column_names, n_atoms, centroid', [
-    (
-        'AAK1_4wsq_altA_chainA_reduced.mol2',
-        {
-            'ca': 'atom_id atom_name res_id res_name subst_name x y z charge'.split(),
-            'pca': 'atom_id atom_name res_id res_name subst_name x y z charge pc_type pc_id pc_atom_id'.split(),
-            'pc': 'atom_id atom_name res_id res_name subst_name x y z charge pc_type pc_id pc_atom_id'.split()
-        },
-        {
-            'ca': 8,
-            'pca': 34,
-            'pc': 29
-        },
-        {
-            'ca': [6.2681, 11.9717, 42.4514],
-            'pca': [5.6836, 12.9039, 43.9326],
-            'pc': [5.8840, 12.5871, 43.3804]
-        }
-    )
-])
+@pytest.mark.parametrize(
+    "filename, column_names, n_atoms, centroid",
+    [
+        (
+            "AAK1_4wsq_altA_chainA_reduced.mol2",
+            {
+                "ca": "atom_id atom_name res_id res_name subst_name x y z charge".split(),
+                "pca": "atom_id atom_name res_id res_name subst_name x y z charge pc_type pc_id pc_atom_id".split(),
+                "pc": "atom_id atom_name res_id res_name subst_name x y z charge pc_type pc_id pc_atom_id".split(),
+            },
+            {"ca": 8, "pca": 34, "pc": 29},
+            {
+                "ca": [6.2681, 11.9717, 42.4514],
+                "pca": [5.6836, 12.9039, 43.9326],
+                "pc": [5.8840, 12.5871, 43.3804],
+            },
+        )
+    ],
+)
 def test_from_molecule(filename, column_names, n_atoms, centroid):
     """
     Test if representatives are correctly extracted from representatives of a molecule.
@@ -82,7 +81,7 @@ def test_from_molecule(filename, column_names, n_atoms, centroid):
     """
 
     # Load molecule
-    molecule_path = Path(__name__).parent / 'ratar' / 'tests' / 'data' / filename
+    molecule_path = Path(__name__).parent / "ratar" / "tests" / "data" / filename
     molecule_loader = MoleculeLoader(molecule_path)
     molecule = molecule_loader.molecules[0]
 
@@ -93,20 +92,16 @@ def test_from_molecule(filename, column_names, n_atoms, centroid):
     for key, value in representatives.data.items():
         assert all(value.columns == column_names[key])
         assert value.shape[0] == n_atoms[key]
-        assert np.isclose(value['x'].mean(), centroid[key][0], rtol=1e-04)
-        assert np.isclose(value['y'].mean(), centroid[key][1], rtol=1e-04)
-        assert np.isclose(value['z'].mean(), centroid[key][2], rtol=1e-04)
+        assert np.isclose(value["x"].mean(), centroid[key][0], rtol=1e-04)
+        assert np.isclose(value["y"].mean(), centroid[key][1], rtol=1e-04)
+        assert np.isclose(value["z"].mean(), centroid[key][2], rtol=1e-04)
 
 
-@pytest.mark.parametrize('filename', [
-    (
-        'AAK1_4wsq_altA_chainA_reduced.mol2'
-    )
-])
+@pytest.mark.parametrize("filename", [("AAK1_4wsq_altA_chainA_reduced.mol2")])
 def test_get_ca_datatypes(filename):
 
     # Load molecule
-    molecule_path = Path(__name__).parent / 'ratar' / 'tests' / 'data' / filename
+    molecule_path = Path(__name__).parent / "ratar" / "tests" / "data" / filename
     molecule_loader = MoleculeLoader(molecule_path)
     molecule = molecule_loader.molecules[0]
 
@@ -114,30 +109,26 @@ def test_get_ca_datatypes(filename):
     ca = repres._get_ca(molecule.df)
 
     datatypes = {
-        'atom_id': int,
-        'atom_name': object,
-        'res_id': object,
-        'res_name': object,
-        'subst_name': object,
-        'x': float,
-        'y': float,
-        'z': float,
-        'charge': float
+        "atom_id": int,
+        "atom_name": object,
+        "res_id": object,
+        "res_name": object,
+        "subst_name": object,
+        "x": float,
+        "y": float,
+        "z": float,
+        "charge": float,
     }
 
     for index, datatype in ca.dtypes.items():
         assert datatype == datatypes[index]
 
 
-@pytest.mark.parametrize('filename', [
-    (
-        'AAK1_4wsq_altA_chainA_reduced.mol2'
-    )
-])
+@pytest.mark.parametrize("filename", [("AAK1_4wsq_altA_chainA_reduced.mol2")])
 def test_get_pca_datatypes(filename):
 
     # Load molecule
-    molecule_path = Path(__name__).parent / 'ratar' / 'tests' / 'data' / filename
+    molecule_path = Path(__name__).parent / "ratar" / "tests" / "data" / filename
     molecule_loader = MoleculeLoader(molecule_path)
     molecule = molecule_loader.molecules[0]
 
@@ -145,33 +136,29 @@ def test_get_pca_datatypes(filename):
     pca = repres._get_pca(molecule.df)
 
     datatypes = {
-        'atom_id': int,
-        'atom_name': object,
-        'res_id': object,
-        'res_name': object,
-        'subst_name': object,
-        'x': float,
-        'y': float,
-        'z': float,
-        'charge': float,
-        'pc_type': object,
-        'pc_id': object,
-        'pc_atom_id': object
+        "atom_id": int,
+        "atom_name": object,
+        "res_id": object,
+        "res_name": object,
+        "subst_name": object,
+        "x": float,
+        "y": float,
+        "z": float,
+        "charge": float,
+        "pc_type": object,
+        "pc_id": object,
+        "pc_atom_id": object,
     }
 
     for index, datatype in pca.dtypes.items():
         assert datatype == datatypes[index]
 
 
-@pytest.mark.parametrize('filename', [
-    (
-        'AAK1_4wsq_altA_chainA_reduced.mol2'
-    )
-])
+@pytest.mark.parametrize("filename", [("AAK1_4wsq_altA_chainA_reduced.mol2")])
 def test_get_pca_pc_datatypes(filename):
 
     # Load molecule
-    molecule_path = Path(__name__).parent / 'ratar' / 'tests' / 'data' / filename
+    molecule_path = Path(__name__).parent / "ratar" / "tests" / "data" / filename
     molecule_loader = MoleculeLoader(molecule_path)
     molecule = molecule_loader.molecules[0]
 
@@ -179,18 +166,18 @@ def test_get_pca_pc_datatypes(filename):
     pc = repres._get_pc(molecule.df)
 
     datatypes = {
-        'atom_id': object,
-        'atom_name': object,
-        'res_id': object,
-        'res_name': object,
-        'subst_name': object,
-        'x': float,
-        'y': float,
-        'z': float,
-        'charge': float,
-        'pc_type': object,
-        'pc_id': object,
-        'pc_atom_id': object
+        "atom_id": object,
+        "atom_name": object,
+        "res_id": object,
+        "res_name": object,
+        "subst_name": object,
+        "x": float,
+        "y": float,
+        "z": float,
+        "charge": float,
+        "pc_type": object,
+        "pc_id": object,
+        "pc_atom_id": object,
     }
 
     for index, datatype in pc.dtypes.items():

@@ -10,13 +10,9 @@ import pytest
 from ratar.auxiliary import MoleculeLoader, AminoAcidDescriptors
 
 
-@pytest.mark.parametrize('filename, n_atoms, centroid', [
-    (
-        'scpdb_1a9p1.mol2',
-        457,
-        [22.38694, 90.907972, 74.754425]
-    )
-])
+@pytest.mark.parametrize(
+    "filename, n_atoms, centroid", [("scpdb_1a9p1.mol2", 457, [22.38694, 90.907972, 74.754425])]
+)
 def test_amino_acid_descriptors(filename, n_atoms, centroid):
     """
     Test AminoAcidDescriptor class.
@@ -32,7 +28,7 @@ def test_amino_acid_descriptors(filename, n_atoms, centroid):
     """
 
     # Load molecule
-    molecule_path = Path(__name__).parent / 'ratar' / 'tests' / 'data' / filename
+    molecule_path = Path(__name__).parent / "ratar" / "tests" / "data" / filename
     molecule_loader = MoleculeLoader(molecule_path)
     molecule = molecule_loader.molecules[0]
 
@@ -46,6 +42,6 @@ def test_amino_acid_descriptors(filename, n_atoms, centroid):
     assert np.isclose(aa_descriptors.zscales.mean().mean(), 0.028100)
 
     assert molecule_aa_zscales.shape == (n_atoms, 9)
-    assert np.isclose(molecule_aa_zscales['x'].mean(), centroid[0], rtol=1e-04)
-    assert np.isclose(molecule_aa_zscales['y'].mean(), centroid[1], rtol=1e-04)
-    assert np.isclose(molecule_aa_zscales['z'].mean(), centroid[2], rtol=1e-04)
+    assert np.isclose(molecule_aa_zscales["x"].mean(), centroid[0], rtol=1e-04)
+    assert np.isclose(molecule_aa_zscales["y"].mean(), centroid[1], rtol=1e-04)
+    assert np.isclose(molecule_aa_zscales["z"].mean(), centroid[2], rtol=1e-04)
