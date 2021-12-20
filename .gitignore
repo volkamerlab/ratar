@@ -103,3 +103,6 @@ ENV/
 
 # mypy
 .mypy_cache/
+
+# data
+/ratar/tests/data/tmp
