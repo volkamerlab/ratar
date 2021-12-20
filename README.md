@@ -1,5 +1,10 @@
 # `ratar` &mdash; Read-across the targetome
 
+[//]: # (Badges)
+[![GitHub Actions Build Status](https://github.com/volkamerlab/ratar/workflows/CI/badge.svg)](https://github.com/volkamerlab/ratar/actions?query=workflow%3ACI)
+[![codecov](https://codecov.io/gh/volkamerlab/ratar/branch/master/graph/badge.svg)](https://codecov.io/gh/volkamerlab/ratar)
+[![License](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+
 > :construction: This repository is in early stages of developement. The current API is not stable.
 
 ## Project descripition
