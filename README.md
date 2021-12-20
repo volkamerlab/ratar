@@ -2,7 +2,7 @@
 
 > :construction: This repository is in early stages of developement. The current API is not stable.
 
-### Project descripition
+## Project descripition
 
 **Read-across the targetome &mdash; an integrated structure- and ligand-based workbench for computational target prediction and novel tool compound design**
 
@@ -16,7 +16,7 @@ The project hypothesis is based on the similarity principle (similar pockets bin
 2. Novel efficient structure-based binding site comparison algorithm will be developed to find the most similar pockets considering protein flexibility in terms of ensembles. This `ratar` repository holds an initial implementation for this step.
 3. Ligand and binding data will be extracted from ChEMBL, filtered and assigned to the respective pockets. Using the novel algorithm, ligands known to bind to the detected neighboring pockets can be elucidated. These compounds can be selected as chemical probes for functional annotations or as novel focused compound libraries for virtual screening. 
 
-### Installation
+## Installation
 
 > We are assuming you have a working ``mamba`` installation in your computer. If this is not the case, please refer to their [official documentation](https://mamba.readthedocs.io/en/latest/installation.html#mamba). 
 > If you installed ``mamba`` into an existing ``conda`` installation, also make sure that the ``conda-forge`` channel is configured by running ``conda config --add channels conda-forge``.
@@ -50,9 +50,9 @@ The project hypothesis is based on the similarity principle (similar pockets bin
     ratar -h
     ```
 
-### Usage
+## Usage
 
-#### CLI
+### CLI
 
 1. Encode binding sites from mol2 files (pdb files not working currently); save them as pickle files to disc (replace pickle save with e.g. csv save in the future).
 
@@ -71,12 +71,12 @@ The project hypothesis is based on the similarity principle (similar pockets bin
 See [tutorial](https://github.com/volkamerlab/ratar/blob/master/docs/tutorials/ratar_tutorial.ipynb) for details on the current Python API of `ratar`.
 
 
-### Copyright
+## Copyright
 
 Copyright (c) 2019, Volkamer Lab
 
 
-### Acknowledgements
+## Acknowledgements
  
 Project based on the 
 [Computational Molecular Science Python Cookiecutter](https://github.com/molssi/cookiecutter-cms) version 1.0.
