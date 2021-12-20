@@ -2,7 +2,6 @@
 
 [//]: # (Badges)
 [![GitHub Actions Build Status](https://github.com/volkamerlab/ratar/workflows/CI/badge.svg)](https://github.com/volkamerlab/ratar/actions?query=workflow%3ACI)
-[![codecov](https://codecov.io/gh/volkamerlab/ratar/branch/master/graph/badge.svg)](https://codecov.io/gh/volkamerlab/ratar)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 
 > :construction: This repository is in early stages of developement. The current API is not stable.
@@ -11,7 +10,7 @@
 
 **Read-across the targetome &mdash; an integrated structure- and ligand-based workbench for computational target prediction and novel tool compound design**
 
-![Ratar overview](https://github.com/dominiquesydow/ratar/blob/master/docs/_static/fig_ratar_overview.png)
+![Ratar overview](docs/_static/fig_ratar_overview.png)
 
 How to probe and validate a potential pathway or target remains one of the key questions in basic research in life sciences. Often these investigations lack suitable chemical tool compounds for the elucidation of the function of a specific protein. Therefore, large consortia, like the Structural Genomics Consortium, have formed to generate tool compounds for the validation of biological targets via classical chemical synthesis and extensive protein structure determination efforts. While these consortia will continue with their focused experimental approaches, the `ratar` project will offer a computational solution for the generation of a comprehensive set of tool compounds for novel targets. 
 
