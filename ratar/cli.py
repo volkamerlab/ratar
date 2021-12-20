@@ -29,8 +29,10 @@ def parse_arguments():
 
     # Parse arguments
     parser = argparse.ArgumentParser()
-    parser.add_argument('-i', '--input_mol_path', help='Path to molecule structure file(s).', required=True)
-    parser.add_argument('-o', '--output_dir', help='Path to output directory.', required=True)
+    parser.add_argument(
+        "-i", "--input_mol_path", help="Path to molecule structure file(s).", required=True
+    )
+    parser.add_argument("-o", "--output_dir", help="Path to output directory.", required=True)
 
     # Set as variables
     args = parser.parse_args()
@@ -53,11 +55,13 @@ def main():
     create_directory(args.output_dir)
 
     # Create custom logger
-    logging.config.fileConfig('logging.conf', defaults={'logfilename': str(Path(args.output_dir) / 'ratar.log')})
+    logging.config.fileConfig(
+        "logging.conf", defaults={"logfilename": str(Path(args.output_dir) / "ratar.log")}
+    )
 
     # Create handlers
     c_handler = logging.StreamHandler()
-    f_handler = logging.FileHandler(filename=Path(args.output_dir) / 'ratar.log')
+    f_handler = logging.FileHandler(filename=Path(args.output_dir) / "ratar.log")
 
     # Get handler
     logger = logging.getLogger(__name__)
@@ -67,12 +71,12 @@ def main():
     logger.addHandler(f_handler)
 
     # Log IO
-    logger.info('IO', extra={'molecule_id': 'all'})
-    logger.info(f'Input: {args.input_mol_path}', extra={'molecule_id': 'all'})
-    logger.info(f'Output: {args.output_dir}', extra={'molecule_id': 'all'})
+    logger.info("IO", extra={"molecule_id": "all"})
+    logger.info(f"Input: {args.input_mol_path}", extra={"molecule_id": "all"})
+    logger.info(f"Output: {args.output_dir}", extra={"molecule_id": "all"})
 
     # Process encoding
-    logger.info(f'PROCESS ENCODING...', extra={'molecule_id': 'all'})
+    logger.info(f"PROCESS ENCODING...", extra={"molecule_id": "all"})
     process_encoding(args.input_mol_path, args.output_dir, remove_solvent=True)
 
     # Get end time of encoding step and runtime
@@ -80,9 +84,9 @@ def main():
     encoding_runtime = encoding_end - encoding_start
 
     # Log runtime
-    logger.info(f'RUNTIME', extra={'molecule_id': 'all'})
-    logger.info(f'Encoding step: {encoding_runtime}', extra={'molecule_id': 'all'})
+    logger.info(f"RUNTIME", extra={"molecule_id": "all"})
+    logger.info(f"Encoding step: {encoding_runtime}", extra={"molecule_id": "all"})
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

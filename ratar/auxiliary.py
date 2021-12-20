@@ -71,20 +71,22 @@ class MoleculeLoader:
         """
 
         if self.molecule_path.exists():
-            logger.info(f'File to be loaded: {self.molecule_path}', extra={'molecule_id': 'all'})
+            logger.info(f"File to be loaded: {self.molecule_path}", extra={"molecule_id": "all"})
         else:
-            logger.error(f'File not found: {self.molecule_path}', extra={'molecule_id': 'all'})
-            raise FileNotFoundError(f'File not found: {self.molecule_path}')
+            logger.error(f"File not found: {self.molecule_path}", extra={"molecule_id": "all"})
+            raise FileNotFoundError(f"File not found: {self.molecule_path}")
 
         # Load molecule data
-        if self.molecule_path.suffix == '.pdb':
+        if self.molecule_path.suffix == ".pdb":
             molecules = self._load_pdb(self.remove_solvent)
-        elif self.molecule_path.suffix == '.mol2':
+        elif self.molecule_path.suffix == ".mol2":
             molecules = self._load_mol2(self.remove_solvent)
         else:
-            raise IOError(f'Unsupported file format {self.molecule_path.suffix}, only pdb and mol2 are supported.')
+            raise IOError(
+                f"Unsupported file format {self.molecule_path.suffix}, only pdb and mol2 are supported."
+            )
 
-        logger.info('File loaded.', extra={'molecule_id': 'all'})
+        logger.info("File loaded.", extra={"molecule_id": "all"})
 
         return molecules
 
@@ -102,7 +104,7 @@ class MoleculeLoader:
         if len(self.molecules) > 0:
             return self.molecules[0]
         else:
-            raise IndexError('MoleculeLoader.molecules is empty.')
+            raise IndexError("MoleculeLoader.molecules is empty.")
 
     def _load_mol2(self, remove_solvent=False):
         """
@@ -122,45 +124,51 @@ class MoleculeLoader:
         # In case of multiple entries in one mol2 file, include iteration step
         molecules = []
 
-        for mol2 in split_multimol2(str(self.molecule_path)):  # biopandas not compatible with pathlib
+        for mol2 in split_multimol2(
+            str(self.molecule_path)
+        ):  # biopandas not compatible with pathlib
 
             # Mol2 files can have 9 or 10 columns.
             try:  # Try 9 columns.
                 molecule = PandasMol2().read_mol2_from_list(
-                                                            mol2_code=mol2[0],
-                                                            mol2_lines=mol2[1],
-                                                            columns={0: ('atom_id', int),
-                                                                     1: ('atom_name', str),
-                                                                     2: ('x', float),
-                                                                     3: ('y', float),
-                                                                     4: ('z', float),
-                                                                     5: ('atom_type', str),
-                                                                     6: ('subst_id', str),
-                                                                     7: ('subst_name', str),
-                                                                     8: ('charge', float)}
-                                                            )
+                    mol2_code=mol2[0],
+                    mol2_lines=mol2[1],
+                    columns={
+                        0: ("atom_id", int),
+                        1: ("atom_name", str),
+                        2: ("x", float),
+                        3: ("y", float),
+                        4: ("z", float),
+                        5: ("atom_type", str),
+                        6: ("subst_id", str),
+                        7: ("subst_name", str),
+                        8: ("charge", float),
+                    },
+                )
 
             except ValueError:  # If 9 columns did not work, try 10 columns.
                 molecule = PandasMol2().read_mol2_from_list(
-                                                            mol2_code=mol2[0],
-                                                            mol2_lines=mol2[1],
-                                                            columns={0: ('atom_id', int),
-                                                                     1: ('atom_name', str),
-                                                                     2: ('x', float),
-                                                                     3: ('y', float),
-                                                                     4: ('z', float),
-                                                                     5: ('atom_type', str),
-                                                                     6: ('subst_id', str),
-                                                                     7: ('subst_name', str),
-                                                                     8: ('charge', float),
-                                                                     9: ('status_bit', str)}
-                                                            )
+                    mol2_code=mol2[0],
+                    mol2_lines=mol2[1],
+                    columns={
+                        0: ("atom_id", int),
+                        1: ("atom_name", str),
+                        2: ("x", float),
+                        3: ("y", float),
+                        4: ("z", float),
+                        5: ("atom_type", str),
+                        6: ("subst_id", str),
+                        7: ("subst_name", str),
+                        8: ("charge", float),
+                        9: ("status_bit", str),
+                    },
+                )
 
             # Insert additional columns (split ASN22 to ASN and 22)
             res_id_list = []
             res_name_list = []
 
-            for i, j in zip(molecule.df['subst_name'], molecule.df['atom_type']):
+            for i, j in zip(molecule.df["subst_name"], molecule.df["atom_type"]):
                 if i[:2] == j.upper():
                     # These are ions such as CA or MG
                     res_id_list.append(i[2:])
@@ -170,23 +178,28 @@ class MoleculeLoader:
                     res_id_list.append(i[3:])
                     res_name_list.append(i[:3])
 
-            molecule.df.insert(loc=2, column='res_id', value=res_id_list)
-            molecule.df.insert(loc=2, column='res_name', value=res_name_list)
+            molecule.df.insert(loc=2, column="res_id", value=res_id_list)
+            molecule.df.insert(loc=2, column="res_name", value=res_name_list)
 
             # Select columns of interest
-            molecule._df = molecule.df.loc[:, ['atom_id',
-                                               'atom_name',
-                                               'res_id',
-                                               'res_name',
-                                               'subst_name',
-                                               'x',
-                                               'y',
-                                               'z',
-                                               'charge']]
+            molecule._df = molecule.df.loc[
+                :,
+                [
+                    "atom_id",
+                    "atom_name",
+                    "res_id",
+                    "res_name",
+                    "subst_name",
+                    "x",
+                    "y",
+                    "z",
+                    "charge",
+                ],
+            ]
 
             # Remove solvent if parameter remove_solvent=True
             if remove_solvent:
-                ix = molecule.df.index[molecule.df['res_name'] == 'HOH']
+                ix = molecule.df.index[molecule.df["res_name"] == "HOH"]
                 molecule.df.drop(index=ix, inplace=True)
 
             molecules.append(molecule)
@@ -208,42 +221,60 @@ class MoleculeLoader:
             List of BioPandas objects containing metadata and structural data of molecule(s) in pdb file.
         """
 
-        molecule = PandasPdb().read_pdb(str(self.molecule_path))  # biopandas not compatible with pathlib
+        molecule = PandasPdb().read_pdb(
+            str(self.molecule_path)
+        )  # biopandas not compatible with pathlib
 
         # If object has no code, set string from file stem and its folder name
         # E.g. "/mydir/pdb/3w32.mol2" will generate the code "pdb_3w32".
         if not (molecule.code or molecule.code.strip()):
-            molecule.code = f'{self.molecule_path.parts[-2]}_{self.molecule_path.stem}'
+            molecule.code = f"{self.molecule_path.parts[-2]}_{self.molecule_path.stem}"
 
         # Get both ATOM and HETATM lines of PDB file
-        molecule._df = pd.concat([molecule.df['ATOM'], molecule.df['HETATM']])
+        molecule._df = pd.concat([molecule.df["ATOM"], molecule.df["HETATM"]])
 
         # Select columns of interest
-        molecule._df = molecule.df.loc[:, ['atom_number',
-                                           'atom_name',
-                                           'residue_number',
-                                           'residue_name',
-                                           'x_coord',
-                                           'y_coord',
-                                           'z_coord',
-                                           'charge']]
+        molecule._df = molecule.df.loc[
+            :,
+            [
+                "atom_number",
+                "atom_name",
+                "residue_number",
+                "residue_name",
+                "x_coord",
+                "y_coord",
+                "z_coord",
+                "charge",
+            ],
+        ]
 
         # Insert additional columns
-        molecule.df.insert(loc=4,
-                           column='subst_name',
-                           value=[f'{i}{j}' for i, j in zip(molecule.df['residue_name'], molecule.df['residue_number'])])
+        molecule.df.insert(
+            loc=4,
+            column="subst_name",
+            value=[
+                f"{i}{j}"
+                for i, j in zip(molecule.df["residue_name"], molecule.df["residue_number"])
+            ],
+        )
 
         # Rename columns
-        molecule.df.rename(index=str, inplace=True, columns={'atom_number': 'atom_id',
-                                                             'residue_number': 'res_id',
-                                                             'residue_name': 'res_name',
-                                                             'x_coord': 'x',
-                                                             'y_coord': 'y',
-                                                             'z_coord': 'z'})
+        molecule.df.rename(
+            index=str,
+            inplace=True,
+            columns={
+                "atom_number": "atom_id",
+                "residue_number": "res_id",
+                "residue_name": "res_name",
+                "x_coord": "x",
+                "y_coord": "y",
+                "z_coord": "z",
+            },
+        )
 
         # Remove solvent if parameter remove_solvent=True
         if remove_solvent:
-            ix = molecule.df.index[molecule.df['res_name'] == 'HOH']
+            ix = molecule.df.index[molecule.df["res_name"] == "HOH"]
             molecule.df.drop(index=ix, inplace=True)
 
         # Cast to list only for homogeneity with reading mol2 files that can have multiple entries
@@ -281,8 +312,8 @@ class AminoAcidDescriptors:
 
     def __init__(self):
 
-        zscales_path = ratar_path / 'data' / 'zscales.csv'
-        self.zscales = pd.read_csv(zscales_path, index_col='aa3')
+        zscales_path = ratar_path / "data" / "zscales.csv"
+        self.zscales = pd.read_csv(zscales_path, index_col="aa3")
 
     def get_zscales_amino_acids(self, molecule):
         """
@@ -300,7 +331,7 @@ class AminoAcidDescriptors:
         """
 
         # Get amino acid name per row (atom)
-        mol_aa = molecule['res_name']
+        mol_aa = molecule["res_name"]
 
         # Get only rows (atoms) that belong to Z-scales amino acids
         mol_zscales_aa = molecule[mol_aa.apply(lambda y: y in self.zscales.index)].copy()
@@ -309,7 +340,9 @@ class AminoAcidDescriptors:
         mol_non_zscales_aa = molecule[mol_aa.apply(lambda y: y not in self.zscales.index)].copy()
 
         if not mol_non_zscales_aa.empty:
-            logger.info(f'Atoms removed for binding site encoding: {mol_non_zscales_aa.to_string()}')
+            logger.info(
+                f"Atoms removed for binding site encoding: {mol_non_zscales_aa.to_string()}"
+            )
 
         return mol_zscales_aa
 
@@ -337,13 +370,13 @@ def load_pseudocenters(remove_hbda=False):
 
     # TODO summarize pseudocenter functions in Pseudocenter class?
 
-    pseudocenter_path = ratar_path / 'data' / 'pseudocenter_atoms.csv'
+    pseudocenter_path = ratar_path / "data" / "pseudocenter_atoms.csv"
 
     pseudocenter_atoms = pd.read_csv(pseudocenter_path, index_col=0)
 
     # Remove HBDA features information (too few data points)
     if remove_hbda:
-        pseudocenter_atoms = pseudocenter_atoms[pseudocenter_atoms['pc_type'] != 'HBDA']
+        pseudocenter_atoms = pseudocenter_atoms[pseudocenter_atoms["pc_type"] != "HBDA"]
         pseudocenter_atoms.reset_index(drop=True, inplace=True)
 
     return pseudocenter_atoms
@@ -394,13 +427,13 @@ def _preprocess_pseudocenters():
             id_suffix = id_suffix + 1
 
         # Add suffix to prefix
-        pc_ids.append(f'{id_prefix_new}_{id_suffix}')
+        pc_ids.append(f"{id_prefix_new}_{id_suffix}")
 
         # Update prefix
         id_prefix_old = id_prefix_new
 
     # Add pseudocenter IDs to DataFrame
-    pc_df.insert(loc=0, column='pc_id', value=pc_ids)
+    pc_df.insert(loc=0, column="pc_id", value=pc_ids)
 
     return pc_df
 
@@ -440,7 +473,7 @@ def _preprocess_pseudocenter_atoms():
         "pc_atom_id": pc_atom_ids,
         "pc_atom_pattern": pc_atom_pattern,
         "pc_id": pc_ids,
-        "pc_type": pc_types
+        "pc_type": pc_types,
     }
 
     # Cast dictionary to DataFrame
@@ -469,4 +502,4 @@ def create_directory(directory):
         if not directory.exists():
             directory.mkdir(parents=True)
     except OSError:
-        raise OSError(f'Creating directory failed: {directory}')
+        raise OSError(f"Creating directory failed: {directory}")
