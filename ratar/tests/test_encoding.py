@@ -25,7 +25,7 @@ def test_save_binding_site(mol_file):
 
     molecule_path = Path(__name__).parent / 'ratar' / 'tests' / 'data' / mol_file
     molecule_loader = MoleculeLoader(molecule_path)
-    bindingsite = BindingSite(molecule_loader.molecules[0])
+    bindingsite = BindingSite.from_molecule(molecule_loader.molecules[0])
 
     output_path = Path(__name__).parent / 'ratar' / 'tests' / 'data' / 'tmp' / 'bindingsite.p'
 
@@ -59,7 +59,7 @@ def test_save_cgo_file(mol_file):
 
     molecule_path = Path(__name__).parent / 'ratar' / 'tests' / 'data' / mol_file
     molecule_loader = MoleculeLoader(molecule_path)
-    bindingsite = BindingSite(molecule_loader.molecules[0])
+    bindingsite = BindingSite.from_molecule(molecule_loader.molecules[0])
 
     output_path = Path(__name__).parent / 'ratar' / 'tests' / 'data' / 'tmp' / 'ref_points.cgo'
 

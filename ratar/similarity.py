@@ -5,7 +5,6 @@ Read-across the targetome -
 An integrated structure- and ligand-based workbench for computational target prediction and novel tool compound design
 
 Handles the primary functions for comparing binding sites.
-
 """
 
 from collections import defaultdict

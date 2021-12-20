@@ -44,7 +44,6 @@ class MoleculeLoader:
     >>> from ratar.auxiliary import MoleculeLoader
     >>> molecule_path = '/path/to/pdb/or/mol2'
     >>> molecule_loader = MoleculeLoader()
-    >>> molecule_loader.load_molecule(molecule_path, remove_solvent=True)
 
     >>> molecules = molecule_loader.molecules  # Contains one or multiple molecule objects
     >>> molecule1 = molecules[0].df  # Molecule data
@@ -58,10 +57,10 @@ class MoleculeLoader:
 
         self.molecule_path = Path(molecule_path)
         self.remove_solvent = remove_solvent
-        self.molecules = self.load_molecule()
+        self.molecules = self._load_molecule()
         self.n_molecules = len(self.molecules)
 
-    def load_molecule(self):
+    def _load_molecule(self):
         """
         Load one or multiple molecules from pdb or mol2 file.
 
@@ -89,7 +88,8 @@ class MoleculeLoader:
 
         return molecules
 
-    def get_first_molecule(self):
+    @property
+    def first_molecule(self):
         """
         Convenience class method: get the first molecule DataFrame.
 
@@ -140,7 +140,7 @@ class MoleculeLoader:
                                                                      8: ('charge', float)}
                                                             )
 
-            except AssertionError:  # If 9 columns did not work, try 10 columns.
+            except ValueError:  # If 9 columns did not work, try 10 columns.
                 molecule = PandasMol2().read_mol2_from_list(
                                                             mol2_code=mol2[0],
                                                             mol2_lines=mol2[1],

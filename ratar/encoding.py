@@ -53,8 +53,7 @@ class BindingSite:
     >>> molecule_loader = MoleculeLoader(molecule_path, remove_solvent=True)
     >>> molecule = molecule_loader.molecules[0]
 
-    >>> binding_site = BindingSite()
-    >>> binding_site.from_molecule(molecule)
+    >>> binding_site = BindingSite.from_molecule(molecule)
     """
 
     def __init__(self):
@@ -77,11 +76,12 @@ class BindingSite:
             self.molecule.code == other.molecule.code,
             self.molecule.df.equals(other.molecule.df),
             self.representatives == other.representatives,
-            self.shapes == other.shapes
+            self.shapes == other.shape
         ]
         return all(rules)
 
-    def from_molecule(self, molecule):
+    @classmethod
+    def from_molecule(cls, molecule):
         """
         Set molecule, representatives and shapes of a molecule.
 
@@ -91,17 +91,39 @@ class BindingSite:
             Content of mol2 or pdb file as BioPandas object.
         """
 
-        self.molecule = molecule
-        self.representatives = self.get_representatives(molecule)
+        #print()
+        #print()
+        #print()
+        #print(molecule.code)
+        #print(molecule.df.iloc[0, :])
+        cls.molecule = molecule
 
-        coordinates = self.get_coordinates(self.representatives)
-        physicochemicalproperties = self.get_physicochemicalproperties(self.representatives)
-        subsets = self.get_subsets(self.representatives)
-        points = self.get_points(coordinates, physicochemicalproperties, subsets)
+        # Get representatives
+        cls.representatives = cls.get_representatives(molecule)
+        #print("representatives")
+        #print(cls.representatives.data["ca"].iloc[0, :])
+        #print(cls.representatives.pc.iloc[0, :])
 
-        self.shapes = self.get_shapes(points)
+        # Get points
+        coordinates = cls.get_coordinates(cls.representatives)
+        physicochemicalproperties = cls.get_physicochemicalproperties(cls.representatives)
+        subsets = cls.get_subsets(cls.representatives)
+        points = cls.get_points(coordinates, physicochemicalproperties, subsets)
+        #print("points")
+        #print(points.pc["no"].iloc[0, :])
 
-    def from_file(self, molecule_path, remove_solvent=False, molecule_index=0):
+        #print("molecules")
+        #print(molecule.df.iloc[0, :])
+
+        # Get shapes
+        cls.shapes = cls.get_shapes(points)
+        #print("shapes")
+        #print(cls.shapes.data['ca']["no"])
+
+        return cls
+
+    @classmethod
+    def from_file(cls, molecule_path, remove_solvent=False, molecule_index=0):
         """
         Set molecule, representatives and shapes of a molecule from a molecule file.
 
@@ -124,7 +146,7 @@ class BindingSite:
             raise IndexError(f'Molecule index {molecule_index} out of range. '
                              f'Number of molecules{len(molecule_loader.molecules)}')
 
-        self.from_molecule(molecule)
+        return cls.from_molecule(molecule)
 
     @staticmethod
     def get_representatives(molecule):
@@ -202,7 +224,8 @@ class BindingSite:
         subsets.from_representatives(representatives)
         return subsets
 
-    def get_points(self, coordinates, physicochemicalproperties, subsets):
+    @staticmethod
+    def get_points(coordinates, physicochemicalproperties, subsets):
         """
         Get multidimensional points for different representatives of a molecule, which contain information on
         coordinates (spatial dimensions) and physicochemical properties (physicochemical dimensions).
@@ -230,7 +253,8 @@ class BindingSite:
         points.from_subsets(subsets)
         return points
 
-    def get_shapes(self, points):
+    @staticmethod
+    def get_shapes(points):
         """
         Get different shape encodings for points representing a molecule.
 
@@ -406,9 +430,12 @@ class Representatives:
         pandas.DataFrame
             DataFrame containing atom lines from input file described by Z-scales.
         """
+        molecule_df_copy = molecule_df.copy()
 
         # Filter for atom name 'CA' (first condition) but exclude calcium (second condition)
-        molecule_ca = molecule_df[(molecule_df['atom_name'] == 'CA') & (molecule_df['res_name'] != 'CA')]
+        molecule_ca = molecule_df_copy[
+            (molecule_df_copy['atom_name'] == 'CA') & (molecule_df_copy['res_name'] != 'CA')
+        ]
 
         return molecule_ca
 
@@ -427,6 +454,7 @@ class Representatives:
         pandas.DataFrame
             DataFrame containing atom lines from input file that belong to pseudocenters.
         """
+        molecule_df_copy = molecule_df.copy()
 
         # Load pseudocenter atoms
         pseudocenter_atoms = load_pseudocenters()
@@ -434,7 +462,7 @@ class Representatives:
         # Collect all molecule atoms that belong to pseudocenters
         molecule_pca = []
 
-        for index, row in molecule_df.iterrows():
+        for index, row in molecule_df_copy.iterrows():
 
             query = f'{row["res_name"]}_{row["atom_name"]}'
 
@@ -490,7 +518,7 @@ class Representatives:
         molecule_pca_df.drop(columns=['index'], inplace=True)
 
         # Join molecule with pseudocenter subset
-        molecule_pca_df = molecule_df.join(molecule_pca_df, how='outer')
+        molecule_pca_df = molecule_df_copy.join(molecule_pca_df, how='outer')
         molecule_pca_df.dropna(how='any', inplace=True)
 
         return molecule_pca_df
@@ -510,14 +538,15 @@ class Representatives:
             DataFrame containing atom lines for (aggregated) pseudocenters, i.e. aggregate multiple atoms belonging to
             one pseudocenter.
         """
+        molecule_df_copy = molecule_df.copy()
 
         # Get pseudocenter atoms
-        molecule_pca_df = self._get_pca(molecule_df)
+        molecule_pca_df = self._get_pca(molecule_df_copy)
 
         # Calculate pseudocenters
         molecule_pc = []
 
-        for key, group in molecule_pca_df.groupby(['subst_name', 'pc_id'], sort=False):
+        for _, group in molecule_pca_df.groupby(['subst_name', 'pc_id'], sort=False):
 
             if len(group) == 1:  # If pseudocenter only contains one atom, keep data
                 row = group.iloc[0].copy()
@@ -2186,10 +2215,12 @@ class Shapes:
         keys_new = [[i[j] for j in key_order] for i in keys_new]
         keys_new = ['/'.join(i) for i in keys_new]
 
+        # Generate new dictionary with new keys and old values
+        flat_dict_new = {}
         for key_old, key_new in zip(keys_old, keys_new):
-            flat_dict[key_new] = flat_dict.pop(key_old)
+            flat_dict_new[key_new] = flat_dict[key_old]
 
-        return flat_dict
+        return flat_dict_new
 
 
 def process_encoding(molecule_path, output_dir, remove_solvent=False):
@@ -2268,7 +2299,7 @@ def process_encoding(molecule_path, output_dir, remove_solvent=False):
             molecule_id_encoding.mkdir(parents=True, exist_ok=True)
 
             # Encode binding site
-            binding_site = BindingSite(molecule)
+            binding_site = BindingSite.from_molecule(molecule)
 
             # Save binding site
             save_binding_site(binding_site, molecule_id_encoding / 'ratar_encoding.p')
@@ -2298,7 +2329,7 @@ def save_binding_site(binding_site, output_path):
     >>> molecule_loader = MoleculeLoader(molecule_path, remove_solvent=True)
     >>> molecule = molecule_loader.molecules[0]
 
-    >>> binding_site = BindingSite(molecule)
+    >>> binding_site = BindingSite.from_molecule(molecule)
     >>> save_binding_site(binding_site, Path(__name__).parent / 'ratar' / 'tests' / 'data' / 'tmp' / 'bindingsite.p')
 )
     """
@@ -2334,7 +2365,7 @@ def save_cgo_file(binding_site, output_path):
     >>> molecule_loader = MoleculeLoader(molecule_path, remove_solvent=True)
     >>> molecule = molecule_loader.molecules[0]
 
-    >>> binding_site = BindingSite(molecule)
+    >>> binding_site = BindingSite.from_molecule(molecule)
     >>> save_cgo_file(binding_site, '/path/to/output/directory')
     """
 
