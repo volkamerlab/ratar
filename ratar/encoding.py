@@ -2322,29 +2322,28 @@ def process_encoding(molecule_path, output_dir, remove_solvent=False):
 
 def save_binding_site(binding_site, output_path):
     """
-        Save an encoded binding site to a pickle file in an output directory.
+    Save an encoded binding site to a pickle file in an output directory.
 
-        Parameters
-        ----------
-        binding_site : encoding.BindingSite
-            Encoded binding site.
-        output_path : str
-            Path to output file.
+    Parameters
+    ----------
+    binding_site : encoding.BindingSite
+        Encoded binding site.
+    output_path : str
+        Path to output file.
 
-        Examples
-        --------
-        >>> from ratar.auxiliary import MoleculeLoader
-        >>> from ratar.encoding import BindingSite, save_binding_site
+    Examples
+    --------
+    >>> from ratar.auxiliary import MoleculeLoader
+    >>> from ratar.encoding import BindingSite, save_binding_site
 
-         >>> molecule_path = Path(__name__).parent / 'ratar/tests/data/AAK1_4wsq_altA_chainA.mol2'
+    >>> molecule_path = Path(__name__).parent / 'ratar/tests/data/AAK1_4wsq_altA_chainA.mol2'
 
-        >>> molecule_loader = MoleculeLoader(molecule_path, remove_solvent=True)
-        >>> molecule = molecule_loader.molecules[0]
+    >>> molecule_loader = MoleculeLoader(molecule_path, remove_solvent=True)
+    >>> molecule = molecule_loader.molecules[0]
 
-        >>> binding_site = BindingSite()
-        >>> binding_site.from_molecule(molecule)
-        >>> save_binding_site(binding_site, Path(__name__).parent / 'ratar/tests/data/tmp/bindingsite.p')
-    )
+    >>> binding_site = BindingSite()
+    >>> binding_site.from_molecule(molecule)
+    >>> save_binding_site(binding_site, Path(__name__).parent / 'ratar/tests/data/tmp/bindingsite.p')
     """
 
     create_directory(Path(output_path).parent)
