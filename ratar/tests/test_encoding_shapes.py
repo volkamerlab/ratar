@@ -407,15 +407,7 @@ def test_calc_shape_6dim_ratar1_exceptions(points):
     [
         (
             pd.DataFrame(
-                [
-                    [0, 0, 0],
-                    [1, 0, 0],
-                    [0, 1, 0],
-                    [0, 0, 1],
-                    [0, 2, 0],
-                    [0, 0, 10],
-                    [0, 0, 5],
-                ],
+                [[0, 0, 0], [1, 0, 0], [0, 1, 0], [0, 0, 1], [0, 2, 0], [0, 0, 10], [0, 0, 5],],
                 columns="x y z".split(),
             ),
             pd.DataFrame(
@@ -441,15 +433,7 @@ def test_calc_shape_3dim_usr(points, ref_points):
     [
         (
             pd.DataFrame(
-                [
-                    [0, 0, 0],
-                    [1, 0, 0],
-                    [0, 1, 0],
-                    [0, 0, 1],
-                    [0, 2, 0],
-                    [0, 0, 10],
-                    [0, 0, 5],
-                ],
+                [[0, 0, 0], [1, 0, 0], [0, 1, 0], [0, 0, 1], [0, 2, 0], [0, 0, 10], [0, 0, 5],],
                 columns="x y z".split(),
             ),
             pd.DataFrame(

@@ -71,13 +71,7 @@ def test_molecule_loader(filename, code, n_atoms, centroid):
 
 
 @pytest.mark.parametrize(
-    "filename, n_atoms",
-    [
-        (
-            "scpdb_1a9p1.mol2",
-            457,
-        )
-    ],
+    "filename, n_atoms", [("scpdb_1a9p1.mol2", 457,)],
 )
 def test_molecule_loader_remove_solvent(filename, n_atoms):
     """
