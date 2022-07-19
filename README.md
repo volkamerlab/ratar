@@ -3,6 +3,7 @@
 [//]: # (Badges)
 [![GitHub Actions Build Status](https://github.com/volkamerlab/ratar/workflows/CI/badge.svg)](https://github.com/volkamerlab/ratar/actions?query=workflow%3ACI)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+[![DOI](https://zenodo.org/badge/187793388.svg)](https://zenodo.org/badge/latestdoi/187793388)
 
 > :construction: This repository is in early stages of developement. The current API is not stable.
 
