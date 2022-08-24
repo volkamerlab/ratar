@@ -75,6 +75,11 @@ The project hypothesis is based on the similarity principle (similar pockets bin
 
 See [tutorial](https://github.com/volkamerlab/ratar/blob/master/docs/tutorials/ratar_tutorial.ipynb) for details on the current Python API of `ratar`.
 
+### Analysis scripts and notebooks
+
+Unsorted collection of scripts and notebooks - needs clean-up:
+https://github.com/volkamerlab/ratar_data
+
 
 ## Copyright
 
