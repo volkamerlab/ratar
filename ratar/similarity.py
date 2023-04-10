@@ -95,7 +95,6 @@ def get_similarity_all_against_all(encoded_molecules_path, measure="modified_man
     for repres in bindingsite.shapes.data.keys():
         for dim in bindingsite.shapes.data[repres].keys():
             for method in bindingsite.shapes.data[repres][dim].keys():
-
                 # Set name for encoding method (representatives and method) and
                 # use as key for dictionary of all-against-all matrices
                 desc = f"{repres}_{dim}_{method}"
@@ -105,7 +104,6 @@ def get_similarity_all_against_all(encoded_molecules_path, measure="modified_man
 
     # Load all possible binding site pairs (to construct an upper triangular matrix)
     for path1, path2 in itertools.combinations(path_list, r=2):
-
         # Load binding site pair
         with open(path1, "rb") as f:
             bindingsite1 = pickle.load(f)
@@ -115,7 +113,6 @@ def get_similarity_all_against_all(encoded_molecules_path, measure="modified_man
         for repres in bindingsite1.shapes.data.keys():
             for dim in bindingsite1.shapes.data[repres].keys():
                 for method in bindingsite1.shapes.data[repres][dim].keys():
-
                     # Set name for encoding method (representatives and method) and
                     # use as key for dictionary of all-against-all matrices
                     desc = f"{repres}_{dim}_{method}"
@@ -173,7 +170,6 @@ def get_similarity_pairs(pairs, encoded_molecules_path, measure="modified_manhat
     pairwise_similarities = defaultdict(list)
 
     for _, pair in pairs.iterrows():
-
         path1 = Path(encoded_molecules_path.replace("%", pair[0]))
         path2 = Path(encoded_molecules_path.replace("%", pair[1]))
 
@@ -193,7 +189,6 @@ def get_similarity_pairs(pairs, encoded_molecules_path, measure="modified_manhat
             )
 
         for (shape_key1, shape1), (_, shape2) in zip(shapes1.items(), shapes2.items()):
-
             similarity = calculate_similarity(shape1.moments, shape2.moments, measure)
             pairwise_similarities[shape_key1].append(similarity)
 

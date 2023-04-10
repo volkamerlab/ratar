@@ -99,7 +99,6 @@ def test_from_molecule(filename, column_names, n_atoms, centroid):
 
 @pytest.mark.parametrize("filename", [("AAK1_4wsq_altA_chainA_reduced.mol2")])
 def test_get_ca_datatypes(filename):
-
     # Load molecule
     molecule_path = Path(__name__).parent / "ratar" / "tests" / "data" / filename
     molecule_loader = MoleculeLoader(molecule_path)
@@ -126,7 +125,6 @@ def test_get_ca_datatypes(filename):
 
 @pytest.mark.parametrize("filename", [("AAK1_4wsq_altA_chainA_reduced.mol2")])
 def test_get_pca_datatypes(filename):
-
     # Load molecule
     molecule_path = Path(__name__).parent / "ratar" / "tests" / "data" / filename
     molecule_loader = MoleculeLoader(molecule_path)
@@ -156,7 +154,6 @@ def test_get_pca_datatypes(filename):
 
 @pytest.mark.parametrize("filename", [("AAK1_4wsq_altA_chainA_reduced.mol2")])
 def test_get_pca_pc_datatypes(filename):
-
     # Load molecule
     molecule_path = Path(__name__).parent / "ratar" / "tests" / "data" / filename
     molecule_loader = MoleculeLoader(molecule_path)

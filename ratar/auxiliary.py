@@ -54,7 +54,6 @@ class MoleculeLoader:
     """
 
     def __init__(self, molecule_path, remove_solvent=False):
-
         self.molecule_path = Path(molecule_path)
         self.remove_solvent = remove_solvent
         self.molecules = self._load_molecule()
@@ -127,7 +126,6 @@ class MoleculeLoader:
         for mol2 in split_multimol2(
             str(self.molecule_path)
         ):  # biopandas not compatible with pathlib
-
             # Mol2 files can have 9 or 10 columns.
             try:  # Try 9 columns.
                 molecule = PandasMol2().read_mol2_from_list(
@@ -311,7 +309,6 @@ class AminoAcidDescriptors:
     """
 
     def __init__(self):
-
         zscales_path = ratar_path / "data" / "zscales.csv"
         self.zscales = pd.read_csv(zscales_path, index_col="aa3")
 
@@ -416,7 +413,6 @@ def _preprocess_pseudocenters():
     id_suffix = 1
 
     for index, row in pc_df.iterrows():
-
         # Create prefix of pseudocenter ID
         id_prefix_new = f'{row["residue"]}_{row["pc_type"]}'
 

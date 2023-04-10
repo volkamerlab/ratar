@@ -109,7 +109,6 @@ def test_shapes_eq(mol_file1, mol_file2):
     ],
 )
 def test_calc_moments(distances, moment1, moment2, moment3):
-
     shapes = Shapes()
     moments = shapes._calc_moments(distances)
 
@@ -130,7 +129,6 @@ def test_calc_moments(distances, moment1, moment2, moment3):
     ],
 )
 def test_reorder_nested_dict_keys(nested_dict, key_order, flat_keys_before, flat_keys_after):
-
     shapes = Shapes()
     reordered_dict = shapes._reorder_nested_dict_keys(nested_dict, key_order)
 
@@ -150,7 +148,6 @@ def test_reorder_nested_dict_keys(nested_dict, key_order, flat_keys_before, flat
     ],
 )
 def test_calc_nearest_point(point, points, nearest_point_ref):
-
     shapes = Shapes()
     nearest_point = shapes._calc_nearest_point(point, points, 1)
 
@@ -162,7 +159,6 @@ def test_calc_nearest_point(point, points, nearest_point_ref):
     [(pd.DataFrame([[1, 2, 4], [1, 2, 5]]), pd.Series([1, 2, 3]), pd.Series([1.0, 2.0]))],
 )
 def test_calc_distances_to_point(points, ref_point, distances_to_point_ref):
-
     shapes = Shapes()
     distances_to_point = shapes._calc_distances_to_point(points, ref_point)
 
@@ -185,7 +181,6 @@ def test_calc_distances_to_point(points, ref_point, distances_to_point_ref):
     ],
 )
 def test_get_shape_nametuple(ref_points, dist, moments_ref):
-
     shapes = Shapes()
     shape = shapes._get_shape_nametuple(ref_points, dist)
 
@@ -199,7 +194,6 @@ def test_get_shape_nametuple(ref_points, dist, moments_ref):
 
 @pytest.mark.parametrize("ref_points, dist, moments", [(None, None, None)])
 def test_get_shape_nametuple_empty(ref_points, dist, moments):
-
     shapes = Shapes()
     shape = shapes._get_shape_nametuple_empty()
 
@@ -219,7 +213,6 @@ def test_get_shape_nametuple_empty(ref_points, dist, moments):
 def test_calc_scaled_3d_cross_product_exceptions(
     coord_origin, coord_point_a, coord_point_b, scaled_by
 ):
-
     shapes = Shapes()
 
     with pytest.raises(ValueError):
@@ -269,7 +262,6 @@ def test_calc_scaled_3d_cross_product_exceptions(
 def test_calc_scaled_3d_cross_product(
     coord_origin, coord_point_a, coord_point_b, scaled_by, scaled_3d_cross_product_ref
 ):
-
     shapes = Shapes()
 
     scaled_3d_cross_product = shapes._calc_scaled_3d_cross_product(
@@ -291,7 +283,6 @@ def test_calc_scaled_3d_cross_product(
     ],
 )
 def test_calc_shape_3dim_usr_exceptions(points):
-
     shapes = Shapes()
 
     with pytest.raises(ValueError):
@@ -310,7 +301,6 @@ def test_calc_shape_3dim_usr_exceptions(points):
     ],
 )
 def test_calc_shape_3dim_csr_exceptions(points):
-
     shapes = Shapes()
 
     with pytest.raises(ValueError):
@@ -344,7 +334,6 @@ def test_calc_shape_3dim_csr_exceptions(points):
     ],
 )
 def test_calc_shape_4dim_electroshape_exceptions(points):
-
     shapes = Shapes()
 
     with pytest.raises(ValueError):
@@ -395,7 +384,6 @@ def test_calc_shape_4dim_electroshape_exceptions(points):
     ],
 )
 def test_calc_shape_6dim_ratar1_exceptions(points):
-
     shapes = Shapes()
 
     with pytest.raises(ValueError):
@@ -427,7 +415,6 @@ def test_calc_shape_6dim_ratar1_exceptions(points):
     ],
 )
 def test_calc_shape_3dim_usr(points, ref_points):
-
     shapes = Shapes()
 
     shape_3dim_usr = shapes._calc_shape_3dim_usr(points)
@@ -461,7 +448,6 @@ def test_calc_shape_3dim_usr(points, ref_points):
     ],
 )
 def test_calc_shape_3dim_csr(points, ref_points):
-
     shapes = Shapes()
 
     shape_3dim_usr = shapes._calc_shape_3dim_csr(points)
@@ -501,7 +487,6 @@ def test_calc_shape_3dim_csr(points, ref_points):
     ],
 )
 def test_calc_shape_4dim_electroshape(points, ref_points):
-
     shapes = Shapes()
 
     shape_3dim_usr = shapes._calc_shape_4dim_electroshape(points)
@@ -543,7 +528,6 @@ def test_calc_shape_4dim_electroshape(points, ref_points):
     ],
 )
 def test_calc_shape_6dim_ratar1(points, ref_points):
-
     shapes = Shapes()
 
     shape_6dim_ratar1 = shapes._calc_shape_6dim_ratar1(points)
@@ -578,7 +562,6 @@ def test_calc_shape_6dim_ratar1(points, ref_points):
     ],
 )
 def test_get_shape_by_method_exceptions(points_df):
-
     shapes = Shapes()
     shape = shapes._get_shape_by_method(points_df)
 
@@ -612,7 +595,6 @@ def test_get_shape_by_method_exceptions(points_df):
     ],
 )
 def test_get_shape_by_method(points_df, shape_keys):
-
     shapes = Shapes()
     shape = shapes._get_shape_by_method(points_df)
 

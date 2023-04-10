@@ -57,7 +57,6 @@ class BindingSite:
     """
 
     def __init__(self):
-
         self.molecule = None
         self.representatives = None
         self.shapes = None
@@ -306,7 +305,6 @@ class Representatives:
     """
 
     def __init__(self):
-
         self.molecule_id = ""
         self.data = {
             "ca": pd.DataFrame(),
@@ -446,11 +444,9 @@ class Representatives:
         molecule_pca = []
 
         for index, row in molecule_df_copy.iterrows():
-
             query = f'{row["res_name"]}_{row["atom_name"]}'
 
             if query in list(pseudocenter_atoms["pc_atom_pattern"]):  # Non-peptide bond atoms
-
                 pc_ix = pseudocenter_atoms.index[
                     pseudocenter_atoms["pc_atom_pattern"] == query
                 ].tolist()[0]
@@ -465,15 +461,12 @@ class Representatives:
                 )
 
             elif row["atom_name"] == "O":  # Peptide bond atoms
-
                 molecule_pca.append([index, "HBA", "PEP_HBA_1", "PEP_HBA_1_0"])
 
             elif row["atom_name"] == "N":  # Peptide bond atoms
-
                 molecule_pca.append([index, "HBD", "PEP_HBD_1", "PEP_HBD_1_N"])
 
             elif row["atom_name"] == "C":  # Peptide bond atoms
-
                 molecule_pca.append([index, "AR", "PEP_AR_1", "PEP_AR_1_C"])
 
         # Cast list of lists to DataFrame
@@ -512,7 +505,6 @@ class Representatives:
         molecule_pc = []
 
         for _, group in molecule_pca_df.groupby(["subst_name", "pc_id"], sort=False):
-
             if len(group) == 1:  # If pseudocenter only contains one atom, keep data
                 row = group.iloc[0].copy()
                 row["atom_id"] = [row["atom_id"]]
@@ -570,7 +562,6 @@ class Coordinates:
     """
 
     def __init__(self):
-
         self.molecule_id = ""
         self.data = {
             "ca": None,
@@ -714,7 +705,6 @@ class PhysicoChemicalProperties:
     """
 
     def __init__(self):
-
         self.molecule_id = ""
         self.data = {
             "ca": {},
@@ -914,7 +904,6 @@ class Subsets:
     """
 
     def __init__(self):
-
         self.molecule_id = ""
         self.data_pseudocenter_subsets = {"pca": {}, "pc": {}}
 
@@ -1006,14 +995,12 @@ class Subsets:
         self.data_pseudocenter_subsets = {}
 
         for k1 in ["pc", "pca"]:
-
             self.data_pseudocenter_subsets[k1] = {}
 
             repres = representatives.data[k1]
 
             # Loop over all pseudocenter subset types
             for k2 in list(set(pseudocenter_atoms["pc_type"])):
-
                 # If pseudocenter type exists in dataset, save corresponding subset, else save None
                 if k2 in set(repres["pc_type"]):
                     self.data_pseudocenter_subsets[k1][k2] = list(
@@ -1061,7 +1048,6 @@ class Points:
     """
 
     def __init__(self):
-
         self.molecule_id = ""
         self.data = {"ca": {}, "pca": {}, "pc": {}}
         self.data_pseudocenter_subsets = {"pc": {}, "pca": {}}
@@ -1221,7 +1207,6 @@ class Points:
         physicochemicalproperties_keys = physicochemicalproperties.data["ca"].keys()
 
         for k1 in coordinates.data.keys():
-
             self.data[k1] = {}
 
             # Add points without physicochemical properties
@@ -1264,7 +1249,6 @@ class Points:
 
         # Subset: pseudocenter atoms
         for k1, v1 in self.data.items():  # Representatives
-
             # Select points keys that we want to subset, e.g. we want to subset pseudocenters but not Calpha atoms
             if k1 in subsets.data_pseudocenter_subsets.keys():
                 self.data_pseudocenter_subsets[k1] = {}
@@ -1331,7 +1315,6 @@ class Shapes:
     """
 
     def __init__(self):
-
         self.molecule_id = ""
         self.data = {"ca": {}, "pca": {}, "pc": {}}
         self.data_pseudocenter_subsets = {"pc": {}, "pca": {}}
@@ -2285,7 +2268,6 @@ def process_encoding(molecule_path, output_dir, remove_solvent=False):
 
     # Iterate over all binding sites (molecule structure files)
     for mol_counter, mol_path in enumerate(molecule_path_list, 1):
-
         # Load binding site from molecule structure file
         molecule_loader = MoleculeLoader(mol_path, remove_solvent)
 
@@ -2397,12 +2379,10 @@ def save_cgo_file(binding_site, output_path):
     bs_flat_keys = [i for i in bs_flat.keys() if "ref_points" in i]
 
     for key in bs_flat_keys:
-
         if bs_flat[key] is None:
             logger.info(f"Empty encoding for {key}.")
 
         else:
-
             # Get reference points (coordinates)
             ref_points = bs_flat[key]
 
@@ -2424,7 +2404,6 @@ def save_cgo_file(binding_site, output_path):
 
             # For each reference point, write sphere color, coordinates and size to file
             for index, row in ref_points.iterrows():
-
                 # Set sphere color
                 sphere_color = list(sphere_colors[counter_colors])
                 counter_colors = counter_colors + 1
