@@ -1858,13 +1858,12 @@ class Shapes:
 
         # b) Add forth dimension with maximum and minmum of points' 4th dimension
         max_value_4thdim = max(points.iloc[:, [3]].values)[0]
+        max_value_4thdim = pd.Series([scaling_factor * max_value_4thdim], index=[points.columns[3]])
+        ref4 = pd.concat([c_s, max_value_4thdim])
+
         min_value_4thdim = min(points.iloc[:, [3]].values)[0]
-        ref4 = c_s.append(
-            pd.Series([scaling_factor * max_value_4thdim], index=[points.columns[3]])
-        )
-        ref5 = c_s.append(
-            pd.Series([scaling_factor * min_value_4thdim], index=[points.columns[3]])
-        )
+        min_value_4thdim = pd.Series([scaling_factor * min_value_4thdim], index=[points.columns[3]])
+        ref5 = pd.concat([c_s, min_value_4thdim])
 
         # Get distances from ref4 and ref5 to all other points
         dist_ref4 = self._calc_distances_to_point(points, ref4)
