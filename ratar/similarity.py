@@ -100,7 +100,7 @@ def get_similarity_all_against_all(encoded_molecules_path, measure="modified_man
                 desc = f"{repres}_{dim}_{method}"
 
                 # Add initial all-against-all matrices in dictionary
-                sim_matrices[desc] = sim_df
+                sim_matrices[desc] = sim_df.copy()
 
     # Load all possible binding site pairs (to construct an upper triangular matrix)
     for path1, path2 in itertools.combinations(path_list, r=2):
